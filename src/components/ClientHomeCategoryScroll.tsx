@@ -46,9 +46,9 @@ export const ClientHomeCategoryScroll = () => {
           const IconComponent = getIconComponent(category.icon);
           return (
             <Link key={category.id} to={`/client-home/services?category=${category.id}`}>
-              <Card className="flex flex-col items-center justify-center p-4 rounded-xl shadow-soft hover:shadow-soft-lg transition-all duration-300 cursor-pointer min-w-[100px] h-[100px] bg-brand-background group">
-                <IconComponent className="h-8 w-8 text-brand-primary mb-2 group-hover:scale-110 transition-transform" />
-                <span className="text-sm font-cairo text-brand-text-dark">{category.name}</span>
+              <Card className="flex flex-col items-center justify-center p-4 rounded-full shadow-soft hover:shadow-soft-lg transition-all duration-300 cursor-pointer min-w-[80px] h-[80px] bg-brand-background group">
+                <IconComponent className="h-8 w-8 text-brand-primary group-hover:scale-110 transition-transform" />
+                {/* <span className="text-sm font-cairo text-brand-text-dark">{category.name}</span> */} {/* تم إزالة اسم الفئة */}
               </Card>
             </Link>
           );

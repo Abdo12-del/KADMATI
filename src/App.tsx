@@ -23,18 +23,6 @@ import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
 import SupportCenterPage from "./pages/SupportCenterPage";
 
-// Client Dashboard Pages
-import ClientDashboardOverviewPage from "./pages/ClientDashboardOverviewPage";
-import ClientMyOrdersPage from "./pages/ClientMyOrdersPage";
-import ClientServicesCatalogPage from "./pages/ClientServicesCatalogPage";
-import ClientServiceDetailsPage from "./pages/ClientServiceDetailsPage";
-import ClientMessagesPage from "./pages/ClientMessagesPage";
-import ClientFavoritesPage from "./pages/ClientFavoritesPage";
-import ClientPaymentsPage from "./pages/ClientPaymentsPage";
-import ClientReviewsRatingsPage from "./pages/ClientReviewsRatingsPage";
-import ClientSettingsPage from "./pages/ClientSettingsPage";
-import ClientSupportPage from "./pages/ClientSupportPage";
-
 // New Client Home Page
 import ClientHomePage from "./pages/ClientHomePage"; // استيراد الصفحة الرئيسية الجديدة
 
@@ -74,18 +62,6 @@ const App = () => (
           <Route path="/dashboard/reports" element={<ReportsPage />} />
           <Route path="/dashboard/settings" element={<SettingsPage />} />
           <Route path="/dashboard/support" element={<SupportCenterPage />} />
-
-          {/* Client Dashboard Routes */}
-          <Route path="/client-dashboard" element={<ClientDashboardOverviewPage />} />
-          <Route path="/client-dashboard/orders" element={<ClientMyOrdersPage />} />
-          <Route path="/client-dashboard/services" element={<ClientServicesCatalogPage />} />
-          <Route path="/client-dashboard/services/:id" element={<ClientServiceDetailsPage />} />
-          <Route path="/client-dashboard/messages" element={<ClientMessagesPage />} />
-          <Route path="/client-dashboard/favorites" element={<ClientFavoritesPage />} />
-          <Route path="/client-dashboard/payments" element={<ClientPaymentsPage />} />
-          <Route path="/client-dashboard/reviews" element={<ClientReviewsRatingsPage />} />
-          <Route path="/client-dashboard/settings" element={<ClientSettingsPage />} />
-          <Route path="/client-dashboard/support" element={<ClientSupportPage />} />
 
           {/* Other existing routes (consider if they are generic or need client/provider specific versions) */}
           <Route path="/service/:id" element={<ServiceDetailsPage />} /> {/* Generic service details */}

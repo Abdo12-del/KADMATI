@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { NotificationsDropdown } from '@/components/notifications/NotificationsDropdown';
 import { ClientHomeMessagesDropdown } from '@/components/ClientHomeMessagesDropdown';
-import { ClientHomeGeneralMenu } from '@/components/ClientHomeGeneralMenu';
+import { ClientGeneralMenuModal } from '@/components/ClientGeneralMenuModal'; // استيراد المكون الجديد
+import ClientOrdersModal from '@/components/ClientOrdersModal'; // استيراد مكون الطلبات الجديد
 
 const ClientHomeHeader = () => {
   const unreadNotificationsCount = 3; // قيمة وهمية لعدد الإشعارات غير المقروءة
@@ -22,7 +23,8 @@ const ClientHomeHeader = () => {
           <ThemeToggle />
           <NotificationsDropdown unreadCount={unreadNotificationsCount} />
           <ClientHomeMessagesDropdown unreadCount={unreadMessagesCount} />
-          <ClientHomeGeneralMenu />
+          <ClientOrdersModal /> {/* زر الطلبات يفتح نافذة منبثقة */}
+          <ClientGeneralMenuModal /> {/* زر القائمة العامة يفتح نافذة منبثقة */}
         </div>
       </div>
     </header>
