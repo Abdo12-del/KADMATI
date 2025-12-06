@@ -25,9 +25,7 @@ const ClientDashboardMenuContent = ({ onNavigate, activePage, onCloseModal }: Cl
 
   return (
     <div className="flex flex-col h-full text-brand-text-dark p-2">
-      <div className="mb-6 text-center">
-        <h2 className="text-3xl font-bold font-cairo text-brand-primary">لوحة العميل</h2>
-      </div>
+      {/* تم إزالة العنوان الداخلي 'لوحة العميل' */}
       <nav className="flex-grow space-y-2">
         {navItems.map((item) => {
           const isActive = activePage === item.page;
@@ -47,7 +45,6 @@ const ClientDashboardMenuContent = ({ onNavigate, activePage, onCloseModal }: Cl
           );
         })}
         <div className="pt-4 border-t border-border mt-4">
-          {/* هذا الزر سيغلق النافذة المنبثقة وينتقل إلى صفحة تسجيل الدخول */}
           <Button
             variant="destructive"
             onClick={onCloseModal}
