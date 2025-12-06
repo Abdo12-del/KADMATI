@@ -51,11 +51,9 @@ const ClientDashboardOverviewPage = () => {
   return (
     <ClientDashboardLayout>
       <div className="space-y-10">
-        {/* Welcome Message */}
-        <section className="bg-gradient-to-br from-brand-primary to-brand-primary-light text-white p-10 rounded-2xl shadow-soft-lg text-right">
-          <h1 className="text-4xl font-cairo mb-3">أهلاً بك، ليلى!</h1>
-          <p className="text-lg font-ibm-plex-arabic">نحن هنا لمساعدتك في العثور على أفضل الخدمات.</p>
-        </section>
+        {/* Main Title for Service Discovery */}
+        <h1 className="text-4xl font-cairo text-brand-text-dark mb-3 text-right">استكشف الخدمات</h1>
+        <p className="text-lg font-ibm-plex-arabic text-brand-text-muted text-right">ابحث عن الخدمات التي تحتاجها من مقدمي الخدمات الموثوقين.</p>
 
         {/* Large Search Bar */}
         <section>
@@ -69,6 +67,24 @@ const ClientDashboardOverviewPage = () => {
           </div>
         </section>
 
+        {/* Service Categories Grid - Moved up for prominence */}
+        <section>
+          <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">استكشف الفئات</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
+            {serviceCategories.map(category => {
+              const IconComponent = getIconComponent(category.icon);
+              return (
+                <Link key={category.id} to={`/client-dashboard/services?category=${category.id}`}>
+                  <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 flex flex-col items-center justify-center text-center space-y-3 group">
+                    <IconComponent className="h-10 w-10 text-brand-primary group-hover:scale-110 transition-transform" />
+                    <p className="font-cairo text-brand-text-dark text-lg">{category.name}</p>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+
         {/* Quick Actions */}
         <section>
           <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">إجراءات سريعة</h2>
@@ -76,7 +92,7 @@ const ClientDashboardOverviewPage = () => {
             <Link to="/client-dashboard/services">
               <Button className="w-full h-32 bg-brand-card-bg text-brand-text-dark rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 flex flex-col items-center justify-center space-y-3 group">
                 <Search className="h-8 w-8 text-brand-primary group-hover:scale-110 transition-transform" />
-                <span className="text-lg font-cairo">تصفح الخدمات</span>
+                <span className="text-lg font-cairo">عرض كل الخدمات</span> {/* Changed text */}
               </Button>
             </Link>
             <Link to="/client-dashboard/requests/create">
@@ -98,24 +114,6 @@ const ClientDashboardOverviewPage = () => {
                 <span className="text-lg font-cairo">المفضلة</span>
               </Button>
             </Link>
-          </div>
-        </section>
-
-        {/* Service Categories Grid */}
-        <section>
-          <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">استكشف الفئات</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
-            {serviceCategories.map(category => {
-              const IconComponent = getIconComponent(category.icon);
-              return (
-                <Link key={category.id} to={`/client-dashboard/services?category=${category.id}`}>
-                  <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 flex flex-col items-center justify-center text-center space-y-3 group">
-                    <IconComponent className="h-10 w-10 text-brand-primary group-hover:scale-110 transition-transform" />
-                    <p className="font-cairo text-brand-text-dark text-lg">{category.name}</p>
-                  </Card>
-                </Link>
-              );
-            })}
           </div>
         </section>
 
