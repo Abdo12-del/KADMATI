@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,11 +49,16 @@ const ClientServiceCard = ({ service }: ClientServiceCardProps) => {
         </div>
         <div className="flex justify-between items-center pt-4">
           <span className="text-brand-primary font-bold text-xl font-cairo">${service.price}</span>
-          <Link to={`/client-dashboard/services/${service.id}`}>
-            <Button className="bg-brand-primary hover:bg-brand-primary-dark text-white px-5 py-2 rounded-lg shadow-soft font-ibm-plex-arabic">
-              عرض التفاصيل
+          <div className="flex gap-2"> {/* تم إضافة div لتجميع الأزرار */}
+            <Link to={`/client-dashboard/services/${service.id}`}>
+              <Button variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 px-3 py-2 rounded-lg shadow-soft font-ibm-plex-arabic text-sm">
+                عرض التفاصيل
+              </Button>
+            </Link>
+            <Button className="bg-brand-primary hover:bg-brand-primary-dark text-white px-3 py-2 rounded-lg shadow-soft font-ibm-plex-arabic text-sm">
+              اطلب الخدمة
             </Button>
-          </Link>
+          </div>
         </div>
       </CardContent>
     </Card>

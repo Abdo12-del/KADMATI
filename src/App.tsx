@@ -1,3 +1,5 @@
+"use client";
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -33,6 +35,9 @@ import ClientReviewsRatingsPage from "./pages/ClientReviewsRatingsPage";
 import ClientSettingsPage from "./pages/ClientSettingsPage";
 import ClientSupportPage from "./pages/ClientSupportPage";
 
+// New Client Home Page
+import ClientHomePage from "./pages/ClientHomePage"; // استيراد الصفحة الرئيسية الجديدة
+
 // Other existing routes
 import ServiceDetailsPage from "./pages/ServiceDetailsPage"; // Generic service details
 import MyRequestsPage from "./pages/MyRequestsPage"; // General requests page
@@ -52,6 +57,9 @@ const App = () => (
           <Route path="/" element={<Index />} /> {/* Landing Page */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          
+          {/* مسار الصفحة الرئيسية الجديدة لطالب الخدمة */}
+          <Route path="/client-home" element={<ClientHomePage />} />
           
           {/* Service Provider Dashboard Routes */}
           <Route path="/dashboard" element={<DashboardOverviewPage />} />
