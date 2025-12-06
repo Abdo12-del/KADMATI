@@ -1,14 +1,14 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, ShoppingCart, LayoutList, MessageSquare, Heart, CreditCard, Star, Settings, HelpCircle } from 'lucide-react';
+import { Home, ShoppingCart, LayoutList, MessageSquare, Heart, CreditCard, Star, Settings, HelpCircle, UserCircle, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface ClientSidebarProps {
-  className?: string;
+interface ClientDashboardMenuContentProps {
+  onLinkClick?: () => void; // لإغلاق النافذة المنبثقة عند النقر على رابط
 }
 
-const ClientSidebar = ({ className }: ClientSidebarProps) => {
+const ClientDashboardMenuContent = ({ onLinkClick }: ClientDashboardMenuContentProps) => {
   const location = useLocation();
 
   const navItems = [
@@ -21,22 +21,23 @@ const ClientSidebar = ({ className }: ClientSidebarProps) => {
     { icon: Star, label: 'تقييماتي', href: '/client-dashboard/reviews' },
     { icon: Settings, label: 'الإعدادات', href: '/client-dashboard/settings' },
     { icon: HelpCircle, label: 'الدعم والمساعدة', href: '/client-dashboard/support' },
+    { icon: UserCircle, label: 'الملف الشخصي', href: '/profile' }, // إضافة رابط للملف الشخصي
   ];
 
   return (
-    <div className={cn("flex flex-col h-full bg-brand-card-bg text-brand-text-dark border-l border-border p-6 shadow-soft-lg", className)}>
-      <div className="mb-10 text-center">
+    <div className="flex flex-col h-full text-brand-text-dark p-2">
+      <div className="mb-6 text-center">
         <h2 className="text-3xl font-bold font-cairo text-brand-primary">لوحة العميل</h2>
       </div>
-      <nav className="flex-grow space-y-3">
+      <nav className="flex-grow space-y-2">
         {navItems.map((item) => {
           const isActive = location.pathname === item.href;
           return (
-            <Link key={item.label} to={item.href}>
+            <Link key={item.label} to={item.href} onClick={onLinkClick}>
               <Button
                 variant="ghost"
                 className={cn(
-                  "w-full justify-end text-brand-text-dark hover:bg-brand-primary-light/20 hover:text-brand-primary rounded-xl py-3 transition-all duration-200",
+                  "w-full justify-end text-brand-text-dark hover:bg-brand-primary-light/20 hover:text-brand-primary rounded-lg py-3 transition-all duration-200",
                   isActive && "bg-brand-primary-light/30 text-brand-primary font-semibold shadow-soft"
                 )}
               >
@@ -46,9 +47,20 @@ const ClientSidebar = ({ className }: ClientSidebarProps) => {
             </Link>
           );
         })}
+        <div className="pt-4 border-t border-border mt-4">
+          <Link to="/login" onClick={onLinkClick}>
+            <Button
+              variant="destructive"
+              className="w-full justify-end bg-brand-danger hover:bg-brand-danger/90 text-white rounded-lg py-3 shadow-soft font-ibm-plex-arabic"
+            >
+              <span className="ml-3 text-lg">تسجيل الخروج</span>
+              <LogOut className="h-5 w-5" />
+            </Button>
+          </Link>
+        </div>
       </nav>
     </div>
   );
 };
 
-export default ClientSidebar;
+export default ClientDashboardMenuContent;
