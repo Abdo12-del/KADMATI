@@ -63,18 +63,18 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
         // Custom colors based on new theme
-        'dark-blue': '#1F3A93',
-        'light-blue': '#4A90E2',
-        'platform-orange': '#F5A623',
-        'platform-red': '#D0021B',
-        'platform-green': '#7ED321',
-        'light-gray': '#F4F6F8',
+        'dark-blue': 'hsl(225 66% 35%)', // #1F3A93
+        'light-blue': 'hsl(210 73% 60%)', // #4A90E2
+        'platform-orange': 'hsl(36 90% 55%)', // #F5A623
+        'platform-red': 'hsl(359 97% 41%)', // #D0021B
+        'platform-green': 'hsl(90 69% 48%)', // #7ED321
+        'light-gray': 'hsl(210 29% 97%)', // #F4F6F8
       },
       borderRadius: {
-        lg: "8px", // Adjusted to 8px
-        md: "6px",
-        sm: "4px",
-        xl: "12px", // Added for 12px rounded corners
+        lg: "0.5rem", // 8px
+        md: "0.375rem", // 6px
+        sm: "0.25rem", // 4px
+        xl: "0.75rem", // 12px
       },
       keyframes: {
         "accordion-down": {
@@ -101,7 +101,7 @@ export default {
       fontFamily: {
         montserrat: ['Montserrat', 'sans-serif'],
         'open-sans': ['Open Sans', 'sans-serif'],
-        roboto: ['Roboto', 'sans-serif'], // Added Roboto
+        roboto: ['Roboto', 'sans-serif'],
       },
     },
   },

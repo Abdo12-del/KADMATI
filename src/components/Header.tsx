@@ -8,6 +8,7 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
+import { ThemeToggle } from '@/components/ThemeToggle'; // Import ThemeToggle
 
 const Header = () => {
   return (
@@ -55,7 +56,8 @@ const Header = () => {
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
-        <div>
+        <div className="flex items-center space-x-2">
+          <ThemeToggle /> {/* Add ThemeToggle here */}
           <Link to="/login">
             <Button variant="ghost" className="text-white hover:bg-dark-blue/80">
               تسجيل الدخول

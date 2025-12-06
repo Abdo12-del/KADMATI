@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Send } from 'lucide-react';
+import { Send, Paperclip } from 'lucide-react';
 
 const MessageCenterPage = () => {
   // Placeholder for conversations and messages
@@ -83,6 +83,9 @@ const MessageCenterPage = () => {
             ))}
           </CardContent>
           <div className="border-t p-4 flex items-center space-x-2 bg-light-gray rounded-b-xl">
+            <Button variant="ghost" size="icon" className="text-gray-500 hover:text-dark-blue rounded-lg">
+              <Paperclip className="h-5 w-5" />
+            </Button>
             <Textarea placeholder="اكتب رسالتك..." className="flex-grow resize-none rounded-lg" rows={1} />
             <Button className="bg-platform-orange hover:bg-platform-orange/90 text-white p-2 rounded-lg">
               <Send className="h-5 w-5" />
