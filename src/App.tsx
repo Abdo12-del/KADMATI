@@ -6,22 +6,38 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index"; // Landing Page
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
-import DashboardOverviewPage from "./pages/DashboardOverviewPage"; // Renamed
-import ServiceDetailsPage from "./pages/ServiceDetailsPage";
-import MyRequestsPage from "./pages/MyRequestsPage";
+
+// Service Provider Dashboard Pages
+import DashboardOverviewPage from "./pages/DashboardOverviewPage";
+import MyServicesListPage from "./pages/MyServicesListPage";
 import AddServicePage from "./pages/AddServicePage";
 import EditServicePage from "./pages/EditServicePage";
-import ProfilePage from "./pages/ProfilePage";
-import SettingsPage from "./pages/SettingsPage";
-import NotFound from "./pages/NotFound";
-import MyServicesListPage from "./pages/MyServicesListPage";
 import OrdersPage from "./pages/OrdersPage";
 import MessageCenterPage from "./pages/MessageCenterPage";
 import CalendarPage from "./pages/CalendarPage";
 import CustomersPage from "./pages/CustomersPage";
 import RatingsReviewsPage from "./pages/RatingsReviewsPage";
 import ReportsPage from "./pages/ReportsPage";
+import SettingsPage from "./pages/SettingsPage";
 import SupportCenterPage from "./pages/SupportCenterPage";
+
+// Client Dashboard Pages
+import ClientDashboardOverviewPage from "./pages/ClientDashboardOverviewPage";
+import ClientMyOrdersPage from "./pages/ClientMyOrdersPage";
+import ClientServicesCatalogPage from "./pages/ClientServicesCatalogPage";
+import ClientServiceDetailsPage from "./pages/ClientServiceDetailsPage";
+import ClientMessagesPage from "./pages/ClientMessagesPage";
+import ClientFavoritesPage from "./pages/ClientFavoritesPage";
+import ClientPaymentsPage from "./pages/ClientPaymentsPage";
+import ClientReviewsRatingsPage from "./pages/ClientReviewsRatingsPage";
+import ClientSettingsPage from "./pages/ClientSettingsPage";
+import ClientSupportPage from "./pages/ClientSupportPage";
+
+// Other existing routes
+import ServiceDetailsPage from "./pages/ServiceDetailsPage"; // Generic service details
+import MyRequestsPage from "./pages/MyRequestsPage"; // General requests page
+import ProfilePage from "./pages/ProfilePage"; // General profile page
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -36,7 +52,7 @@ const App = () => (
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           
-          {/* Dashboard Routes */}
+          {/* Service Provider Dashboard Routes */}
           <Route path="/dashboard" element={<DashboardOverviewPage />} />
           <Route path="/dashboard/services" element={<MyServicesListPage />} />
           <Route path="/dashboard/services/add" element={<AddServicePage />} />
@@ -50,10 +66,22 @@ const App = () => (
           <Route path="/dashboard/settings" element={<SettingsPage />} />
           <Route path="/dashboard/support" element={<SupportCenterPage />} />
 
-          {/* Other existing routes */}
-          <Route path="/service/:id" element={<ServiceDetailsPage />} />
-          <Route path="/requests" element={<MyRequestsPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          {/* Client Dashboard Routes */}
+          <Route path="/client-dashboard" element={<ClientDashboardOverviewPage />} />
+          <Route path="/client-dashboard/orders" element={<ClientMyOrdersPage />} />
+          <Route path="/client-dashboard/services" element={<ClientServicesCatalogPage />} />
+          <Route path="/client-dashboard/services/:id" element={<ClientServiceDetailsPage />} />
+          <Route path="/client-dashboard/messages" element={<ClientMessagesPage />} />
+          <Route path="/client-dashboard/favorites" element={<ClientFavoritesPage />} />
+          <Route path="/client-dashboard/payments" element={<ClientPaymentsPage />} />
+          <Route path="/client-dashboard/reviews" element={<ClientReviewsRatingsPage />} />
+          <Route path="/client-dashboard/settings" element={<ClientSettingsPage />} />
+          <Route path="/client-dashboard/support" element={<ClientSupportPage />} />
+
+          {/* Other existing routes (consider if they are generic or need client/provider specific versions) */}
+          <Route path="/service/:id" element={<ServiceDetailsPage />} /> {/* Generic service details */}
+          <Route path="/requests" element={<MyRequestsPage />} /> {/* General requests page */}
+          <Route path="/profile" element={<ProfilePage />} /> {/* General profile page */}
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
