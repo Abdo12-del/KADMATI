@@ -10,8 +10,12 @@ import {
 } from '@/components/ui/navigation-menu';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Bell, UserCircle } from 'lucide-react'; // Using Lucide for icons
+import { NotificationsDropdown } from '@/components/notifications/NotificationsDropdown.tsx'; // تم التصحيح هنا
 
 const Header = () => {
+  // Placeholder for unread notifications count
+  const unreadNotificationsCount = 3; 
+
   return (
     <header className="bg-brand-card-bg text-brand-text-dark p-4 shadow-soft border-b border-border">
       <div className="container mx-auto flex justify-between items-center">
@@ -45,10 +49,10 @@ const Header = () => {
         </NavigationMenu>
         <div className="flex items-center space-x-4 rtl:space-x-reverse">
           <ThemeToggle />
-          <Button variant="ghost" size="icon" className="relative text-brand-text-dark hover:bg-brand-background rounded-full">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-0 right-0 h-3 w-3 rounded-full bg-brand-danger border-2 border-brand-card-bg" />
-          </Button>
+          
+          {/* Notifications Dropdown */}
+          <NotificationsDropdown unreadCount={unreadNotificationsCount} />
+
           <Link to="/profile">
             <Button variant="ghost" size="icon" className="text-brand-text-dark hover:bg-brand-background rounded-full">
               <UserCircle className="h-6 w-6" />

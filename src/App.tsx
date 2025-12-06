@@ -37,6 +37,7 @@ import ClientSupportPage from "./pages/ClientSupportPage";
 import ServiceDetailsPage from "./pages/ServiceDetailsPage"; // Generic service details
 import MyRequestsPage from "./pages/MyRequestsPage"; // General requests page
 import ProfilePage from "./pages/ProfilePage"; // General profile page
+import NotificationsPage from "./pages/NotificationsPage"; // صفحة الإشعارات الجديدة
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -82,6 +83,7 @@ const App = () => (
           <Route path="/service/:id" element={<ServiceDetailsPage />} /> {/* Generic service details */}
           <Route path="/requests" element={<MyRequestsPage />} /> {/* General requests page */}
           <Route path="/profile" element={<ProfilePage />} /> {/* General profile page */}
+          <Route path="/notifications" element={<NotificationsPage />} /> {/* مسار صفحة الإشعارات الجديدة */}
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
