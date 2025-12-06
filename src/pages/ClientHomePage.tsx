@@ -3,9 +3,7 @@
 import React from 'react';
 import ClientHomeHeader from '@/components/ClientHomeHeader';
 import Footer from '@/components/Footer';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { ClientHomeCategoryScroll } from '@/components/ClientHomeCategoryScroll';
 import ClientServiceCard from '@/components/ClientServiceCard';
@@ -25,23 +23,16 @@ const ClientHomePage = () => {
     <div className="min-h-screen flex flex-col bg-brand-background">
       <ClientHomeHeader />
       <main className="flex-grow container mx-auto px-8 py-10">
-        {/* Hero Section - Adapted from Index.tsx */}
-        <section className="text-center py-20 bg-gradient-to-br from-brand-primary to-brand-primary-light text-white rounded-2xl shadow-soft-lg mb-10">
-          <h1 className="text-5xl font-cairo mb-4">اكتشف الخدمات المحلية بسهولة</h1>
-          <p className="text-xl font-ibm-plex-arabic mb-8">ابحث عن الخدمات التي تحتاجها من مقدمي الخدمات الموثوقين.</p>
-          <div className="relative max-w-xl mx-auto mb-8">
+        {/* حقل البحث */}
+        <section className="mb-8">
+          <div className="relative max-w-3xl mx-auto">
             <Input
               type="text"
               placeholder="ابحث عن خدمات، مقدمي خدمات، أو طلبات..."
-              className="w-full pr-12 pl-5 py-3 text-lg rounded-2xl shadow-soft bg-white text-brand-text-dark border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
+              className="w-full pr-12 pl-5 py-3 text-lg rounded-2xl shadow-soft bg-brand-card-bg border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
             />
             <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-6 w-6 text-brand-text-muted" />
           </div>
-          <Link to="/client-dashboard/services">
-            <Button className="bg-white hover:bg-brand-background text-brand-primary text-lg px-8 py-4 rounded-2xl shadow-soft-lg font-cairo">
-              تصفح الخدمات
-            </Button>
-          </Link>
         </section>
 
         {/* شريط الفئات الطائر */}

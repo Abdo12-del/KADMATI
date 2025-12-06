@@ -5,12 +5,14 @@ import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Menu } from 'lucide-react';
 import ClientDashboardMenuContent from '@/components/ClientDashboardMenuContent';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom'; // لاستخدام التوجيه بعد تسجيل الخروج
 
 // استيراد مكونات الصفحات الداخلية للنافذة المنبثقة (مكونات وهمية حاليًا)
 import ClientDashboardOverviewPage from '@/pages/ClientDashboardOverviewPage';
@@ -22,11 +24,11 @@ import ClientPaymentsPage from '@/pages/ClientPaymentsPage';
 import ClientReviewsRatingsPage from '@/pages/ClientReviewsRatingsPage';
 import ClientSettingsPage from '@/pages/ClientSettingsPage';
 import ClientSupportPage from '@/pages/ClientSupportPage';
-import ProfilePage from '@/pages/ProfilePage';
+import ProfilePage from '@/pages/ProfilePage'; // استخدام صفحة الملف الشخصي العامة
 
 export const ClientDashboardMenuModal = () => {
   const [open, setOpen] = React.useState(false);
-  const [activeModalPage, setActiveModalPage] = React.useState('overview');
+  const [activeModalPage, setActiveModalPage] = React.useState('overview'); // الصفحة الافتراضية
   const navigate = useNavigate();
 
   const handleNavigate = (page: string) => {
@@ -34,12 +36,11 @@ export const ClientDashboardMenuModal = () => {
   };
 
   const handleCloseModalAndLogout = () => {
-    setOpen(false);
-    navigate('/login');
+    setOpen(false); // إغلاق النافذة المنبثقة
+    navigate('/login'); // الانتقال إلى صفحة تسجيل الدخول
   };
 
   const renderModalContent = () => {
-    // هذه الصفحات يجب أن تكون محتواها الأساسي فقط بدون أي تخطيطات خارجية
     switch (activeModalPage) {
       case 'overview':
         return <ClientDashboardOverviewPage />;

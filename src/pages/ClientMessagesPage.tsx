@@ -1,5 +1,5 @@
 import React from 'react';
-// تم إزالة استيراد ClientDashboardLayout
+import ClientDashboardLayout from '@/components/ClientDashboardLayout';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -28,7 +28,7 @@ const ClientMessagesPage = () => {
   };
 
   return (
-    <div> {/* تم إزالة ClientDashboardLayout */}
+    <ClientDashboardLayout>
       <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">الرسائل</h1>
 
       <div className="flex h-[70vh] bg-brand-card-bg rounded-2xl shadow-soft overflow-hidden">
@@ -105,7 +105,7 @@ const ClientMessagesPage = () => {
           </div>
         </div>
       </div>
-    </div>
+    </ClientDashboardLayout>
   );
 };
 

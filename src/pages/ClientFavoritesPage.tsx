@@ -1,5 +1,5 @@
 import React from 'react';
-// تم إزالة استيراد ClientDashboardLayout
+import ClientDashboardLayout from '@/components/ClientDashboardLayout';
 import ClientServiceCard from '@/components/ClientServiceCard';
 import ProviderCard from '@/components/ProviderCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -17,7 +17,7 @@ const ClientFavoritesPage = () => {
   ];
 
   return (
-    <div> {/* تم إزالة ClientDashboardLayout */}
+    <ClientDashboardLayout>
       <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">المفضلة</h1>
 
       <Tabs defaultValue="services" className="w-full">
@@ -50,7 +50,7 @@ const ClientFavoritesPage = () => {
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+    </ClientDashboardLayout>
   );
 };
 

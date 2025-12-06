@@ -1,5 +1,5 @@
 import React from 'react';
-// تم إزالة استيراد ClientDashboardLayout
+import ClientDashboardLayout from '@/components/ClientDashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,7 @@ const ClientSupportPage = () => {
   ];
 
   return (
-    <div> {/* تم إزالة ClientDashboardLayout */}
+    <ClientDashboardLayout>
       <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">الدعم والمساعدة</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -96,7 +96,7 @@ const ClientSupportPage = () => {
           </CardContent>
         </Card>
       </section>
-    </div>
+    </ClientDashboardLayout>
   );
 };
 

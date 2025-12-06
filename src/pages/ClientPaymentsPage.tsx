@@ -1,5 +1,5 @@
 import React from 'react';
-// تم إزالة استيراد ClientDashboardLayout
+import ClientDashboardLayout from '@/components/ClientDashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -27,7 +27,7 @@ const ClientPaymentsPage = () => {
   };
 
   return (
-    <div> {/* تم إزالة ClientDashboardLayout */}
+    <ClientDashboardLayout>
       <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">الدفع والمعاملات</h1>
 
       <Card className="bg-brand-card-bg rounded-2xl shadow-soft p-6">
@@ -68,7 +68,7 @@ const ClientPaymentsPage = () => {
           )}
         </CardContent>
       </Card>
-    </div>
+    </ClientDashboardLayout>
   );
 };
 

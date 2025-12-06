@@ -1,5 +1,5 @@
 import React from 'react';
-// تم إزالة استيراد ClientDashboardLayout
+import ClientDashboardLayout from '@/components/ClientDashboardLayout';
 import ClientOrderCard from '@/components/ClientOrderCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -20,7 +20,7 @@ const ClientMyOrdersPage = () => {
   ];
 
   return (
-    <div> {/* تم إزالة ClientDashboardLayout */}
+    <ClientDashboardLayout>
       <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">طلباتي</h1>
 
       <Tabs defaultValue="pending" className="w-full">
@@ -79,7 +79,7 @@ const ClientMyOrdersPage = () => {
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+    </ClientDashboardLayout>
   );
 };
 

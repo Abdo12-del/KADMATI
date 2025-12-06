@@ -1,5 +1,5 @@
 import React from 'react';
-// تم إزالة استيراد ClientDashboardLayout
+import ClientDashboardLayout from '@/components/ClientDashboardLayout';
 import ClientServiceCard from '@/components/ClientServiceCard';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,7 +16,7 @@ const ClientServicesCatalogPage = () => {
   ];
 
   return (
-    <div> {/* تم إزالة ClientDashboardLayout */}
+    <ClientDashboardLayout>
       <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">كتالوج الخدمات</h1>
 
       <div className="flex flex-col md:flex-row gap-4 mb-8 rtl:space-x-reverse">
@@ -59,7 +59,7 @@ const ClientServicesCatalogPage = () => {
           <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد خدمات متاحة حاليًا.</p>
         )}
       </div>
-    </div>
+    </ClientDashboardLayout>
   );
 };
 

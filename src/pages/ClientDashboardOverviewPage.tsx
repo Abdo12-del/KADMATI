@@ -1,5 +1,5 @@
 import React from 'react';
-// تم إزالة استيراد ClientDashboardLayout
+import ClientDashboardLayout from '@/components/ClientDashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,133 +49,135 @@ const getIconComponent = (iconName: string) => {
 
 const ClientDashboardOverviewPage = () => {
   return (
-    <div className="space-y-10"> {/* تم إزالة ClientDashboardLayout */}
-      {/* Main Title for Service Discovery */}
-      <h1 className="text-4xl font-cairo text-brand-text-dark mb-3 text-right">استكشف الخدمات</h1>
-      <p className="text-lg font-ibm-plex-arabic text-brand-text-muted text-right">ابحث عن الخدمات التي تحتاجها من مقدمي الخدمات الموثوقين.</p>
+    <ClientDashboardLayout>
+      <div className="space-y-10">
+        {/* Main Title for Service Discovery */}
+        <h1 className="text-4xl font-cairo text-brand-text-dark mb-3 text-right">استكشف الخدمات</h1>
+        <p className="text-lg font-ibm-plex-arabic text-brand-text-muted text-right">ابحث عن الخدمات التي تحتاجها من مقدمي الخدمات الموثوقين.</p>
 
-      {/* Large Search Bar */}
-      <section>
-        <div className="relative">
-          <Input
-            type="text"
-            placeholder="ابحث عن خدمات، مقدمي خدمات، أو طلبات..."
-            className="w-full pr-12 pl-5 py-3 text-lg rounded-2xl shadow-soft bg-brand-card-bg border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
-          />
-          <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-6 w-6 text-brand-text-muted" />
-        </div>
-      </section>
+        {/* Large Search Bar */}
+        <section>
+          <div className="relative">
+            <Input
+              type="text"
+              placeholder="ابحث عن خدمات، مقدمي خدمات، أو طلبات..."
+              className="w-full pr-12 pl-5 py-3 text-lg rounded-2xl shadow-soft bg-brand-card-bg border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
+            />
+            <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-6 w-6 text-brand-text-muted" />
+          </div>
+        </section>
 
-      {/* Service Categories Grid - Moved up for prominence */}
-      <section>
-        <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">استكشف الفئات</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
-          {serviceCategories.map(category => {
-            const IconComponent = getIconComponent(category.icon);
-            return (
-              <Link key={category.id} to={`/client-dashboard/services?category=${category.id}`}>
-                <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 flex flex-col items-center justify-center text-center space-y-3 group">
-                  <IconComponent className="h-10 w-10 text-brand-primary group-hover:scale-110 transition-transform" />
-                  <p className="font-cairo text-brand-text-dark text-lg">{category.name}</p>
-                </Card>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Quick Actions */}
-      <section>
-        <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">إجراءات سريعة</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Link to="/client-dashboard/services">
-            <Button className="w-full h-32 bg-brand-card-bg text-brand-text-dark rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 flex flex-col items-center justify-center space-y-3 group">
-              <Search className="h-8 w-8 text-brand-primary group-hover:scale-110 transition-transform" />
-              <span className="text-lg font-cairo">عرض كل الخدمات</span>
-            </Button>
-          </Link>
-          <Link to="/client-dashboard/requests/create">
-            <Button className="w-full h-32 bg-brand-card-bg text-brand-text-dark rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 flex flex-col items-center justify-center space-y-3 group">
-              <Plus className="h-8 w-8 text-brand-success group-hover:scale-110 transition-transform" />
-              <span className="text-lg font-cairo">إنشاء طلب جديد</span>
-            </Button>
-          </Link>
-          <Link to="/client-dashboard/messages">
-            <Button className="w-full h-32 bg-brand-card-bg text-brand-text-dark rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 flex flex-col items-center justify-center space-y-3 group relative">
-              <MessageSquare className="h-8 w-8 text-brand-warning group-hover:scale-110 transition-transform" />
-              <span className="text-lg font-cairo">الرسائل</span>
-              <span className="absolute top-4 left-4 h-5 w-5 rounded-full bg-brand-danger flex items-center justify-center text-xs text-white font-ibm-plex-arabic">1</span>
-            </Button>
-          </Link>
-          <Link to="/client-dashboard/favorites">
-            <Button className="w-full h-32 bg-brand-card-bg text-brand-text-dark rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 flex flex-col items-center justify-center space-y-3 group">
-              <Heart className="h-8 w-8 text-brand-danger group-hover:scale-110 transition-transform" />
-              <span className="text-lg font-cairo">المفضلة</span>
-            </Button>
-          </Link>
-        </div>
-      </section>
-
-      {/* Popular Services */}
-      <section>
-        <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">خدمات شائعة</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {popularServices.map(service => (
-            <Card key={service.id} className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 overflow-hidden">
-              <img src={service.imageUrl} alt={service.title} className="w-full h-40 object-cover" />
-              <CardContent className="p-4 text-right">
-                <h3 className="text-lg font-cairo text-brand-text-dark mb-2">{service.title}</h3>
-                <Link to={`/client-dashboard/services/${service.id}`}>
-                  <Button variant="link" className="p-0 h-auto text-brand-primary hover:text-brand-primary-dark font-ibm-plex-arabic">
-                    عرض التفاصيل
-                  </Button>
+        {/* Service Categories Grid - Moved up for prominence */}
+        <section>
+          <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">استكشف الفئات</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
+            {serviceCategories.map(category => {
+              const IconComponent = getIconComponent(category.icon);
+              return (
+                <Link key={category.id} to={`/client-dashboard/services?category=${category.id}`}>
+                  <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 flex flex-col items-center justify-center text-center space-y-3 group">
+                    <IconComponent className="h-10 w-10 text-brand-primary group-hover:scale-110 transition-transform" />
+                    <p className="font-cairo text-brand-text-dark text-lg">{category.name}</p>
+                  </Card>
                 </Link>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
+              );
+            })}
+          </div>
+        </section>
 
-      {/* Recently Viewed Services */}
-      <section>
-        <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">الخدمات التي تمت مشاهدتها مؤخرًا</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {recentlyViewedServices.map(service => (
-            <Card key={service.id} className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 overflow-hidden">
-              <img src={service.imageUrl} alt={service.title} className="w-full h-32 object-cover" />
-              <CardContent className="p-4 text-right">
-                <h3 className="text-lg font-cairo text-brand-text-dark mb-2">{service.title}</h3>
-                <Link to={`/client-dashboard/services/${service.id}`}>
-                  <Button variant="link" className="p-0 h-auto text-brand-primary hover:text-brand-primary-dark font-ibm-plex-arabic">
-                    عرض التفاصيل
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
+        {/* Quick Actions */}
+        <section>
+          <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">إجراءات سريعة</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Link to="/client-dashboard/services">
+              <Button className="w-full h-32 bg-brand-card-bg text-brand-text-dark rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 flex flex-col items-center justify-center space-y-3 group">
+                <Search className="h-8 w-8 text-brand-primary group-hover:scale-110 transition-transform" />
+                <span className="text-lg font-cairo">عرض كل الخدمات</span> {/* Changed text */}
+              </Button>
+            </Link>
+            <Link to="/client-dashboard/requests/create">
+              <Button className="w-full h-32 bg-brand-card-bg text-brand-text-dark rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 flex flex-col items-center justify-center space-y-3 group">
+                <Plus className="h-8 w-8 text-brand-success group-hover:scale-110 transition-transform" />
+                <span className="text-lg font-cairo">إنشاء طلب جديد</span>
+              </Button>
+            </Link>
+            <Link to="/client-dashboard/messages">
+              <Button className="w-full h-32 bg-brand-card-bg text-brand-text-dark rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 flex flex-col items-center justify-center space-y-3 group relative">
+                <MessageSquare className="h-8 w-8 text-brand-warning group-hover:scale-110 transition-transform" />
+                <span className="text-lg font-cairo">الرسائل</span>
+                <span className="absolute top-4 left-4 h-5 w-5 rounded-full bg-brand-danger flex items-center justify-center text-xs text-white font-ibm-plex-arabic">1</span>
+              </Button>
+            </Link>
+            <Link to="/client-dashboard/favorites">
+              <Button className="w-full h-32 bg-brand-card-bg text-brand-text-dark rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 flex flex-col items-center justify-center space-y-3 group">
+                <Heart className="h-8 w-8 text-brand-danger group-hover:scale-110 transition-transform" />
+                <span className="text-lg font-cairo">المفضلة</span>
+              </Button>
+            </Link>
+          </div>
+        </section>
 
-      {/* Recent Messages List */}
-      <section>
-        <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">آخر الرسائل</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {recentMessages.map(message => (
-            <Card key={message.id} className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 flex flex-row-reverse items-center space-x-4 rtl:space-x-reverse">
-              <Avatar className="h-12 w-12">
-                <AvatarImage src={message.avatarUrl} alt={message.sender} />
-                <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{message.sender.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-              </Avatar>
-              <div className="flex-grow text-right">
-                <p className="font-cairo text-brand-text-dark font-semibold">{message.sender}</p>
-                <p className="text-sm text-brand-text-muted font-ibm-plex-arabic line-clamp-1">{message.content}</p>
-                <p className="text-xs text-brand-text-muted font-ibm-plex-arabic mt-1">{message.time}</p>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </section>
-    </div>
+        {/* Popular Services */}
+        <section>
+          <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">خدمات شائعة</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {popularServices.map(service => (
+              <Card key={service.id} className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 overflow-hidden">
+                <img src={service.imageUrl} alt={service.title} className="w-full h-40 object-cover" />
+                <CardContent className="p-4 text-right">
+                  <h3 className="text-lg font-cairo text-brand-text-dark mb-2">{service.title}</h3>
+                  <Link to={`/client-dashboard/services/${service.id}`}>
+                    <Button variant="link" className="p-0 h-auto text-brand-primary hover:text-brand-primary-dark font-ibm-plex-arabic">
+                      عرض التفاصيل
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        {/* Recently Viewed Services */}
+        <section>
+          <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">الخدمات التي تمت مشاهدتها مؤخرًا</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {recentlyViewedServices.map(service => (
+              <Card key={service.id} className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 overflow-hidden">
+                <img src={service.imageUrl} alt={service.title} className="w-full h-32 object-cover" />
+                <CardContent className="p-4 text-right">
+                  <h3 className="text-lg font-cairo text-brand-text-dark mb-2">{service.title}</h3>
+                  <Link to={`/client-dashboard/services/${service.id}`}>
+                    <Button variant="link" className="p-0 h-auto text-brand-primary hover:text-brand-primary-dark font-ibm-plex-arabic">
+                      عرض التفاصيل
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        {/* Recent Messages List */}
+        <section>
+          <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">آخر الرسائل</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {recentMessages.map(message => (
+              <Card key={message.id} className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 flex flex-row-reverse items-center space-x-4 rtl:space-x-reverse">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={message.avatarUrl} alt={message.sender} />
+                  <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{message.sender.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                </Avatar>
+                <div className="flex-grow text-right">
+                  <p className="font-cairo text-brand-text-dark font-semibold">{message.sender}</p>
+                  <p className="text-sm text-brand-text-muted font-ibm-plex-arabic line-clamp-1">{message.content}</p>
+                  <p className="text-xs text-brand-text-muted font-ibm-plex-arabic mt-1">{message.time}</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </section>
+      </div>
+    </ClientDashboardLayout>
   );
 };
 
