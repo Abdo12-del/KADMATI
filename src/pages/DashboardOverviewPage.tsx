@@ -3,163 +3,224 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Briefcase, Package, Star, Users, TrendingUp, DollarSign } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { Briefcase, Package, Star, Users, MessageSquare, DollarSign, TrendingUp, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils'; // تم إضافة هذا الاستيراد
 
-const salesData = [
-  { name: 'يناير', sales: 400 },
-  { name: 'فبراير', sales: 300 },
-  { name: 'مارس', sales: 500 },
-  { name: 'أبريل', sales: 450 },
-  { name: 'مايو', sales: 600 },
+const performanceData = [
+  { name: 'يناير', sales: 4000, orders: 2400 },
+  { name: 'فبراير', sales: 3000, orders: 1398 },
+  { name: 'مارس', sales: 2000, orders: 9800 },
+  { name: 'أبريل', sales: 2780, orders: 3908 },
+  { name: 'مايو', sales: 1890, orders: 4800 },
+  { name: 'يونيو', sales: 2390, orders: 3800 },
 ];
 
-const ordersData = [
-  { name: 'يناير', orders: 20 },
-  { name: 'فبراير', orders: 15 },
-  { name: 'مارس', orders: 25 },
-  { name: 'أبريل', orders: 22 },
-  { name: 'مايو', orders: 30 },
+const ordersBreakdownData = [
+  { name: 'معلقة', value: 15, color: 'var(--brand-warning)' },
+  { name: 'مقبولة', value: 30, color: 'var(--brand-primary)' },
+  { name: 'مكتملة', value: 55, color: 'var(--brand-success)' },
+  { name: 'ملغاة', value: 10, color: 'var(--brand-danger)' },
+];
+
+const recentTasks = [
+  { id: 't1', title: 'الرد على طلب خدمة تصميم شعار', status: 'Pending', dueDate: '2023-11-10' },
+  { id: 't2', title: 'مراجعة خدمة تطوير موقع ويب', status: 'Completed', dueDate: '2023-11-05' },
+  { id: 't3', title: 'إرسال عرض سعر لعميل جديد', status: 'Pending', dueDate: '2023-11-12' },
+];
+
+const customerMessages = [
+  { id: 'cm1', customerName: 'أحمد محمد', message: 'متى يمكن البدء بالمشروع؟', avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=AM' },
+  { id: 'cm2', customerName: 'سارة علي', message: 'شكراً على الخدمة الممتازة!', avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=SA' },
+];
+
+const recentActivity = [
+  { id: 'a1', type: 'طلب جديد', description: 'طلب جديد لخدمة "تصميم شعار"', time: 'قبل 5 دقائق', icon: Package, iconColor: 'text-brand-primary' },
+  { id: 'a2', type: 'خدمة مقبولة', description: 'تم قبول خدمتك "تطوير موقع ويب"', time: 'قبل ساعة', icon: Briefcase, iconColor: 'text-brand-success' },
+  { id: 'a3', type: 'تقييم جديد', description: 'تقييم جديد لخدمة "كتابة محتوى" (5 نجوم)', time: 'قبل يوم', icon: Star, iconColor: 'text-yellow-500' },
 ];
 
 const DashboardOverviewPage = () => {
   return (
     <DashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue">نظرة عامة على لوحة التحكم</h1>
+      <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">نظرة عامة على لوحة التحكم</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card className="rounded-xl shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium font-montserrat text-dark-blue">الخدمات المقدمة</CardTitle>
-            <Briefcase className="h-4 w-4 text-gray-500" />
+      {/* Overview Analytics Cards */}
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-10">
+        <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 text-right">
+          <CardHeader className="flex flex-row-reverse items-center justify-between p-0 pb-3">
+            <CardTitle className="text-lg font-cairo text-brand-text-dark">إجمالي الطلبات</CardTitle>
+            <Package className="h-6 w-6 text-brand-primary" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-dark-blue">5</div>
-            <p className="text-xs text-gray-600 font-open-sans">لديك 5 خدمات نشطة</p>
+          <CardContent className="p-0">
+            <div className="text-3xl font-cairo text-brand-text-dark font-bold">125</div>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">+10% عن الشهر الماضي</p>
           </CardContent>
         </Card>
-        <Card className="rounded-xl shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium font-montserrat text-dark-blue">الطلبات الجديدة</CardTitle>
-            <div className="flex items-center">
-              <Package className="h-4 w-4 text-gray-500 mr-1" />
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-platform-orange opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-platform-orange"></span>
-              </span>
-            </div>
+        <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 text-right">
+          <CardHeader className="flex flex-row-reverse items-center justify-between p-0 pb-3">
+            <CardTitle className="text-lg font-cairo text-brand-text-dark">الطلبات النشطة</CardTitle>
+            <Clock className="h-6 w-6 text-brand-warning" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-dark-blue">2</div>
-            <p className="text-xs text-gray-600 font-open-sans">2 طلب جديد في انتظار المراجعة</p>
+          <CardContent className="p-0">
+            <div className="text-3xl font-cairo text-brand-text-dark font-bold">12</div>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">3 طلبات جديدة</p>
           </CardContent>
         </Card>
-        <Card className="rounded-xl shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium font-montserrat text-dark-blue">التقييمات</CardTitle>
-            <Star className="h-4 w-4 text-gray-500" />
+        <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 text-right">
+          <CardHeader className="flex flex-row-reverse items-center justify-between p-0 pb-3">
+            <CardTitle className="text-lg font-cairo text-brand-text-dark">الأرباح</CardTitle>
+            <DollarSign className="h-6 w-6 text-brand-success" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-dark-blue">4.8</div>
-            <p className="text-xs text-gray-600 font-open-sans">متوسط تقييماتك</p>
+          <CardContent className="p-0">
+            <div className="text-3xl font-cairo text-brand-text-dark font-bold">$15,230</div>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">+5% هذا الشهر</p>
           </CardContent>
         </Card>
-        <Card className="rounded-xl shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium font-montserrat text-dark-blue">إجمالي العملاء</CardTitle>
-            <Users className="h-4 w-4 text-gray-500" />
+        <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 text-right">
+          <CardHeader className="flex flex-row-reverse items-center justify-between p-0 pb-3">
+            <CardTitle className="text-lg font-cairo text-brand-text-dark">متوسط التقييم</CardTitle>
+            <Star className="h-6 w-6 text-yellow-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-dark-blue">120</div>
-            <p className="text-xs text-gray-600 font-open-sans">إجمالي العملاء الذين تعاملت معهم</p>
+          <CardContent className="p-0">
+            <div className="text-3xl font-cairo text-brand-text-dark font-bold">4.8</div>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">من 250 تقييم</p>
           </CardContent>
         </Card>
-      </div>
-
-      <section className="mb-8">
-        <h2 className="text-2xl font-bold mb-4 font-montserrat text-dark-blue">إجراءات سريعة</h2>
-        <div className="flex flex-wrap gap-4">
-          <Link to="/dashboard/services/add">
-            <Button className="bg-light-blue hover:bg-light-blue/90 text-white rounded-lg">
-              إضافة خدمة جديدة
-            </Button>
-          </Link>
-          <Link to="/dashboard/orders">
-            <Button variant="outline" className="border-light-blue text-light-blue hover:bg-light-blue/10 rounded-lg">
-              عرض الطلبات
-            </Button>
-          </Link>
-          <Link to="/dashboard/messages">
-            <Button variant="outline" className="border-light-blue text-light-blue hover:bg-light-blue/10 rounded-lg">
-              مركز الرسائل
-            </Button>
-          </Link>
-        </div>
+        <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 text-right">
+          <CardHeader className="flex flex-row-reverse items-center justify-between p-0 pb-3">
+            <CardTitle className="text-lg font-cairo text-brand-text-dark">الرسائل الجديدة</CardTitle>
+            <MessageSquare className="h-6 w-6 text-brand-info" />
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="text-3xl font-cairo text-brand-text-dark font-bold">5</div>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">في انتظار الرد</p>
+          </CardContent>
+        </Card>
       </section>
 
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <Card className="rounded-xl shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="font-montserrat text-dark-blue">ملخص المبيعات</CardTitle>
+      {/* Performance Line Chart */}
+      <section className="mb-10">
+        <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6">
+          <CardHeader className="p-0 pb-4 text-right">
+            <CardTitle className="text-2xl font-cairo text-brand-text-dark">أداء المبيعات والطلبات</CardTitle>
           </CardHeader>
-          <CardContent className="h-[200px]">
+          <CardContent className="h-[300px] p-0">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={salesData}>
-                <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
-                <Tooltip />
-                <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-gray-200" />
-                <Line type="monotone" dataKey="sales" stroke="#4A90E2" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+              <LineChart data={performanceData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                <XAxis dataKey="name" tick={{ fill: 'var(--brand-text-muted)', fontFamily: 'var(--font-ibm-plex-arabic)' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: 'var(--brand-text-muted)', fontFamily: 'var(--font-ibm-plex-arabic)' }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={{ backgroundColor: 'var(--brand-card-bg)', borderColor: 'var(--border)', borderRadius: '8px', boxShadow: 'var(--shadow-soft)' }} itemStyle={{ fontFamily: 'var(--font-ibm-plex-arabic)', color: 'var(--brand-text-dark)' }} labelStyle={{ fontFamily: 'var(--font-cairo)', color: 'var(--brand-primary)' }} />
+                <Legend wrapperStyle={{ fontFamily: 'var(--font-ibm-plex-arabic)', direction: 'rtl', right: 0 }} />
+                <Line type="monotone" dataKey="sales" stroke="var(--brand-primary)" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} name="المبيعات" />
+                <Line type="monotone" dataKey="orders" stroke="var(--brand-warning)" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} name="الطلبات" />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
-        <Card className="rounded-xl shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="font-montserrat text-dark-blue">عدد الطلبات</CardTitle>
+      </section>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+        {/* Orders Status Breakdown */}
+        <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6">
+          <CardHeader className="p-0 pb-4 text-right">
+            <CardTitle className="text-2xl font-cairo text-brand-text-dark">توزيع حالة الطلبات</CardTitle>
           </CardHeader>
-          <CardContent className="h-[200px]">
+          <CardContent className="h-[250px] p-0">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={ordersData}>
-                <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip />
-                <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-gray-200" />
-                <Bar dataKey="orders" fill="#F5A623" radius={[4, 4, 0, 0]} />
+              <BarChart data={ordersBreakdownData} layout="vertical">
+                <XAxis type="number" hide />
+                <YAxis type="category" dataKey="name" tick={{ fill: 'var(--brand-text-dark)', fontFamily: 'var(--font-ibm-plex-arabic)' }} axisLine={false} tickLine={false} width={80} mirror />
+                <Tooltip contentStyle={{ backgroundColor: 'var(--brand-card-bg)', borderColor: 'var(--border)', borderRadius: '8px', boxShadow: 'var(--shadow-soft)' }} itemStyle={{ fontFamily: 'var(--font-ibm-plex-arabic)', color: 'var(--brand-text-dark)' }} labelStyle={{ fontFamily: 'var(--font-cairo)', color: 'var(--brand-primary)' }} />
+                <Bar dataKey="value" fill="var(--color)" radius={[0, 10, 10, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
-      </section>
 
-      <section>
-        <h2 className="text-2xl font-bold mb-4 font-montserrat text-dark-blue">آخر الأنشطة</h2>
-        <div className="bg-white p-6 rounded-xl shadow-md">
-          <ul className="space-y-4">
-            <li className="flex items-center border-b pb-2 last:border-b-0">
-              <Package className="h-5 w-5 text-light-blue mr-3 flex-shrink-0" />
-              <div>
-                <p className="font-semibold text-gray-800 font-open-sans">طلب جديد لخدمة "تصميم شعار"</p>
-                <p className="text-sm text-gray-600 font-open-sans">من العميل: أحمد محمد - قبل 5 دقائق</p>
-              </div>
-            </li>
-            <li className="flex items-center border-b pb-2 last:border-b-0">
-              <Briefcase className="h-5 w-5 text-platform-green mr-3 flex-shrink-0" />
-              <div>
-                <p className="font-semibold text-gray-800 font-open-sans">تم قبول خدمتك "تطوير موقع ويب"</p>
-                <p className="text-sm text-gray-600 font-open-sans">من العميل: سارة علي - قبل ساعة</p>
-              </div>
-            </li>
-            <li className="flex items-center border-b pb-2 last:border-b-0">
-              <Star className="h-5 w-5 text-yellow-500 mr-3 flex-shrink-0" />
-              <div>
-                <p className="font-semibold text-gray-800 font-open-sans">تقييم جديد لخدمة "كتابة محتوى"</p>
-                <p className="text-sm text-gray-600 font-open-sans">بواسطة: خالد فهد - 5 نجوم</p>
-              </div>
-            </li>
-          </ul>
-        </div>
-      </section>
+        {/* Tasks List */}
+        <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6">
+          <CardHeader className="p-0 pb-4 text-right">
+            <CardTitle className="text-2xl font-cairo text-brand-text-dark">المهام</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ul className="space-y-4">
+              {recentTasks.map(task => (
+                <li key={task.id} className="flex flex-row-reverse items-center justify-between border-b border-border pb-3 last:border-b-0 last:pb-0">
+                  <div className="flex flex-row-reverse items-center">
+                    {task.status === 'Completed' ? (
+                      <CheckCircle className="h-5 w-5 text-brand-success ml-3" />
+                    ) : (
+                      <Clock className="h-5 w-5 text-brand-warning ml-3" />
+                    )}
+                    <div>
+                      <p className="font-cairo text-brand-text-dark font-semibold">{task.title}</p>
+                      <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">تاريخ الاستحقاق: {task.dueDate}</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="sm" className="text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic">
+                    عرض
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Customer Messages Center & Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Customer Messages Center */}
+        <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6">
+          <CardHeader className="p-0 pb-4 text-right">
+            <CardTitle className="text-2xl font-cairo text-brand-text-dark">رسائل العملاء</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ul className="space-y-4">
+              {customerMessages.map(msg => (
+                <li key={msg.id} className="flex flex-row-reverse items-center border-b border-border pb-3 last:border-b-0 last:pb-0">
+                  <Avatar className="h-10 w-10 ml-3">
+                    <AvatarImage src={msg.avatarUrl} alt={msg.customerName} />
+                    <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{msg.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-grow text-right">
+                    <p className="font-cairo text-brand-text-dark font-semibold">{msg.customerName}</p>
+                    <p className="text-sm text-brand-text-muted font-ibm-plex-arabic line-clamp-1">{msg.message}</p>
+                  </div>
+                  <Button variant="ghost" size="sm" className="text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic">
+                    رد
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+
+        {/* Recent Activity Module */}
+        <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6">
+          <CardHeader className="p-0 pb-4 text-right">
+            <CardTitle className="text-2xl font-cairo text-brand-text-dark">آخر الأنشطة</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ul className="space-y-4">
+              {recentActivity.map(activity => {
+                const IconComponent = activity.icon;
+                return (
+                  <li key={activity.id} className="flex flex-row-reverse items-center border-b border-border pb-3 last:border-b-0 last:pb-0">
+                    <IconComponent className={cn("h-5 w-5 ml-3", activity.iconColor)} />
+                    <div className="flex-grow text-right">
+                      <p className="font-cairo text-brand-text-dark font-semibold">{activity.description}</p>
+                      <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">{activity.time}</p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
     </DashboardLayout>
   );
 };

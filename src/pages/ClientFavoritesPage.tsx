@@ -18,34 +18,34 @@ const ClientFavoritesPage = () => {
 
   return (
     <ClientDashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue text-right">المفضلة</h1>
+      <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">المفضلة</h1>
 
       <Tabs defaultValue="services" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-soft-white rounded-xl shadow-soft-neumorphism p-2">
-          <TabsTrigger value="services" className="data-[state=active]:bg-light-blue data-[state=active]:text-white rounded-lg font-inter text-dark-blue data-[state=active]:shadow-soft-neumorphism-inset">الخدمات المفضلة</TabsTrigger>
-          <TabsTrigger value="providers" className="data-[state=active]:bg-light-blue data-[state=active]:text-white rounded-lg font-inter text-dark-blue data-[state=active]:shadow-soft-neumorphism-inset">مقدمو الخدمات المفضلون</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 bg-brand-background rounded-xl shadow-soft p-2">
+          <TabsTrigger value="services" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">الخدمات المفضلة</TabsTrigger>
+          <TabsTrigger value="providers" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">مقدمو الخدمات المفضلون</TabsTrigger>
         </TabsList>
         <TabsContent value="services" className="mt-6">
-          <h2 className="text-2xl font-bold mb-4 font-montserrat text-dark-blue text-right">خدماتي المفضلة</h2>
+          <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">خدماتي المفضلة</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {favoriteServices.length > 0 ? (
               favoriteServices.map(service => (
                 <ClientServiceCard key={service.id} service={service} />
               ))
             ) : (
-              <p className="text-gray-600 col-span-full font-inter text-right">لا توجد خدمات في قائمة المفضلة.</p>
+              <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد خدمات في قائمة المفضلة.</p>
             )}
           </div>
         </TabsContent>
         <TabsContent value="providers" className="mt-6">
-          <h2 className="text-2xl font-bold mb-4 font-montserrat text-dark-blue text-right">مقدمو الخدمات المفضلون</h2>
+          <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">مقدمو الخدمات المفضلون</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {favoriteProviders.length > 0 ? (
               favoriteProviders.map(provider => (
                 <ProviderCard key={provider.id} provider={provider} />
               ))
             ) : (
-              <p className="text-gray-600 col-span-full font-inter text-right">لا يوجد مقدمو خدمات في قائمة المفضلة.</p>
+              <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا يوجد مقدمو خدمات في قائمة المفضلة.</p>
             )}
           </div>
         </TabsContent>

@@ -10,9 +10,9 @@ const CalendarPage = () => {
 
   // Placeholder for events/bookings
   const events = [
-    { id: 'e1', date: new Date(2023, 9, 28), title: 'اجتماع مشروع تصميم', time: '10:00 AM' },
-    { id: 'e2', date: new Date(2023, 9, 28), title: 'تسليم خدمة تطوير', time: '02:00 PM' },
-    { id: 'e3', date: new Date(2023, 9, 30), title: 'مكالمة عميل جديد', time: '11:00 AM' },
+    { id: 'e1', date: new Date(2023, 10, 28), title: 'اجتماع مشروع تصميم', time: '10:00 ص' },
+    { id: 'e2', date: new Date(2023, 10, 28), title: 'تسليم خدمة تطوير', time: '02:00 م' },
+    { id: 'e3', date: new Date(2023, 10, 30), title: 'مكالمة عميل جديد', time: '11:00 ص' },
   ];
 
   const getEventsForDate = (selectedDate: Date | undefined) => {
@@ -26,53 +26,54 @@ const CalendarPage = () => {
 
   return (
     <DashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue">التقويم وتوفر الخدمة</h1>
+      <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">التقويم وتوفر الخدمة</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="rounded-xl">
-          <CardHeader>
-            <CardTitle className="font-montserrat text-dark-blue">التقويم</CardTitle>
+        <Card className="bg-brand-card-bg rounded-2xl shadow-soft p-6">
+          <CardHeader className="p-0 pb-4 text-right">
+            <CardTitle className="font-cairo text-brand-text-dark text-2xl">التقويم</CardTitle>
           </CardHeader>
-          <CardContent className="flex justify-center">
+          <CardContent className="flex justify-center p-0">
             <Calendar
               mode="single"
               selected={date}
               onSelect={setDate}
-              className="rounded-xl border shadow"
+              className="rounded-2xl border border-border shadow-soft bg-brand-background"
+              dir="rtl" // Ensure calendar is RTL
             />
           </CardContent>
         </Card>
 
-        <Card className="rounded-xl">
-          <CardHeader>
-            <CardTitle className="font-montserrat text-dark-blue">أحداث اليوم ({date?.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long' })})</CardTitle>
+        <Card className="bg-brand-card-bg rounded-2xl shadow-soft p-6 text-right">
+          <CardHeader className="p-0 pb-4">
+            <CardTitle className="font-cairo text-brand-text-dark text-2xl">أحداث اليوم ({date?.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long' })})</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {selectedDateEvents.length > 0 ? (
               <ul className="space-y-4">
                 {selectedDateEvents.map(event => (
-                  <li key={event.id} className="border-b pb-2 last:border-b-0">
-                    <p className="font-semibold text-gray-800 font-open-sans">{event.title}</p>
-                    <p className="text-sm text-gray-700 font-open-sans">{event.time}</p>
+                  <li key={event.id} className="border-b border-border pb-3 last:border-b-0 last:pb-0">
+                    <p className="font-cairo text-brand-text-dark font-semibold">{event.title}</p>
+                    <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">{event.time}</p>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-gray-700 font-open-sans">لا توجد أحداث لهذا اليوم.</p>
+              <p className="text-brand-text-muted font-ibm-plex-arabic">لا توجد أحداث لهذا اليوم.</p>
             )}
-            <div className="mt-6 space-y-4">
-              <h3 className="text-lg font-semibold font-montserrat text-dark-blue">تعديل التوفر</h3>
+            <div className="mt-8 space-y-4">
+              <h3 className="text-xl font-cairo text-brand-text-dark">تعديل التوفر</h3>
               <Select>
-                <SelectTrigger className="rounded-lg">
+                <SelectTrigger className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right">
                   <SelectValue placeholder="اختر حالة التوفر" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-xl shadow-soft bg-brand-card-bg font-ibm-plex-arabic text-right">
                   <SelectItem value="available">متاح</SelectItem>
                   <SelectItem value="busy">مشغول</SelectItem>
                   <SelectItem value="vacation">إجازة</SelectItem>
                 </SelectContent>
               </Select>
-              <Button className="w-full bg-platform-orange hover:bg-platform-orange/90 text-white rounded-lg">
+              <Button className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
                 حفظ التوفر
               </Button>
             </div>

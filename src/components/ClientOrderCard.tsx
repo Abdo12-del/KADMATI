@@ -18,32 +18,32 @@ const ClientOrderCard = ({ order }: ClientOrderCardProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Pending':
-        return 'text-platform-orange';
+        return 'text-brand-warning';
       case 'Accepted':
-        return 'text-light-blue';
+        return 'text-brand-primary';
       case 'Completed':
-        return 'text-platform-green';
+        return 'text-brand-success';
       case 'Cancelled':
-        return 'text-platform-red';
+        return 'text-brand-danger';
       default:
-        return 'text-gray-700';
+        return 'text-brand-text-muted';
     }
   };
 
   return (
-    <Card className="shadow-soft-neumorphism bg-soft-white rounded-2xl p-4">
-      <CardHeader className="p-0 mb-2">
-        <CardTitle className="text-lg font-montserrat text-dark-blue">{order.serviceTitle}</CardTitle>
+    <Card className="bg-brand-card-bg rounded-xl shadow-soft hover:shadow-soft-lg transition-all duration-300">
+      <CardHeader className="p-4 pb-2 text-right">
+        <CardTitle className="text-lg font-cairo text-brand-text-dark">{order.serviceTitle}</CardTitle>
+        <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">مقدم الخدمة: <span className="font-semibold">{order.providerName}</span></p>
       </CardHeader>
-      <CardContent className="p-0 space-y-2">
-        <p className="text-sm text-gray-700 font-inter">مقدم الخدمة: <span className="font-medium">{order.providerName}</span></p>
-        <p className="text-sm text-gray-700 font-inter">التاريخ: {order.date}</p>
-        <div className="flex justify-between items-center pt-4">
-          <span className={`font-semibold font-inter ${getStatusColor(order.status)}`}>الحالة: {order.status}</span>
-          <span className="font-bold text-dark-blue text-xl">${order.price}</span>
+      <CardContent className="p-4 pt-0 space-y-3 text-right">
+        <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">التاريخ: {order.date}</p>
+        <div className="flex justify-between items-center pt-2">
+          <span className={`font-semibold font-ibm-plex-arabic ${getStatusColor(order.status)}`}>الحالة: {order.status}</span>
+          <span className="font-bold text-brand-primary text-xl font-cairo">${order.price}</span>
         </div>
         <Link to={`/client-dashboard/orders/${order.id}`}>
-          <Button variant="outline" className="w-full mt-4 border-light-blue text-light-blue hover:bg-light-blue/10 rounded-lg shadow-md">
+          <Button variant="outline" className="w-full mt-4 border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-lg shadow-soft font-ibm-plex-arabic">
             عرض التفاصيل
           </Button>
         </Link>

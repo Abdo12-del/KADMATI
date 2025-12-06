@@ -3,6 +3,7 @@ import { useLocation, Link } from "react-router-dom";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const NotFound = () => {
   const location = useLocation();
@@ -15,18 +16,22 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-brand-background">
       <Header />
-      <main className="flex-grow flex items-center justify-center bg-light-gray">
-        <div className="text-center p-8 bg-soft-white rounded-2xl shadow-soft-neumorphism">
-          <h1 className="text-6xl font-bold mb-4 text-light-blue font-montserrat">404</h1>
-          <p className="text-2xl text-dark-blue mb-6 font-inter">عذراً! الصفحة غير موجودة</p>
-          <Link to="/">
-            <Button className="bg-platform-orange hover:bg-platform-orange/90 text-white text-lg px-6 py-3 rounded-lg shadow-md">
-              العودة إلى الرئيسية
-            </Button>
-          </Link>
-        </div>
+      <main className="flex-grow flex items-center justify-center">
+        <Card className="text-center p-8 bg-brand-card-bg rounded-2xl shadow-soft">
+          <CardHeader className="p-0 pb-4">
+            <CardTitle className="text-6xl font-cairo text-brand-primary mb-4">404</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <p className="text-2xl text-brand-text-dark mb-6 font-ibm-plex-arabic">عذراً! الصفحة غير موجودة</p>
+            <Link to="/">
+              <Button className="bg-brand-primary hover:bg-brand-primary-dark text-white text-lg px-6 py-3 rounded-xl shadow-soft font-ibm-plex-arabic">
+                العودة إلى الرئيسية
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
       </main>
       <Footer />
     </div>

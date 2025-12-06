@@ -16,11 +16,11 @@ const ClientPaymentsPage = () => {
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'Completed':
-        return 'default';
+        return 'default'; // Assuming default is green/success
       case 'Pending':
-        return 'secondary';
+        return 'secondary'; // Assuming secondary is orange/warning
       case 'Cancelled':
-        return 'destructive';
+        return 'destructive'; // Assuming destructive is red/danger
       default:
         return 'outline';
     }
@@ -28,43 +28,43 @@ const ClientPaymentsPage = () => {
 
   return (
     <ClientDashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue text-right">الدفع والمعاملات</h1>
+      <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">الدفع والمعاملات</h1>
 
-      <Card className="rounded-2xl shadow-soft-neumorphism bg-soft-white">
-        <CardHeader className="text-right">
-          <CardTitle className="font-montserrat text-dark-blue">سجل المعاملات</CardTitle>
+      <Card className="bg-brand-card-bg rounded-2xl shadow-soft p-6">
+        <CardHeader className="p-0 pb-4 text-right">
+          <CardTitle className="font-cairo text-brand-text-dark text-2xl">سجل المعاملات</CardTitle>
         </CardHeader>
-        <CardContent className="p-6">
+        <CardContent className="p-0">
           {transactions.length > 0 ? (
             <Table className="text-right">
-              <TableCaption className="font-inter text-right">قائمة بجميع معاملاتك السابقة.</TableCaption>
+              <TableCaption className="font-ibm-plex-arabic text-right">قائمة بجميع معاملاتك السابقة.</TableCaption>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-dark-blue font-semibold font-inter text-right">الخدمة</TableHead>
-                  <TableHead className="text-dark-blue font-semibold font-inter text-right">المبلغ</TableHead>
-                  <TableHead className="text-dark-blue font-semibold font-inter text-right">التاريخ</TableHead>
-                  <TableHead className="text-dark-blue font-semibold font-inter text-right">الحالة</TableHead>
-                  <TableHead className="text-dark-blue font-semibold font-inter text-right">طريقة الدفع</TableHead>
+                  <TableHead className="text-brand-text-dark font-semibold font-cairo text-right">الخدمة</TableHead>
+                  <TableHead className="text-brand-text-dark font-semibold font-cairo text-right">المبلغ</TableHead>
+                  <TableHead className="text-brand-text-dark font-semibold font-cairo text-right">التاريخ</TableHead>
+                  <TableHead className="text-brand-text-dark font-semibold font-cairo text-right">الحالة</TableHead>
+                  <TableHead className="text-brand-text-dark font-semibold font-cairo text-right">طريقة الدفع</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {transactions.map(transaction => (
                   <TableRow key={transaction.id}>
-                    <TableCell className="font-medium text-gray-800 font-inter text-right">{transaction.service}</TableCell>
-                    <TableCell className="text-gray-800 font-inter text-right">${transaction.amount}</TableCell>
-                    <TableCell className="text-gray-800 font-inter text-right">{transaction.date}</TableCell>
+                    <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">{transaction.service}</TableCell>
+                    <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">${transaction.amount}</TableCell>
+                    <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">{transaction.date}</TableCell>
                     <TableCell className="text-right">
-                      <Badge variant={getStatusBadgeVariant(transaction.status)} className="rounded-md font-inter">
+                      <Badge variant={getStatusBadgeVariant(transaction.status)} className="rounded-md font-ibm-plex-arabic">
                         {transaction.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-gray-800 font-inter text-right">{transaction.method}</TableCell>
+                    <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">{transaction.method}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           ) : (
-            <p className="text-gray-600 font-inter text-right">لا توجد معاملات سابقة.</p>
+            <p className="text-brand-text-muted font-ibm-plex-arabic text-right">لا توجد معاملات سابقة.</p>
           )}
         </CardContent>
       </Card>

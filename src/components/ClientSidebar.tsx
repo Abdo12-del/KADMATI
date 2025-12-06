@@ -1,7 +1,7 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, ShoppingCart, LayoutList, MessageSquare, Heart, CreditCard, Star, Settings, HelpCircle, User } from 'lucide-react';
+import { Home, ShoppingCart, LayoutList, MessageSquare, Heart, CreditCard, Star, Settings, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ClientSidebarProps {
@@ -9,6 +9,8 @@ interface ClientSidebarProps {
 }
 
 const ClientSidebar = ({ className }: ClientSidebarProps) => {
+  const location = useLocation();
+
   const navItems = [
     { icon: Home, label: 'نظرة عامة', href: '/client-dashboard' },
     { icon: ShoppingCart, label: 'طلباتي', href: '/client-dashboard/orders' },
@@ -22,22 +24,28 @@ const ClientSidebar = ({ className }: ClientSidebarProps) => {
   ];
 
   return (
-    <div className={cn("flex flex-col h-full bg-dark-blue text-white border-r border-gray-700 p-4", className)}>
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold font-montserrat text-white">لوحة تحكم العميل</h2>
+    <div className={cn("flex flex-col h-full bg-brand-card-bg text-brand-text-dark border-l border-border p-6 shadow-soft-lg", className)}>
+      <div className="mb-10 text-center">
+        <h2 className="text-3xl font-bold font-cairo text-brand-primary">لوحة العميل</h2>
       </div>
-      <nav className="flex-grow space-y-2">
-        {navItems.map((item) => (
-          <Link key={item.label} to={item.href}>
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-white hover:bg-light-blue hover:text-white rounded-lg"
-            >
-              <item.icon className="mr-3 h-5 w-5" />
-              {item.label}
-            </Button>
-          </Link>
-        ))}
+      <nav className="flex-grow space-y-3">
+        {navItems.map((item) => {
+          const isActive = location.pathname === item.href;
+          return (
+            <Link key={item.label} to={item.href}>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-end text-brand-text-dark hover:bg-brand-primary-light/20 hover:text-brand-primary rounded-xl py-3 transition-all duration-200",
+                  isActive && "bg-brand-primary-light/30 text-brand-primary font-semibold shadow-soft"
+                )}
+              >
+                <span className="ml-3 font-ibm-plex-arabic text-lg">{item.label}</span>
+                <item.icon className="h-5 w-5" />
+              </Button>
+            </Link>
+          );
+        })}
       </nav>
     </div>
   );

@@ -14,7 +14,7 @@ const RatingsReviewsPage = () => {
       rating: 5,
       comment: 'خدمة ممتازة وشعار رائع، أنصح به بشدة!',
       date: '2023-10-20',
-      avatarUrl: 'https://github.com/shadcn.png',
+      avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=AM',
     },
     {
       id: 'rev2',
@@ -38,7 +38,7 @@ const RatingsReviewsPage = () => {
 
   const renderStars = (rating: number) => {
     return (
-      <div className="flex">
+      <div className="flex rtl:flex-row-reverse">
         {[...Array(5)].map((_, i) => (
           <Star
             key={i}
@@ -51,31 +51,31 @@ const RatingsReviewsPage = () => {
 
   return (
     <DashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue">التقييمات والمراجعات</h1>
+      <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">التقييمات والمراجعات</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {reviews.length > 0 ? (
           reviews.map(review => (
-            <Card key={review.id} className="shadow-sm rounded-xl">
-              <CardHeader className="flex flex-row items-center space-x-4 pb-2">
+            <Card key={review.id} className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6">
+              <CardHeader className="flex flex-row-reverse items-center space-x-4 rtl:space-x-reverse p-0 pb-3">
                 <Avatar className="h-12 w-12">
                   <AvatarImage src={review.avatarUrl} alt={review.customerName} />
-                  <AvatarFallback>{review.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{review.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                 </Avatar>
-                <div>
-                  <CardTitle className="text-lg font-montserrat text-dark-blue">{review.customerName}</CardTitle>
-                  <p className="text-sm text-gray-700 font-open-sans">خدمة: {review.serviceTitle}</p>
+                <div className="text-right">
+                  <CardTitle className="text-lg font-cairo text-brand-text-dark">{review.customerName}</CardTitle>
+                  <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">خدمة: {review.serviceTitle}</p>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-2">
-                {renderStars(review.rating)}
-                <p className="text-gray-700 font-open-sans">{review.comment}</p>
-                <p className="text-xs text-gray-600 mt-2 font-open-sans">بتاريخ: {review.date}</p>
+              <CardContent className="p-0 space-y-3 text-right">
+                <div className="flex justify-end">{renderStars(review.rating)}</div>
+                <p className="text-brand-text-dark font-ibm-plex-arabic">{review.comment}</p>
+                <p className="text-xs text-brand-text-muted mt-2 font-ibm-plex-arabic">بتاريخ: {review.date}</p>
               </CardContent>
             </Card>
           ))
         ) : (
-          <p className="text-gray-600 col-span-full font-open-sans">لا توجد تقييمات أو مراجعات حتى الآن.</p>
+          <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد تقييمات أو مراجعات حتى الآن.</p>
         )}
       </div>
     </DashboardLayout>

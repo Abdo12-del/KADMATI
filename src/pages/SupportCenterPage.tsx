@@ -29,21 +29,21 @@ const SupportCenterPage = () => {
 
   return (
     <DashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue">مركز المساعدة والدعم</h1>
+      <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">مركز المساعدة والدعم</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="rounded-xl">
-          <CardHeader>
-            <CardTitle className="font-montserrat text-dark-blue">الأسئلة الشائعة</CardTitle>
+        <Card className="bg-brand-card-bg rounded-2xl shadow-soft p-6">
+          <CardHeader className="p-0 pb-4 text-right">
+            <CardTitle className="font-cairo text-brand-text-dark text-2xl">الأسئلة الشائعة</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             <Accordion type="single" collapsible className="w-full">
               {faqs.map((faq, index) => (
-                <AccordionItem key={index} value={`item-${index}`}>
-                  <AccordionTrigger className="font-semibold text-gray-800 font-open-sans text-right hover:no-underline hover:text-light-blue">
+                <AccordionItem key={index} value={`item-${index}`} className="border-b border-border last:border-b-0">
+                  <AccordionTrigger className="font-cairo text-brand-text-dark text-lg text-right hover:no-underline hover:text-brand-primary py-4">
                     {faq.question}
                   </AccordionTrigger>
-                  <AccordionContent className="text-gray-700 font-open-sans text-right">
+                  <AccordionContent className="text-brand-text-muted font-ibm-plex-arabic text-right pb-4">
                     {faq.answer}
                   </AccordionContent>
                 </AccordionItem>
@@ -52,28 +52,28 @@ const SupportCenterPage = () => {
           </CardContent>
         </Card>
 
-        <Card className="rounded-xl">
-          <CardHeader>
-            <CardTitle className="font-montserrat text-dark-blue">تواصل مع الدعم الفني</CardTitle>
+        <Card className="bg-brand-card-bg rounded-2xl shadow-soft p-6 text-right">
+          <CardHeader className="p-0 pb-4">
+            <CardTitle className="font-cairo text-brand-text-dark text-2xl">تواصل مع الدعم الفني</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="p-0 space-y-4">
             <div>
-              <Label htmlFor="support-name" className="text-gray-700 font-open-sans">اسمك الكامل</Label>
-              <Input id="support-name" type="text" placeholder="ادخل اسمك" required className="rounded-lg" />
+              <Label htmlFor="support-name" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">اسمك الكامل</Label>
+              <Input id="support-name" type="text" placeholder="ادخل اسمك" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
             </div>
             <div>
-              <Label htmlFor="support-email" className="text-gray-700 font-open-sans">بريدك الإلكتروني</Label>
-              <Input id="support-email" type="email" placeholder="ادخل بريدك الإلكتروني" required className="rounded-lg" />
+              <Label htmlFor="support-email" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">بريدك الإلكتروني</Label>
+              <Input id="support-email" type="email" placeholder="ادخل بريدك الإلكتروني" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
             </div>
             <div>
-              <Label htmlFor="support-subject" className="text-gray-700 font-open-sans">الموضوع</Label>
-              <Input id="support-subject" type="text" placeholder="موضوع رسالتك" required className="rounded-lg" />
+              <Label htmlFor="support-subject" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">الموضوع</Label>
+              <Input id="support-subject" type="text" placeholder="موضوع رسالتك" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
             </div>
             <div>
-              <Label htmlFor="support-message" className="text-gray-700 font-open-sans">رسالتك</Label>
-              <Textarea id="support-message" placeholder="اكتب رسالتك هنا بالتفصيل..." rows={5} required className="rounded-lg" />
+              <Label htmlFor="support-message" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">رسالتك</Label>
+              <Textarea id="support-message" placeholder="اكتب رسالتك هنا بالتفصيل..." rows={5} required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
             </div>
-            <Button className="w-full bg-platform-orange hover:bg-platform-orange/90 text-white rounded-lg">
+            <Button className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
               إرسال الرسالة
             </Button>
           </CardContent>

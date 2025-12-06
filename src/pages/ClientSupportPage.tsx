@@ -30,21 +30,21 @@ const ClientSupportPage = () => {
 
   return (
     <ClientDashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue text-right">الدعم والمساعدة</h1>
+      <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">الدعم والمساعدة</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="rounded-2xl shadow-soft-neumorphism bg-soft-white">
-          <CardHeader className="text-right">
-            <CardTitle className="font-montserrat text-dark-blue">الأسئلة الشائعة</CardTitle>
+        <Card className="bg-brand-card-bg rounded-2xl shadow-soft p-6">
+          <CardHeader className="p-0 pb-4 text-right">
+            <CardTitle className="font-cairo text-brand-text-dark text-2xl">الأسئلة الشائعة</CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-0">
             <Accordion type="single" collapsible className="w-full">
               {faqs.map((faq, index) => (
-                <AccordionItem key={index} value={`item-${index}`} className="border-b border-gray-200">
-                  <AccordionTrigger className="font-semibold text-gray-800 font-inter text-right hover:no-underline hover:text-light-blue">
+                <AccordionItem key={index} value={`item-${index}`} className="border-b border-border last:border-b-0">
+                  <AccordionTrigger className="font-cairo text-brand-text-dark text-lg text-right hover:no-underline hover:text-brand-primary py-4">
                     {faq.question}
                   </AccordionTrigger>
-                  <AccordionContent className="text-gray-700 font-inter text-right">
+                  <AccordionContent className="text-brand-text-muted font-ibm-plex-arabic text-right pb-4">
                     {faq.answer}
                   </AccordionContent>
                 </AccordionItem>
@@ -53,46 +53,48 @@ const ClientSupportPage = () => {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl shadow-soft-neumorphism bg-soft-white">
-          <CardHeader className="text-right">
-            <CardTitle className="font-montserrat text-dark-blue">تواصل مع الدعم الفني</CardTitle>
+        <Card className="bg-brand-card-bg rounded-2xl shadow-soft p-6 text-right">
+          <CardHeader className="p-0 pb-4">
+            <CardTitle className="font-cairo text-brand-text-dark text-2xl">تواصل مع الدعم الفني</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 p-6">
+          <CardContent className="p-0 space-y-4">
             <div>
-              <Label htmlFor="support-name" className="text-gray-700 font-inter">اسمك الكامل</Label>
-              <Input id="support-name" type="text" placeholder="ادخل اسمك" required className="rounded-lg shadow-soft-neumorphism bg-soft-white text-right" />
+              <Label htmlFor="support-name" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">اسمك الكامل</Label>
+              <Input id="support-name" type="text" placeholder="ادخل اسمك" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
             </div>
             <div>
-              <Label htmlFor="support-email" className="text-gray-700 font-inter">بريدك الإلكتروني</Label>
-              <Input id="support-email" type="email" placeholder="ادخل بريدك الإلكتروني" required className="rounded-lg shadow-soft-neumorphism bg-soft-white text-right" />
+              <Label htmlFor="support-email" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">بريدك الإلكتروني</Label>
+              <Input id="support-email" type="email" placeholder="ادخل بريدك الإلكتروني" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
             </div>
             <div>
-              <Label htmlFor="support-subject" className="text-gray-700 font-inter">الموضوع</Label>
-              <Input id="support-subject" type="text" placeholder="موضوع رسالتك" required className="rounded-lg shadow-soft-neumorphism bg-soft-white text-right" />
+              <Label htmlFor="support-subject" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">الموضوع</Label>
+              <Input id="support-subject" type="text" placeholder="موضوع رسالتك" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
             </div>
             <div>
-              <Label htmlFor="support-message" className="text-gray-700 font-inter">رسالتك</Label>
-              <Textarea id="support-message" placeholder="اكتب رسالتك هنا بالتفصيل..." rows={5} required className="rounded-lg shadow-soft-neumorphism bg-soft-white text-right" />
+              <Label htmlFor="support-message" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">رسالتك</Label>
+              <Textarea id="support-message" placeholder="اكتب رسالتك هنا بالتفصيل..." rows={5} required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
             </div>
-            <Button className="w-full bg-platform-orange hover:bg-platform-orange/90 text-white rounded-lg shadow-md">
+            <Button className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
               إرسال الرسالة
             </Button>
           </CardContent>
         </Card>
       </div>
 
-      <section className="mt-8">
-        <h2 className="text-2xl font-semibold mb-4 font-montserrat text-dark-blue text-right">مركز التعلم</h2>
-        <div className="bg-soft-white p-6 rounded-2xl shadow-soft-neumorphism">
-          <p className="text-gray-700 mb-4 font-inter text-right">
-            استكشف مواردنا التعليمية لمساعدتك في استخدام المنصة بفعالية.
-          </p>
-          <Link to="/client-dashboard/learning-center"> {/* Placeholder link */}
-            <Button variant="outline" className="border-light-blue text-light-blue hover:bg-light-blue/10 rounded-lg shadow-md">
-              اذهب إلى مركز التعلم
-            </Button>
-          </Link>
-        </div>
+      <section className="mt-10">
+        <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">مركز التعلم</h2>
+        <Card className="bg-brand-card-bg p-6 rounded-2xl shadow-soft">
+          <CardContent className="p-0 text-right">
+            <p className="text-brand-text-dark mb-4 font-ibm-plex-arabic">
+              استكشف مواردنا التعليمية لمساعدتك في استخدام المنصة بفعالية.
+            </p>
+            <Link to="/client-dashboard/learning-center"> {/* Placeholder link */}
+              <Button variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
+                اذهب إلى مركز التعلم
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
       </section>
     </ClientDashboardLayout>
   );

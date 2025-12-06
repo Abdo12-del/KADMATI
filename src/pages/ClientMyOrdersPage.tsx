@@ -15,58 +15,67 @@ const ClientMyOrdersPage = () => {
   const completedOrders = [
     { id: 'ord4', serviceTitle: 'تركيب كاميرات مراقبة', providerName: 'شركة الأمان', status: 'Completed' as const, date: '2023-10-20', price: 800 },
   ];
+  const cancelledOrders = [
+    { id: 'ord5', serviceTitle: 'تصميم هوية بصرية', providerName: 'محمد سعيد', status: 'Cancelled' as const, date: '2023-10-10', price: 300 },
+  ];
 
   return (
     <ClientDashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue text-right">طلباتي</h1>
+      <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">طلباتي</h1>
 
       <Tabs defaultValue="pending" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 bg-soft-white rounded-xl shadow-soft-neumorphism p-2">
-          <TabsTrigger value="pending" className="data-[state=active]:bg-light-blue data-[state=active]:text-white rounded-lg font-inter text-dark-blue data-[state=active]:shadow-soft-neumorphism-inset">معلقة</TabsTrigger>
-          <TabsTrigger value="active" className="data-[state=active]:bg-light-blue data-[state=active]:text-white rounded-lg font-inter text-dark-blue data-[state=active]:shadow-soft-neumorphism-inset">نشطة</TabsTrigger>
-          <TabsTrigger value="completed" className="data-[state=active]:bg-light-blue data-[state=active]:text-white rounded-lg font-inter text-dark-blue data-[state=active]:shadow-soft-neumorphism-inset">مكتملة</TabsTrigger>
-          <TabsTrigger value="cancelled" className="data-[state=active]:bg-light-blue data-[state=active]:text-white rounded-lg font-inter text-dark-blue data-[state=active]:shadow-soft-neumorphism-inset">ملغاة</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 bg-brand-background rounded-xl shadow-soft p-2">
+          <TabsTrigger value="pending" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">معلقة</TabsTrigger>
+          <TabsTrigger value="active" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">نشطة</TabsTrigger>
+          <TabsTrigger value="completed" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">مكتملة</TabsTrigger>
+          <TabsTrigger value="cancelled" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">ملغاة</TabsTrigger>
         </TabsList>
         <TabsContent value="pending" className="mt-6">
-          <h2 className="text-2xl font-bold mb-4 font-montserrat text-dark-blue text-right">الطلبات المعلقة</h2>
+          <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">الطلبات المعلقة</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {pendingOrders.length > 0 ? (
               pendingOrders.map(order => (
                 <ClientOrderCard key={order.id} order={order} />
               ))
             ) : (
-              <p className="text-gray-600 col-span-full font-inter text-right">لا توجد طلبات معلقة.</p>
+              <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد طلبات معلقة.</p>
             )}
           </div>
         </TabsContent>
         <TabsContent value="active" className="mt-6">
-          <h2 className="text-2xl font-bold mb-4 font-montserrat text-dark-blue text-right">الطلبات النشطة</h2>
+          <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">الطلبات النشطة</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {activeOrders.length > 0 ? (
               activeOrders.map(order => (
                 <ClientOrderCard key={order.id} order={order} />
               ))
             ) : (
-              <p className="text-gray-600 col-span-full font-inter text-right">لا توجد طلبات نشطة.</p>
+              <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد طلبات نشطة.</p>
             )}
           </div>
         </TabsContent>
         <TabsContent value="completed" className="mt-6">
-          <h2 className="text-2xl font-bold mb-4 font-montserrat text-dark-blue text-right">الطلبات المكتملة</h2>
+          <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">الطلبات المكتملة</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {completedOrders.length > 0 ? (
               completedOrders.map(order => (
                 <ClientOrderCard key={order.id} order={order} />
               ))
             ) : (
-              <p className="text-gray-600 col-span-full font-inter text-right">لا توجد طلبات مكتملة.</p>
+              <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد طلبات مكتملة.</p>
             )}
           </div>
         </TabsContent>
         <TabsContent value="cancelled" className="mt-6">
-          <h2 className="text-2xl font-bold mb-4 font-montserrat text-dark-blue text-right">الطلبات الملغاة</h2>
+          <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">الطلبات الملغاة</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <p className="text-gray-600 col-span-full font-inter text-right">لا توجد طلبات ملغاة.</p>
+            {cancelledOrders.length > 0 ? (
+              cancelledOrders.map(order => (
+                <ClientOrderCard key={order.id} order={order} />
+              ))
+            ) : (
+              <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد طلبات ملغاة.</p>
+            )}
           </div>
         </TabsContent>
       </Tabs>

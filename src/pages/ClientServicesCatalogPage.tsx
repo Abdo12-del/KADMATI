@@ -1,7 +1,7 @@
 import React from 'react';
 import ClientDashboardLayout from '@/components/ClientDashboardLayout';
 import ClientServiceCard from '@/components/ClientServiceCard';
-import { Input } from '@/components/ui/input'; // تم التصحيح هنا
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Search } from 'lucide-react';
@@ -17,18 +17,18 @@ const ClientServicesCatalogPage = () => {
 
   return (
     <ClientDashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue text-right">كتالوج الخدمات</h1>
+      <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">كتالوج الخدمات</h1>
 
-      <div className="flex flex-col md:flex-row gap-4 mb-8">
+      <div className="flex flex-col md:flex-row gap-4 mb-8 rtl:space-x-reverse">
         <div className="relative flex-grow">
-          <Input placeholder="ابحث عن خدمة..." className="w-full pl-10 rounded-lg shadow-soft-neumorphism bg-soft-white" />
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+          <Input placeholder="ابحث عن خدمة..." className="w-full pr-10 rounded-xl shadow-soft bg-brand-card-bg border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-brand-text-muted" />
         </div>
         <Select>
-          <SelectTrigger className="w-full md:w-[200px] rounded-lg shadow-soft-neumorphism bg-soft-white text-right">
+          <SelectTrigger className="w-full md:w-[200px] rounded-xl shadow-soft bg-brand-card-bg border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right">
             <SelectValue placeholder="الفئة" />
           </SelectTrigger>
-          <SelectContent className="rounded-lg shadow-soft-neumorphism bg-soft-white">
+          <SelectContent className="rounded-xl shadow-soft bg-brand-card-bg font-ibm-plex-arabic text-right">
             <SelectItem value="cleaning">نظافة</SelectItem>
             <SelectItem value="maintenance">صيانة</SelectItem>
             <SelectItem value="education">تعليم</SelectItem>
@@ -36,16 +36,16 @@ const ClientServicesCatalogPage = () => {
           </SelectContent>
         </Select>
         <Select>
-          <SelectTrigger className="w-full md:w-[200px] rounded-lg shadow-soft-neumorphism bg-soft-white text-right">
+          <SelectTrigger className="w-full md:w-[200px] rounded-xl shadow-soft bg-brand-card-bg border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right">
             <SelectValue placeholder="الموقع" />
           </SelectTrigger>
-          <SelectContent className="rounded-lg shadow-soft-neumorphism bg-soft-white">
+          <SelectContent className="rounded-xl shadow-soft bg-brand-card-bg font-ibm-plex-arabic text-right">
             <SelectItem value="riyadh">الرياض</SelectItem>
             <SelectItem value="jeddah">جدة</SelectItem>
             <SelectItem value="dammam">الدمام</SelectItem>
           </SelectContent>
         </Select>
-        <Button className="bg-platform-orange hover:bg-platform-orange/90 text-white rounded-lg shadow-md">
+        <Button className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-lg shadow-soft font-ibm-plex-arabic px-5 py-2">
           تطبيق الفلاتر
         </Button>
       </div>
@@ -56,7 +56,7 @@ const ClientServicesCatalogPage = () => {
             <ClientServiceCard key={service.id} service={service} />
           ))
         ) : (
-          <p className="text-gray-600 col-span-full font-inter text-right">لا توجد خدمات متاحة حاليًا.</p>
+          <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد خدمات متاحة حاليًا.</p>
         )}
       </div>
     </ClientDashboardLayout>
