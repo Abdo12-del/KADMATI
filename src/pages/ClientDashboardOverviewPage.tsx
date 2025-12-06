@@ -3,7 +3,7 @@ import ClientDashboardLayout from '@/components/ClientDashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Heart, MessageSquare, Star, Plus, Search, LayoutList } from 'lucide-react';
+import { Plus, Search, MessageSquare, Heart, LayoutList, Sparkles, Wrench, BookOpen, Palette, Truck, Scissors } from 'lucide-react'; // تم تحديث الاستيراد هنا
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 // Placeholder data
@@ -30,12 +30,12 @@ const serviceCategories = [
 // Helper to get Lucide icon component
 const getIconComponent = (iconName: string) => {
   const icons: { [key: string]: React.ElementType } = {
-    Sparkles: require('lucide-react').Sparkles,
-    Wrench: require('lucide-react').Wrench,
-    BookOpen: require('lucide-react').BookOpen,
-    Palette: require('lucide-react').Palette,
-    Truck: require('lucide-react').Truck,
-    Scissors: require('lucide-react').Scissors,
+    Sparkles: Sparkles, // تم التعديل هنا
+    Wrench: Wrench,     // تم التعديل هنا
+    BookOpen: BookOpen, // تم التعديل هنا
+    Palette: Palette,   // تم التعديل هنا
+    Truck: Truck,       // تم التعديل هنا
+    Scissors: Scissors, // تم التعديل هنا
   };
   return icons[iconName] || LayoutList; // Default to LayoutList if not found
 };
