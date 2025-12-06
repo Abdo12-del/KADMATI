@@ -1,17 +1,24 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const ServiceCard = () => {
   return (
-    <div className="border rounded-lg p-4 shadow-sm bg-white">
-      <h3 className="text-lg font-semibold font-montserrat">Service Title</h3>
-      <p className="text-gray-600 text-sm mt-1">Service description snippet...</p>
-      <div className="flex justify-between items-center mt-4">
-        <span className="text-sky-blue-light font-bold">Price: $XX</span>
-        <button className="bg-orange-button text-white px-3 py-1 rounded-md hover:bg-orange-button/90">
-          View Details
-        </button>
-      </div>
-    </div>
+    <Card className="shadow-sm bg-white rounded-xl">
+      <CardHeader>
+        <CardTitle className="text-lg font-semibold font-montserrat text-dark-blue">Service Title</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-gray-700 text-sm mt-1 font-open-sans">Service description snippet...</p>
+        <div className="flex justify-between items-center mt-4">
+          <span className="text-light-blue font-bold text-lg">$XX</span>
+          <Button className="bg-platform-orange text-white px-4 py-2 rounded-lg hover:bg-platform-orange/90">
+            View Details
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

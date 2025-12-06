@@ -27,25 +27,25 @@ const MessageCenterPage = () => {
 
   return (
     <DashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-gray-800">مركز الرسائل</h1>
+      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue">مركز الرسائل</h1>
 
-      <div className="flex h-[70vh] bg-white rounded-lg shadow-lg overflow-hidden">
+      <div className="flex h-[70vh] bg-white rounded-xl shadow-lg overflow-hidden">
         {/* Sidebar for conversations */}
         <div className="w-1/3 border-r p-4 flex flex-col">
-          <Input placeholder="بحث عن محادثات..." className="mb-4" />
+          <Input placeholder="بحث عن محادثات..." className="mb-4 rounded-lg" />
           <div className="flex-grow overflow-y-auto space-y-2">
             {conversations.map(conv => (
               <div
                 key={conv.id}
-                className="flex items-center p-3 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                className="flex items-center p-3 rounded-lg hover:bg-light-gray cursor-pointer transition-colors"
               >
                 <Avatar className="h-10 w-10 mr-3">
                   <AvatarImage src={conv.avatarUrl} alt={conv.customerName} />
                   <AvatarFallback>{conv.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-semibold font-montserrat">{conv.customerName}</p>
-                  <p className="text-sm text-gray-600 truncate">{conv.lastMessage}</p>
+                  <p className="font-semibold font-montserrat text-dark-blue">{conv.customerName}</p>
+                  <p className="text-sm text-gray-700 truncate font-open-sans">{conv.lastMessage}</p>
                 </div>
               </div>
             ))}
@@ -54,12 +54,12 @@ const MessageCenterPage = () => {
 
         {/* Chat area */}
         <div className="w-2/3 flex flex-col">
-          <CardHeader className="border-b p-4 flex flex-row items-center">
+          <CardHeader className="border-b p-4 flex flex-row items-center bg-light-gray rounded-t-xl">
             <Avatar className="h-10 w-10 mr-3">
               <AvatarImage src={currentConversation.avatarUrl} alt={currentConversation.customerName} />
               <AvatarFallback>{currentConversation.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
             </Avatar>
-            <CardTitle className="font-montserrat">{currentConversation.customerName}</CardTitle>
+            <CardTitle className="font-montserrat text-dark-blue">{currentConversation.customerName}</CardTitle>
           </CardHeader>
           <CardContent className="flex-grow overflow-y-auto p-4 space-y-4">
             {currentConversation.messages.map(msg => (
@@ -68,23 +68,23 @@ const MessageCenterPage = () => {
                 className={`flex ${msg.sender === 'provider' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[70%] p-3 rounded-lg ${
+                  className={`max-w-[70%] p-3 rounded-xl ${
                     msg.sender === 'provider'
-                      ? 'bg-sky-blue-light text-white'
-                      : 'bg-gray-100 text-gray-800'
+                      ? 'bg-light-blue text-white'
+                      : 'bg-light-gray text-dark-blue'
                   }`}
                 >
                   <p className="font-open-sans">{msg.text}</p>
-                  <span className={`text-xs mt-1 block ${msg.sender === 'provider' ? 'text-white/80' : 'text-gray-500'}`}>
+                  <span className={`text-xs mt-1 block ${msg.sender === 'provider' ? 'text-white/80' : 'text-gray-600'}`}>
                     {msg.time}
                   </span>
                 </div>
               </div>
             ))}
           </CardContent>
-          <div className="border-t p-4 flex items-center space-x-2">
-            <Textarea placeholder="اكتب رسالتك..." className="flex-grow resize-none" rows={1} />
-            <Button className="bg-orange-button hover:bg-orange-button/90 text-white p-2">
+          <div className="border-t p-4 flex items-center space-x-2 bg-light-gray rounded-b-xl">
+            <Textarea placeholder="اكتب رسالتك..." className="flex-grow resize-none rounded-lg" rows={1} />
+            <Button className="bg-platform-orange hover:bg-platform-orange/90 text-white p-2 rounded-lg">
               <Send className="h-5 w-5" />
             </Button>
           </div>

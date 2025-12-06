@@ -18,55 +18,55 @@ const ClientMyOrdersPage = () => {
 
   return (
     <ClientDashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-gray-800">طلباتي</h1>
+      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue">طلباتي</h1>
 
       <Tabs defaultValue="pending" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="pending">معلقة</TabsTrigger>
-          <TabsTrigger value="active">نشطة</TabsTrigger>
-          <TabsTrigger value="completed">مكتملة</TabsTrigger>
-          <TabsTrigger value="cancelled">ملغاة</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 bg-light-gray rounded-lg">
+          <TabsTrigger value="pending" className="data-[state=active]:bg-light-blue data-[state=active]:text-white rounded-lg">معلقة</TabsTrigger>
+          <TabsTrigger value="active" className="data-[state=active]:bg-light-blue data-[state=active]:text-white rounded-lg">نشطة</TabsTrigger>
+          <TabsTrigger value="completed" className="data-[state=active]:bg-light-blue data-[state=active]:text-white rounded-lg">مكتملة</TabsTrigger>
+          <TabsTrigger value="cancelled" className="data-[state=active]:bg-light-blue data-[state=active]:text-white rounded-lg">ملغاة</TabsTrigger>
         </TabsList>
         <TabsContent value="pending" className="mt-6">
-          <h2 className="text-2xl font-bold mb-4 font-montserrat text-gray-800">الطلبات المعلقة</h2>
+          <h2 className="text-2xl font-bold mb-4 font-montserrat text-dark-blue">الطلبات المعلقة</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {pendingOrders.length > 0 ? (
               pendingOrders.map(order => (
                 <ClientOrderCard key={order.id} order={order} />
               ))
             ) : (
-              <p className="text-gray-600 col-span-full">لا توجد طلبات معلقة.</p>
+              <p className="text-gray-600 col-span-full font-open-sans">لا توجد طلبات معلقة.</p>
             )}
           </div>
         </TabsContent>
         <TabsContent value="active" className="mt-6">
-          <h2 className="text-2xl font-bold mb-4 font-montserrat text-gray-800">الطلبات النشطة</h2>
+          <h2 className="text-2xl font-bold mb-4 font-montserrat text-dark-blue">الطلبات النشطة</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {activeOrders.length > 0 ? (
               activeOrders.map(order => (
                 <ClientOrderCard key={order.id} order={order} />
               ))
             ) : (
-              <p className="text-gray-600 col-span-full">لا توجد طلبات نشطة.</p>
+              <p className="text-gray-600 col-span-full font-open-sans">لا توجد طلبات نشطة.</p>
             )}
           </div>
         </TabsContent>
         <TabsContent value="completed" className="mt-6">
-          <h2 className="text-2xl font-bold mb-4 font-montserrat text-gray-800">الطلبات المكتملة</h2>
+          <h2 className="text-2xl font-bold mb-4 font-montserrat text-dark-blue">الطلبات المكتملة</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {completedOrders.length > 0 ? (
               completedOrders.map(order => (
                 <ClientOrderCard key={order.id} order={order} />
               ))
             ) : (
-              <p className="text-gray-600 col-span-full">لا توجد طلبات مكتملة.</p>
+              <p className="text-gray-600 col-span-full font-open-sans">لا توجد طلبات مكتملة.</p>
             )}
           </div>
         </TabsContent>
         <TabsContent value="cancelled" className="mt-6">
-          <h2 className="text-2xl font-bold mb-4 font-montserrat text-gray-800">الطلبات الملغاة</h2>
+          <h2 className="text-2xl font-bold mb-4 font-montserrat text-dark-blue">الطلبات الملغاة</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <p className="text-gray-600 col-span-full">لا توجد طلبات ملغاة.</p>
+            <p className="text-gray-600 col-span-full font-open-sans">لا توجد طلبات ملغاة.</p>
           </div>
         </TabsContent>
       </Tabs>

@@ -29,18 +29,18 @@ const SupportCenterPage = () => {
 
   return (
     <DashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-gray-800">مركز المساعدة والدعم</h1>
+      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue">مركز المساعدة والدعم</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card>
+        <Card className="rounded-xl">
           <CardHeader>
-            <CardTitle className="font-montserrat">الأسئلة الشائعة</CardTitle>
+            <CardTitle className="font-montserrat text-dark-blue">الأسئلة الشائعة</CardTitle>
           </CardHeader>
           <CardContent>
             <Accordion type="single" collapsible className="w-full">
               {faqs.map((faq, index) => (
                 <AccordionItem key={index} value={`item-${index}`}>
-                  <AccordionTrigger className="font-semibold text-gray-800 font-open-sans text-right">
+                  <AccordionTrigger className="font-semibold text-gray-800 font-open-sans text-right hover:no-underline hover:text-light-blue">
                     {faq.question}
                   </AccordionTrigger>
                   <AccordionContent className="text-gray-700 font-open-sans text-right">
@@ -52,28 +52,28 @@ const SupportCenterPage = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-xl">
           <CardHeader>
-            <CardTitle className="font-montserrat">تواصل مع الدعم الفني</CardTitle>
+            <CardTitle className="font-montserrat text-dark-blue">تواصل مع الدعم الفني</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="support-name">اسمك الكامل</Label>
-              <Input id="support-name" type="text" placeholder="ادخل اسمك" required />
+              <Label htmlFor="support-name" className="text-gray-700 font-open-sans">اسمك الكامل</Label>
+              <Input id="support-name" type="text" placeholder="ادخل اسمك" required className="rounded-lg" />
             </div>
             <div>
-              <Label htmlFor="support-email">بريدك الإلكتروني</Label>
-              <Input id="support-email" type="email" placeholder="ادخل بريدك الإلكتروني" required />
+              <Label htmlFor="support-email" className="text-gray-700 font-open-sans">بريدك الإلكتروني</Label>
+              <Input id="support-email" type="email" placeholder="ادخل بريدك الإلكتروني" required className="rounded-lg" />
             </div>
             <div>
-              <Label htmlFor="support-subject">الموضوع</Label>
-              <Input id="support-subject" type="text" placeholder="موضوع رسالتك" required />
+              <Label htmlFor="support-subject" className="text-gray-700 font-open-sans">الموضوع</Label>
+              <Input id="support-subject" type="text" placeholder="موضوع رسالتك" required className="rounded-lg" />
             </div>
             <div>
-              <Label htmlFor="support-message">رسالتك</Label>
-              <Textarea id="support-message" placeholder="اكتب رسالتك هنا بالتفصيل..." rows={5} required />
+              <Label htmlFor="support-message" className="text-gray-700 font-open-sans">رسالتك</Label>
+              <Textarea id="support-message" placeholder="اكتب رسالتك هنا بالتفصيل..." rows={5} required className="rounded-lg" />
             </div>
-            <Button className="w-full bg-orange-button hover:bg-orange-button/90 text-white">
+            <Button className="w-full bg-platform-orange hover:bg-platform-orange/90 text-white rounded-lg">
               إرسال الرسالة
             </Button>
           </CardContent>

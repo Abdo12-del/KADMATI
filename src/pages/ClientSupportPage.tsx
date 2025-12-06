@@ -30,18 +30,18 @@ const ClientSupportPage = () => {
 
   return (
     <ClientDashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-gray-800">الدعم والمساعدة</h1>
+      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue">الدعم والمساعدة</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card>
+        <Card className="rounded-xl">
           <CardHeader>
-            <CardTitle className="font-montserrat">الأسئلة الشائعة</CardTitle>
+            <CardTitle className="font-montserrat text-dark-blue">الأسئلة الشائعة</CardTitle>
           </CardHeader>
           <CardContent>
             <Accordion type="single" collapsible className="w-full">
               {faqs.map((faq, index) => (
                 <AccordionItem key={index} value={`item-${index}`}>
-                  <AccordionTrigger className="font-semibold text-gray-800 font-open-sans text-right">
+                  <AccordionTrigger className="font-semibold text-gray-800 font-open-sans text-right hover:no-underline hover:text-light-blue">
                     {faq.question}
                   </AccordionTrigger>
                   <AccordionContent className="text-gray-700 font-open-sans text-right">
@@ -53,28 +53,28 @@ const ClientSupportPage = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-xl">
           <CardHeader>
-            <CardTitle className="font-montserrat">تواصل مع الدعم الفني</CardTitle>
+            <CardTitle className="font-montserrat text-dark-blue">تواصل مع الدعم الفني</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="support-name">اسمك الكامل</Label>
-              <Input id="support-name" type="text" placeholder="ادخل اسمك" required />
+              <Label htmlFor="support-name" className="text-gray-700 font-open-sans">اسمك الكامل</Label>
+              <Input id="support-name" type="text" placeholder="ادخل اسمك" required className="rounded-lg" />
             </div>
             <div>
-              <Label htmlFor="support-email">بريدك الإلكتروني</Label>
-              <Input id="support-email" type="email" placeholder="ادخل بريدك الإلكتروني" required />
+              <Label htmlFor="support-email" className="text-gray-700 font-open-sans">بريدك الإلكتروني</Label>
+              <Input id="support-email" type="email" placeholder="ادخل بريدك الإلكتروني" required className="rounded-lg" />
             </div>
             <div>
-              <Label htmlFor="support-subject">الموضوع</Label>
-              <Input id="support-subject" type="text" placeholder="موضوع رسالتك" required />
+              <Label htmlFor="support-subject" className="text-gray-700 font-open-sans">الموضوع</Label>
+              <Input id="support-subject" type="text" placeholder="موضوع رسالتك" required className="rounded-lg" />
             </div>
             <div>
-              <Label htmlFor="support-message">رسالتك</Label>
-              <Textarea id="support-message" placeholder="اكتب رسالتك هنا بالتفصيل..." rows={5} required />
+              <Label htmlFor="support-message" className="text-gray-700 font-open-sans">رسالتك</Label>
+              <Textarea id="support-message" placeholder="اكتب رسالتك هنا بالتفصيل..." rows={5} required className="rounded-lg" />
             </div>
-            <Button className="w-full bg-orange-button hover:bg-orange-button/90 text-white">
+            <Button className="w-full bg-platform-orange hover:bg-platform-orange/90 text-white rounded-lg">
               إرسال الرسالة
             </Button>
           </CardContent>
@@ -82,13 +82,13 @@ const ClientSupportPage = () => {
       </div>
 
       <section className="mt-8">
-        <h2 className="text-2xl font-bold mb-4 font-montserrat text-gray-800">مركز التعلم</h2>
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <p className="text-gray-700 mb-4">
+        <h2 className="text-2xl font-bold mb-4 font-montserrat text-dark-blue">مركز التعلم</h2>
+        <div className="bg-white p-6 rounded-xl shadow-md">
+          <p className="text-gray-700 mb-4 font-open-sans">
             استكشف مواردنا التعليمية لمساعدتك في استخدام المنصة بفعالية.
           </p>
           <Link to="/client-dashboard/learning-center"> {/* Placeholder link */}
-            <Button variant="outline" className="border-sky-blue-light text-sky-blue-light hover:bg-sky-blue-light/10">
+            <Button variant="outline" className="border-light-blue text-light-blue hover:bg-light-blue/10 rounded-lg">
               اذهب إلى مركز التعلم
             </Button>
           </Link>

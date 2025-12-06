@@ -17,12 +17,12 @@ const NotFound = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-grow flex items-center justify-center bg-gray-50">
-        <div className="text-center p-8 bg-white rounded-lg shadow-lg">
-          <h1 className="text-6xl font-bold mb-4 text-sky-blue-light font-montserrat">404</h1>
-          <p className="text-2xl text-gray-800 mb-6 font-open-sans">عذراً! الصفحة غير موجودة</p>
+      <main className="flex-grow flex items-center justify-center bg-light-gray">
+        <div className="text-center p-8 bg-white rounded-xl shadow-lg">
+          <h1 className="text-6xl font-bold mb-4 text-light-blue font-montserrat">404</h1>
+          <p className="text-2xl text-dark-blue mb-6 font-open-sans">عذراً! الصفحة غير موجودة</p>
           <Link to="/">
-            <Button className="bg-orange-button hover:bg-orange-button/90 text-white text-lg px-6 py-3 rounded-md">
+            <Button className="bg-platform-orange hover:bg-platform-orange/90 text-white text-lg px-6 py-3 rounded-lg">
               العودة إلى الرئيسية
             </Button>
           </Link>

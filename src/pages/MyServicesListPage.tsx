@@ -15,9 +15,9 @@ const MyServicesListPage = () => {
   return (
     <DashboardLayout>
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold font-montserrat text-gray-800">خدماتي</h1>
+        <h1 className="text-4xl font-bold font-montserrat text-dark-blue">خدماتي</h1>
         <Link to="/dashboard/services/add">
-          <Button className="bg-orange-button hover:bg-orange-button/90 text-white">
+          <Button className="bg-platform-orange hover:bg-platform-orange/90 text-white rounded-lg">
             إضافة خدمة جديدة
           </Button>
         </Link>
@@ -29,7 +29,7 @@ const MyServicesListPage = () => {
             <ServiceCard key={service.id} /> // Using the existing ServiceCard
           ))
         ) : (
-          <p className="text-gray-600 col-span-full">لم تقم بإضافة أي خدمات بعد.</p>
+          <p className="text-gray-600 col-span-full font-open-sans">لم تقم بإضافة أي خدمات بعد.</p>
         )}
       </div>
     </DashboardLayout>

@@ -19,60 +19,60 @@ const ProfilePage = () => {
 
   return (
     <DashboardLayout>
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl mx-auto">
-        <h1 className="text-4xl font-bold text-center mb-8 font-montserrat text-gray-800">الملف الشخصي</h1>
+      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-3xl mx-auto">
+        <h1 className="text-4xl font-bold text-center mb-8 font-montserrat text-dark-blue">الملف الشخصي</h1>
 
         <div className="flex flex-col items-center mb-8">
           <Avatar className="h-24 w-24 mb-4">
             <AvatarImage src={user.avatarUrl} alt={user.name} />
             <AvatarFallback>{user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
           </Avatar>
-          <h2 className="text-2xl font-semibold font-montserrat text-gray-800">{user.name}</h2>
-          <p className="text-gray-600">{user.email}</p>
-          <p className="text-sky-blue-light font-medium mt-2">{user.role}</p>
+          <h2 className="text-2xl font-semibold font-montserrat text-dark-blue">{user.name}</h2>
+          <p className="text-gray-700 font-open-sans">{user.email}</p>
+          <p className="text-light-blue font-medium mt-2 font-open-sans">{user.role}</p>
         </div>
 
-        <Card className="mb-6">
+        <Card className="mb-6 rounded-xl">
           <CardHeader>
-            <CardTitle className="font-montserrat">معلومات شخصية</CardTitle>
+            <CardTitle className="font-montserrat text-dark-blue">معلومات شخصية</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="profile-name">الاسم الكامل</Label>
-              <Input id="profile-name" type="text" defaultValue={user.name} />
+              <Label htmlFor="profile-name" className="text-gray-700 font-open-sans">الاسم الكامل</Label>
+              <Input id="profile-name" type="text" defaultValue={user.name} className="rounded-lg" />
             </div>
             <div>
-              <Label htmlFor="profile-email">البريد الإلكتروني</Label>
-              <Input id="profile-email" type="email" defaultValue={user.email} disabled />
+              <Label htmlFor="profile-email" className="text-gray-700 font-open-sans">البريد الإلكتروني</Label>
+              <Input id="profile-email" type="email" defaultValue={user.email} disabled className="rounded-lg" />
             </div>
             <div>
-              <Label htmlFor="profile-bio">نبذة عني</Label>
-              <Textarea id="profile-bio" defaultValue={user.bio} rows={4} />
+              <Label htmlFor="profile-bio" className="text-gray-700 font-open-sans">نبذة عني</Label>
+              <Textarea id="profile-bio" defaultValue={user.bio} rows={4} className="rounded-lg" />
             </div>
-            <Button className="bg-orange-button hover:bg-orange-button/90 text-white">
+            <Button className="bg-platform-orange hover:bg-platform-orange/90 text-white rounded-lg">
               حفظ التعديلات
             </Button>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-xl">
           <CardHeader>
-            <CardTitle className="font-montserrat">تغيير كلمة المرور</CardTitle>
+            <CardTitle className="font-montserrat text-dark-blue">تغيير كلمة المرور</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="current-password">كلمة المرور الحالية</Label>
-              <Input id="current-password" type="password" />
+              <Label htmlFor="current-password" className="text-gray-700 font-open-sans">كلمة المرور الحالية</Label>
+              <Input id="current-password" type="password" className="rounded-lg" />
             </div>
             <div>
-              <Label htmlFor="new-password">كلمة المرور الجديدة</Label>
-              <Input id="new-password" type="password" />
+              <Label htmlFor="new-password" className="text-gray-700 font-open-sans">كلمة المرور الجديدة</Label>
+              <Input id="new-password" type="password" className="rounded-lg" />
             </div>
             <div>
-              <Label htmlFor="confirm-new-password">تأكيد كلمة المرور الجديدة</Label>
-              <Input id="confirm-new-password" type="password" />
+              <Label htmlFor="confirm-new-password" className="text-gray-700 font-open-sans">تأكيد كلمة المرور الجديدة</Label>
+              <Input id="confirm-new-password" type="password" className="rounded-lg" />
             </div>
-            <Button variant="outline" className="border-sky-blue-light text-sky-blue-light hover:bg-sky-blue-light/10">
+            <Button variant="outline" className="border-light-blue text-light-blue hover:bg-light-blue/10 rounded-lg">
               تغيير كلمة المرور
             </Button>
           </CardContent>

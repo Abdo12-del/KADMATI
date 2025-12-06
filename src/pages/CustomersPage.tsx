@@ -13,10 +13,10 @@ const CustomersPage = () => {
 
   return (
     <DashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-gray-800">العملاء</h1>
+      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue">العملاء</h1>
 
       <div className="mb-6">
-        <Input placeholder="بحث عن عميل..." className="max-w-sm" />
+        <Input placeholder="بحث عن عميل..." className="max-w-sm rounded-lg" />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -25,7 +25,7 @@ const CustomersPage = () => {
             <CustomerCard key={customer.id} customer={customer} />
           ))
         ) : (
-          <p className="text-gray-600 col-span-full">لا يوجد عملاء حتى الآن.</p>
+          <p className="text-gray-600 col-span-full font-open-sans">لا يوجد عملاء حتى الآن.</p>
         )}
       </div>
     </DashboardLayout>

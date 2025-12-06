@@ -30,27 +30,27 @@ const ProviderCard = ({ provider }: ProviderCardProps) => {
   };
 
   return (
-    <Card className="shadow-sm hover:shadow-md transition-shadow">
+    <Card className="shadow-sm hover:shadow-md transition-shadow rounded-xl">
       <CardHeader className="flex flex-row items-center space-x-4 pb-2">
         <Avatar className="h-12 w-12">
           <AvatarImage src={provider.avatarUrl} alt={provider.name} />
           <AvatarFallback>{provider.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
         </Avatar>
         <div>
-          <CardTitle className="text-lg font-montserrat">{provider.name}</CardTitle>
-          <div className="flex items-center text-sm text-gray-600">
+          <CardTitle className="text-lg font-montserrat text-dark-blue">{provider.name}</CardTitle>
+          <div className="flex items-center text-sm text-gray-700">
             {renderStars(provider.rating)}
             <span className="ml-1">({provider.rating})</span>
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-2">
-        <p className="text-sm text-gray-600 flex items-center">
+        <p className="text-sm text-gray-700 flex items-center font-open-sans">
           <Briefcase className="h-4 w-4 mr-2" />
           عدد الخدمات: <span className="font-medium ml-1">{provider.serviceCount}</span>
         </p>
         <Link to={`/provider/${provider.id}`}> {/* Placeholder link to provider profile */}
-          <Button className="w-full mt-4 bg-sky-blue-light hover:bg-sky-blue-light/90 text-white">
+          <Button className="w-full mt-4 bg-light-blue hover:bg-light-blue/90 text-white rounded-lg">
             عرض الملف الشخصي
           </Button>
         </Link>

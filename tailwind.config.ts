@@ -62,14 +62,19 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Custom colors
-        'sky-blue-light': '#5BC0EB',
-        'orange-button': '#FF8C00',
+        // Custom colors based on new theme
+        'dark-blue': '#1F3A93',
+        'light-blue': '#4A90E2',
+        'platform-orange': '#F5A623',
+        'platform-red': '#D0021B',
+        'platform-green': '#7ED321',
+        'light-gray': '#F4F6F8',
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        lg: "8px", // Adjusted to 8px
+        md: "6px",
+        sm: "4px",
+        xl: "12px", // Added for 12px rounded corners
       },
       keyframes: {
         "accordion-down": {
@@ -96,6 +101,7 @@ export default {
       fontFamily: {
         montserrat: ['Montserrat', 'sans-serif'],
         'open-sans': ['Open Sans', 'sans-serif'],
+        roboto: ['Roboto', 'sans-serif'], // Added Roboto
       },
     },
   },

@@ -11,7 +11,7 @@ import {
 
 const Header = () => {
   return (
-    <header className="bg-sky-blue-light text-white p-4 shadow-md">
+    <header className="bg-dark-blue text-white p-4 shadow-md">
       <div className="container mx-auto flex justify-between items-center">
         <Link to="/" className="text-2xl font-bold font-montserrat">
           Service Platform
@@ -28,14 +28,14 @@ const Header = () => {
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
                 <Link to="/dashboard" className={navigationMenuTriggerStyle()}>
-                  لوحة التحكم
+                  لوحة التحكم (مقدم)
                 </Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
-                <Link to="/requests" className={navigationMenuTriggerStyle()}>
-                  طلباتي
+                <Link to="/client-dashboard" className={navigationMenuTriggerStyle()}>
+                  لوحة التحكم (عميل)
                 </Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
@@ -57,12 +57,12 @@ const Header = () => {
         </NavigationMenu>
         <div>
           <Link to="/login">
-            <Button variant="ghost" className="text-white hover:bg-sky-blue-light/80">
+            <Button variant="ghost" className="text-white hover:bg-dark-blue/80">
               تسجيل الدخول
             </Button>
           </Link>
           <Link to="/signup">
-            <Button className="bg-orange-button hover:bg-orange-button/90 text-white ml-2">
+            <Button className="bg-platform-orange hover:bg-platform-orange/90 text-white ml-2 rounded-lg">
               إنشاء حساب
             </Button>
           </Link>

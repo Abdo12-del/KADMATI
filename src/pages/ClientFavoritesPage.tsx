@@ -18,34 +18,34 @@ const ClientFavoritesPage = () => {
 
   return (
     <ClientDashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-gray-800">المفضلة</h1>
+      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue">المفضلة</h1>
 
       <Tabs defaultValue="services" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="services">الخدمات المفضلة</TabsTrigger>
-          <TabsTrigger value="providers">مقدمو الخدمات المفضلون</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 bg-light-gray rounded-lg">
+          <TabsTrigger value="services" className="data-[state=active]:bg-light-blue data-[state=active]:text-white rounded-lg">الخدمات المفضلة</TabsTrigger>
+          <TabsTrigger value="providers" className="data-[state=active]:bg-light-blue data-[state=active]:text-white rounded-lg">مقدمو الخدمات المفضلون</TabsTrigger>
         </TabsList>
         <TabsContent value="services" className="mt-6">
-          <h2 className="text-2xl font-bold mb-4 font-montserrat text-gray-800">خدماتي المفضلة</h2>
+          <h2 className="text-2xl font-bold mb-4 font-montserrat text-dark-blue">خدماتي المفضلة</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {favoriteServices.length > 0 ? (
               favoriteServices.map(service => (
                 <ClientServiceCard key={service.id} service={service} />
               ))
             ) : (
-              <p className="text-gray-600 col-span-full">لا توجد خدمات في قائمة المفضلة.</p>
+              <p className="text-gray-600 col-span-full font-open-sans">لا توجد خدمات في قائمة المفضلة.</p>
             )}
           </div>
         </TabsContent>
         <TabsContent value="providers" className="mt-6">
-          <h2 className="text-2xl font-bold mb-4 font-montserrat text-gray-800">مقدمو الخدمات المفضلون</h2>
+          <h2 className="text-2xl font-bold mb-4 font-montserrat text-dark-blue">مقدمو الخدمات المفضلون</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {favoriteProviders.length > 0 ? (
               favoriteProviders.map(provider => (
                 <ProviderCard key={provider.id} provider={provider} />
               ))
             ) : (
-              <p className="text-gray-600 col-span-full">لا يوجد مقدمو خدمات في قائمة المفضلة.</p>
+              <p className="text-gray-600 col-span-full font-open-sans">لا يوجد مقدمو خدمات في قائمة المفضلة.</p>
             )}
           </div>
         </TabsContent>

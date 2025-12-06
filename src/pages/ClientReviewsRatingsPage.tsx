@@ -43,32 +43,32 @@ const ClientReviewsRatingsPage = () => {
 
   return (
     <ClientDashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-gray-800">تقييماتي</h1>
+      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue">تقييماتي</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {myReviews.length > 0 ? (
           myReviews.map(review => (
-            <Card key={review.id} className="shadow-sm">
+            <Card key={review.id} className="shadow-sm rounded-xl">
               <CardHeader className="flex flex-row items-center space-x-4 pb-2">
                 <Avatar className="h-12 w-12">
                   <AvatarImage src={review.providerAvatarUrl} alt={review.providerName} />
                   <AvatarFallback>{review.providerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <CardTitle className="text-lg font-montserrat">{review.serviceTitle}</CardTitle>
-                  <p className="text-sm text-gray-600">مقدم الخدمة: {review.providerName}</p>
+                  <CardTitle className="text-lg font-montserrat text-dark-blue">{review.serviceTitle}</CardTitle>
+                  <p className="text-sm text-gray-700 font-open-sans">مقدم الخدمة: {review.providerName}</p>
                 </div>
               </CardHeader>
               <CardContent className="space-y-2">
                 {renderStars(review.rating)}
                 <p className="text-gray-700 font-open-sans">{review.comment}</p>
-                <p className="text-xs text-gray-500 mt-2">بتاريخ: {review.date}</p>
+                <p className="text-xs text-gray-600 mt-2 font-open-sans">بتاريخ: {review.date}</p>
                 <div className="flex gap-2 mt-4">
-                  <Button variant="outline" size="sm" className="border-sky-blue-light text-sky-blue-light hover:bg-sky-blue-light/10">
+                  <Button variant="outline" size="sm" className="border-light-blue text-light-blue hover:bg-light-blue/10 rounded-lg">
                     <Edit className="h-4 w-4 mr-2" />
                     تعديل
                   </Button>
-                  <Button variant="destructive" size="sm">
+                  <Button variant="destructive" size="sm" className="bg-platform-red hover:bg-platform-red/90 text-white rounded-lg">
                     <Trash2 className="h-4 w-4 mr-2" />
                     حذف
                   </Button>
@@ -77,7 +77,7 @@ const ClientReviewsRatingsPage = () => {
             </Card>
           ))
         ) : (
-          <p className="text-gray-600 col-span-full">لم تقم بتقييم أي خدمات بعد.</p>
+          <p className="text-gray-600 col-span-full font-open-sans">لم تقم بتقييم أي خدمات بعد.</p>
         )}
       </div>
     </ClientDashboardLayout>

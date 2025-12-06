@@ -17,15 +17,15 @@ const ClientServicesCatalogPage = () => {
 
   return (
     <ClientDashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-gray-800">كتالوج الخدمات</h1>
+      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue">كتالوج الخدمات</h1>
 
       <div className="flex flex-col md:flex-row gap-4 mb-8">
         <div className="relative flex-grow">
-          <Input placeholder="ابحث عن خدمة..." className="w-full pl-10" />
+          <Input placeholder="ابحث عن خدمة..." className="w-full pl-10 rounded-lg" />
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
         </div>
         <Select>
-          <SelectTrigger className="w-full md:w-[200px]">
+          <SelectTrigger className="w-full md:w-[200px] rounded-lg">
             <SelectValue placeholder="الفئة" />
           </SelectTrigger>
           <SelectContent>
@@ -36,7 +36,7 @@ const ClientServicesCatalogPage = () => {
           </SelectContent>
         </Select>
         <Select>
-          <SelectTrigger className="w-full md:w-[200px]">
+          <SelectTrigger className="w-full md:w-[200px] rounded-lg">
             <SelectValue placeholder="الموقع" />
           </SelectTrigger>
           <SelectContent>
@@ -45,7 +45,7 @@ const ClientServicesCatalogPage = () => {
             <SelectItem value="dammam">الدمام</SelectItem>
           </SelectContent>
         </Select>
-        <Button className="bg-orange-button hover:bg-orange-button/90 text-white">
+        <Button className="bg-platform-orange hover:bg-platform-orange/90 text-white rounded-lg">
           تطبيق الفلاتر
         </Button>
       </div>
@@ -56,7 +56,7 @@ const ClientServicesCatalogPage = () => {
             <ClientServiceCard key={service.id} service={service} />
           ))
         ) : (
-          <p className="text-gray-600 col-span-full">لا توجد خدمات متاحة حاليًا.</p>
+          <p className="text-gray-600 col-span-full font-open-sans">لا توجد خدمات متاحة حاليًا.</p>
         )}
       </div>
     </ClientDashboardLayout>

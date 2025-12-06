@@ -28,41 +28,43 @@ const ClientPaymentsPage = () => {
 
   return (
     <ClientDashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-gray-800">الدفع والمعاملات</h1>
+      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue">الدفع والمعاملات</h1>
 
-      <Card>
+      <Card className="rounded-xl">
         <CardHeader>
-          <CardTitle className="font-montserrat">سجل المعاملات</CardTitle>
+          <CardTitle className="font-montserrat text-dark-blue">سجل المعاملات</CardTitle>
         </CardHeader>
         <CardContent>
           {transactions.length > 0 ? (
             <Table>
-              <TableCaption>قائمة بجميع معاملاتك السابقة.</TableCaption>
+              <TableCaption className="font-open-sans">قائمة بجميع معاملاتك السابقة.</TableCaption>
               <TableHeader>
                 <TableRow>
-                  <TableHead>الخدمة</TableHead>
-                  <TableHead>المبلغ</TableHead>
-                  <TableHead>التاريخ</TableHead>
-                  <TableHead>الحالة</TableHead>
-                  <TableHead>طريقة الدفع</TableHead>
+                  <TableHead className="text-dark-blue font-semibold font-open-sans">الخدمة</TableHead>
+                  <TableHead className="text-dark-blue font-semibold font-open-sans">المبلغ</TableHead>
+                  <TableHead className="text-dark-blue font-semibold font-open-sans">التاريخ</TableHead>
+                  <TableHead className="text-dark-blue font-semibold font-open-sans">الحالة</TableHead>
+                  <TableHead className="text-dark-blue font-semibold font-open-sans">طريقة الدفع</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {transactions.map(transaction => (
                   <TableRow key={transaction.id}>
-                    <TableCell className="font-medium">{transaction.service}</TableCell>
-                    <TableCell>${transaction.amount}</TableCell>
-                    <TableCell>{transaction.date}</TableCell>
+                    <TableCell className="font-medium text-gray-800 font-open-sans">{transaction.service}</TableCell>
+                    <TableCell className="text-gray-800 font-open-sans">${transaction.amount}</TableCell>
+                    <TableCell className="text-gray-800 font-open-sans">{transaction.date}</TableCell>
                     <TableCell>
-                      <Badge variant={getStatusBadgeVariant(transaction.status)}>{transaction.status}</Badge>
+                      <Badge variant={getStatusBadgeVariant(transaction.status)} className="rounded-md font-open-sans">
+                        {transaction.status}
+                      </Badge>
                     </TableCell>
-                    <TableCell>{transaction.method}</TableCell>
+                    <TableCell className="text-gray-800 font-open-sans">{transaction.method}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           ) : (
-            <p className="text-gray-600">لا توجد معاملات سابقة.</p>
+            <p className="text-gray-600 font-open-sans">لا توجد معاملات سابقة.</p>
           )}
         </CardContent>
       </Card>

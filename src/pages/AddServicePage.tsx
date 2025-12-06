@@ -9,21 +9,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 const AddServicePage = () => {
   return (
     <DashboardLayout>
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-6 font-montserrat text-gray-800">إضافة خدمة جديدة</h1>
+      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-2xl mx-auto">
+        <h1 className="text-3xl font-bold text-center mb-6 font-montserrat text-dark-blue">إضافة خدمة جديدة</h1>
         <form className="space-y-6">
           <div>
-            <Label htmlFor="service-title">عنوان الخدمة</Label>
-            <Input id="service-title" type="text" placeholder="مثال: تصميم شعار احترافي" required />
+            <Label htmlFor="service-title" className="text-gray-700 font-open-sans">عنوان الخدمة</Label>
+            <Input id="service-title" type="text" placeholder="مثال: تصميم شعار احترافي" required className="rounded-lg" />
           </div>
           <div>
-            <Label htmlFor="service-description">وصف الخدمة</Label>
-            <Textarea id="service-description" placeholder="صف خدمتك بالتفصيل..." rows={5} required />
+            <Label htmlFor="service-description" className="text-gray-700 font-open-sans">وصف الخدمة</Label>
+            <Textarea id="service-description" placeholder="صف خدمتك بالتفصيل..." rows={5} required className="rounded-lg" />
           </div>
           <div>
-            <Label htmlFor="service-category">الفئة</Label>
+            <Label htmlFor="service-category" className="text-gray-700 font-open-sans">الفئة</Label>
             <Select>
-              <SelectTrigger id="service-category">
+              <SelectTrigger id="service-category" className="rounded-lg">
                 <SelectValue placeholder="اختر فئة الخدمة" />
               </SelectTrigger>
               <SelectContent>
@@ -36,18 +36,18 @@ const AddServicePage = () => {
             </Select>
           </div>
           <div>
-            <Label htmlFor="service-price">السعر ($)</Label>
-            <Input id="service-price" type="number" placeholder="مثال: 150" required min="0" />
+            <Label htmlFor="service-price" className="text-gray-700 font-open-sans">السعر ($)</Label>
+            <Input id="service-price" type="number" placeholder="مثال: 150" required min="0" className="rounded-lg" />
           </div>
           <div>
-            <Label htmlFor="delivery-time">وقت التسليم (أيام)</Label>
-            <Input id="delivery-time" type="number" placeholder="مثال: 3" required min="1" />
+            <Label htmlFor="delivery-time" className="text-gray-700 font-open-sans">وقت التسليم (أيام)</Label>
+            <Input id="delivery-time" type="number" placeholder="مثال: 3" required min="1" className="rounded-lg" />
           </div>
           <div>
-            <Label htmlFor="service-image">صورة الخدمة</Label>
-            <Input id="service-image" type="file" />
+            <Label htmlFor="service-image" className="text-gray-700 font-open-sans">صورة الخدمة</Label>
+            <Input id="service-image" type="file" className="rounded-lg" />
           </div>
-          <Button type="submit" className="w-full bg-orange-button hover:bg-orange-button/90 text-white py-2">
+          <Button type="submit" className="w-full bg-platform-orange hover:bg-platform-orange/90 text-white py-2 rounded-lg">
             إضافة الخدمة
           </Button>
         </form>

@@ -23,16 +23,16 @@ const Sidebar = ({ className }: SidebarProps) => {
   ];
 
   return (
-    <div className={cn("flex flex-col h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border p-4", className)}>
+    <div className={cn("flex flex-col h-full bg-dark-blue text-white border-r border-gray-700 p-4", className)}>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold font-montserrat text-sidebar-primary">لوحة التحكم</h2>
+        <h2 className="text-2xl font-bold font-montserrat text-white">لوحة التحكم</h2>
       </div>
       <nav className="flex-grow space-y-2">
         {navItems.map((item) => (
           <Link key={item.label} to={item.href}>
             <Button
               variant="ghost"
-              className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              className="w-full justify-start text-white hover:bg-light-blue hover:text-white rounded-lg"
             >
               <item.icon className="mr-3 h-5 w-5" />
               {item.label}

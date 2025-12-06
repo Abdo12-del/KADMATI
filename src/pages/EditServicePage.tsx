@@ -18,21 +18,21 @@ const EditServicePage = () => {
 
   return (
     <DashboardLayout>
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-6 font-montserrat text-gray-800">تعديل الخدمة</h1>
+      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-2xl mx-auto">
+        <h1 className="text-3xl font-bold text-center mb-6 font-montserrat text-dark-blue">تعديل الخدمة</h1>
         <form className="space-y-6">
           <div>
-            <Label htmlFor="service-title">عنوان الخدمة</Label>
-            <Input id="service-title" type="text" defaultValue={service.title} required />
+            <Label htmlFor="service-title" className="text-gray-700 font-open-sans">عنوان الخدمة</Label>
+            <Input id="service-title" type="text" defaultValue={service.title} required className="rounded-lg" />
           </div>
           <div>
-            <Label htmlFor="service-description">وصف الخدمة</Label>
-            <Textarea id="service-description" defaultValue={service.description} rows={5} required />
+            <Label htmlFor="service-description" className="text-gray-700 font-open-sans">وصف الخدمة</Label>
+            <Textarea id="service-description" defaultValue={service.description} rows={5} required className="rounded-lg" />
           </div>
           <div>
-            <Label htmlFor="service-category">الفئة</Label>
+            <Label htmlFor="service-category" className="text-gray-700 font-open-sans">الفئة</Label>
             <Select defaultValue={service.category}>
-              <SelectTrigger id="service-category">
+              <SelectTrigger id="service-category" className="rounded-lg">
                 <SelectValue placeholder="اختر فئة الخدمة" />
               </SelectTrigger>
               <SelectContent>
@@ -45,18 +45,18 @@ const EditServicePage = () => {
             </Select>
           </div>
           <div>
-            <Label htmlFor="service-price">السعر ($)</Label>
-            <Input id="service-price" type="number" defaultValue={service.price} required min="0" />
+            <Label htmlFor="service-price" className="text-gray-700 font-open-sans">السعر ($)</Label>
+            <Input id="service-price" type="number" defaultValue={service.price} required min="0" className="rounded-lg" />
           </div>
           <div>
-            <Label htmlFor="delivery-time">وقت التسليم (أيام)</Label>
-            <Input id="delivery-time" type="number" defaultValue={service.deliveryTime} required min="1" />
+            <Label htmlFor="delivery-time" className="text-gray-700 font-open-sans">وقت التسليم (أيام)</Label>
+            <Input id="delivery-time" type="number" defaultValue={service.deliveryTime} required min="1" className="rounded-lg" />
           </div>
           <div>
-            <Label htmlFor="service-image">صورة الخدمة (اتركها فارغة للحفاظ على الصورة الحالية)</Label>
-            <Input id="service-image" type="file" />
+            <Label htmlFor="service-image" className="text-gray-700 font-open-sans">صورة الخدمة (اتركها فارغة للحفاظ على الصورة الحالية)</Label>
+            <Input id="service-image" type="file" className="rounded-lg" />
           </div>
-          <Button type="submit" className="w-full bg-orange-button hover:bg-orange-button/90 text-white py-2">
+          <Button type="submit" className="w-full bg-platform-orange hover:bg-platform-orange/90 text-white py-2 rounded-lg">
             حفظ التعديلات
           </Button>
         </form>

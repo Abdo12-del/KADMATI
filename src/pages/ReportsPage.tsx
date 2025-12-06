@@ -17,14 +17,14 @@ const data = [
 const ReportsPage = () => {
   return (
     <DashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-gray-800">التقارير</h1>
+      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue">التقارير</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <Card>
+        <Card className="rounded-xl">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="font-montserrat">ملخص الأرباح</CardTitle>
+            <CardTitle className="font-montserrat text-dark-blue">ملخص الأرباح</CardTitle>
             <Select>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[180px] rounded-lg">
                 <SelectValue placeholder="آخر 30 يومًا" />
               </SelectTrigger>
               <SelectContent>
@@ -35,8 +35,8 @@ const ReportsPage = () => {
             </Select>
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold mb-2">$12,345</div>
-            <p className="text-sm text-muted-foreground">+15% عن الشهر الماضي</p>
+            <div className="text-4xl font-bold mb-2 text-dark-blue">$12,345</div>
+            <p className="text-sm text-gray-600 font-open-sans">+15% عن الشهر الماضي</p>
             <div className="h-[200px] mt-4">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data}>
@@ -45,18 +45,18 @@ const ReportsPage = () => {
                   <Tooltip />
                   <Legend />
                   <CartesianGrid strokeDasharray="3 3" />
-                  <Bar dataKey="sales" fill="#5BC0EB" name="المبيعات" />
+                  <Bar dataKey="sales" fill="#4A90E2" name="المبيعات" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-xl">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="font-montserrat">عدد الطلبات</CardTitle>
+            <CardTitle className="font-montserrat text-dark-blue">عدد الطلبات</CardTitle>
             <Select>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[180px] rounded-lg">
                 <SelectValue placeholder="آخر 30 يومًا" />
               </SelectTrigger>
               <SelectContent>
@@ -67,8 +67,8 @@ const ReportsPage = () => {
             </Select>
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold mb-2">250</div>
-            <p className="text-sm text-muted-foreground">+8% عن الشهر الماضي</p>
+            <div className="text-4xl font-bold mb-2 text-dark-blue">250</div>
+            <p className="text-sm text-gray-600 font-open-sans">+8% عن الشهر الماضي</p>
             <div className="h-[200px] mt-4">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data}>
@@ -77,7 +77,7 @@ const ReportsPage = () => {
                   <Tooltip />
                   <Legend />
                   <CartesianGrid strokeDasharray="3 3" />
-                  <Line type="monotone" dataKey="orders" stroke="#FF8C00" name="الطلبات" />
+                  <Line type="monotone" dataKey="orders" stroke="#F5A623" name="الطلبات" />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -85,32 +85,32 @@ const ReportsPage = () => {
         </Card>
       </div>
 
-      <Card>
+      <Card className="rounded-xl">
         <CardHeader>
-          <CardTitle className="font-montserrat">أداء الخدمات</CardTitle>
+          <CardTitle className="font-montserrat text-dark-blue">أداء الخدمات</CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="space-y-4">
             <li className="flex justify-between items-center border-b pb-2 last:border-b-0">
               <div>
-                <p className="font-semibold">تصميم شعار احترافي</p>
-                <p className="text-sm text-gray-600">50 طلب، متوسط تقييم 4.9</p>
+                <p className="font-semibold text-gray-800 font-open-sans">تصميم شعار احترافي</p>
+                <p className="text-sm text-gray-700 font-open-sans">50 طلب، متوسط تقييم 4.9</p>
               </div>
-              <span className="font-bold text-sky-blue-light">$7,500</span>
+              <span className="font-bold text-light-blue">$7,500</span>
             </li>
             <li className="flex justify-between items-center border-b pb-2 last:border-b-0">
               <div>
-                <p className="font-semibold">تطوير موقع ويب شخصي</p>
-                <p className="text-sm text-gray-600">20 طلب، متوسط تقييم 4.7</p>
+                <p className="font-semibold text-gray-800 font-open-sans">تطوير موقع ويب شخصي</p>
+                <p className="text-sm text-gray-700 font-open-sans">20 طلب، متوسط تقييم 4.7</p>
               </div>
-              <span className="font-bold text-sky-blue-light">$10,000</span>
+              <span className="font-bold text-light-blue">$10,000</span>
             </li>
             <li className="flex justify-between items-center border-b pb-2 last:border-b-0">
               <div>
-                <p className="font-semibold">كتابة محتوى تسويقي</p>
-                <p className="text-sm text-gray-600">30 طلب، متوسط تقييم 4.8</p>
+                <p className="font-semibold text-gray-800 font-open-sans">كتابة محتوى تسويقي</p>
+                <p className="text-sm text-gray-700 font-open-sans">30 طلب، متوسط تقييم 4.8</p>
               </div>
-              <span className="font-bold text-sky-blue-light">$3,000</span>
+              <span className="font-bold text-light-blue">$3,000</span>
             </li>
           </ul>
         </CardContent>

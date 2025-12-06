@@ -26,44 +26,44 @@ const CalendarPage = () => {
 
   return (
     <DashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-gray-800">التقويم وتوفر الخدمة</h1>
+      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue">التقويم وتوفر الخدمة</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card>
+        <Card className="rounded-xl">
           <CardHeader>
-            <CardTitle className="font-montserrat">التقويم</CardTitle>
+            <CardTitle className="font-montserrat text-dark-blue">التقويم</CardTitle>
           </CardHeader>
           <CardContent className="flex justify-center">
             <Calendar
               mode="single"
               selected={date}
               onSelect={setDate}
-              className="rounded-md border shadow"
+              className="rounded-xl border shadow"
             />
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-xl">
           <CardHeader>
-            <CardTitle className="font-montserrat">أحداث اليوم ({date?.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long' })})</CardTitle>
+            <CardTitle className="font-montserrat text-dark-blue">أحداث اليوم ({date?.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long' })})</CardTitle>
           </CardHeader>
           <CardContent>
             {selectedDateEvents.length > 0 ? (
               <ul className="space-y-4">
                 {selectedDateEvents.map(event => (
                   <li key={event.id} className="border-b pb-2 last:border-b-0">
-                    <p className="font-semibold">{event.title}</p>
-                    <p className="text-sm text-gray-600">{event.time}</p>
+                    <p className="font-semibold text-gray-800 font-open-sans">{event.title}</p>
+                    <p className="text-sm text-gray-700 font-open-sans">{event.time}</p>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-gray-600">لا توجد أحداث لهذا اليوم.</p>
+              <p className="text-gray-700 font-open-sans">لا توجد أحداث لهذا اليوم.</p>
             )}
             <div className="mt-6 space-y-4">
-              <h3 className="text-lg font-semibold font-montserrat">تعديل التوفر</h3>
+              <h3 className="text-lg font-semibold font-montserrat text-dark-blue">تعديل التوفر</h3>
               <Select>
-                <SelectTrigger>
+                <SelectTrigger className="rounded-lg">
                   <SelectValue placeholder="اختر حالة التوفر" />
                 </SelectTrigger>
                 <SelectContent>
@@ -72,7 +72,7 @@ const CalendarPage = () => {
                   <SelectItem value="vacation">إجازة</SelectItem>
                 </SelectContent>
               </Select>
-              <Button className="w-full bg-orange-button hover:bg-orange-button/90 text-white">
+              <Button className="w-full bg-platform-orange hover:bg-platform-orange/90 text-white rounded-lg">
                 حفظ التوفر
               </Button>
             </div>

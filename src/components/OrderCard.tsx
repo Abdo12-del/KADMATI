@@ -17,31 +17,31 @@ const OrderCard = ({ order }: OrderCardProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Pending':
-        return 'text-orange-button';
+        return 'text-platform-orange';
       case 'Accepted':
-        return 'text-sky-blue-light';
+        return 'text-light-blue';
       case 'Completed':
-        return 'text-green-600';
+        return 'text-platform-green';
       case 'Cancelled':
-        return 'text-red-600';
+        return 'text-platform-red';
       default:
         return 'text-gray-700';
     }
   };
 
   return (
-    <Card className="shadow-sm">
+    <Card className="shadow-sm rounded-xl">
       <CardHeader>
-        <CardTitle className="text-lg font-montserrat">{order.serviceTitle}</CardTitle>
+        <CardTitle className="text-lg font-montserrat text-dark-blue">{order.serviceTitle}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        <p className="text-sm text-gray-600">العميل: <span className="font-medium">{order.customerName}</span></p>
-        <p className="text-sm text-gray-600">التاريخ: {order.date}</p>
+        <p className="text-sm text-gray-700">العميل: <span className="font-medium">{order.customerName}</span></p>
+        <p className="text-sm text-gray-700">التاريخ: {order.date}</p>
         <div className="flex justify-between items-center pt-2">
           <span className={`font-semibold ${getStatusColor(order.status)}`}>الحالة: {order.status}</span>
-          <span className="font-bold text-gray-800">${order.price}</span>
+          <span className="font-bold text-dark-blue">${order.price}</span>
         </div>
-        <Button variant="outline" className="w-full mt-4 border-sky-blue-light text-sky-blue-light hover:bg-sky-blue-light/10">
+        <Button variant="outline" className="w-full mt-4 border-light-blue text-light-blue hover:bg-light-blue/10 rounded-lg">
           عرض التفاصيل
         </Button>
       </CardContent>
