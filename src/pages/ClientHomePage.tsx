@@ -6,7 +6,7 @@ import Footer from '@/components/Footer';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { ClientHomeCategoryScroll } from '@/components/ClientHomeCategoryScroll';
-import ClientServiceCard from '@/components/ClientServiceCard'; // إعادة استخدام البطاقة الموجودة
+import ClientServiceCard from '@/components/ClientServiceCard';
 
 const ClientHomePage = () => {
   // بيانات وهمية للخدمات
