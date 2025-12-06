@@ -62,6 +62,9 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Custom colors
+        'sky-blue-light': '#5BC0EB',
+        'orange-button': '#FF8C00',
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -89,6 +92,10 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+      },
+      fontFamily: {
+        montserrat: ['Montserrat', 'sans-serif'],
+        'open-sans': ['Open Sans', 'sans-serif'],
       },
     },
   },
