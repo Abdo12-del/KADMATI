@@ -76,6 +76,7 @@ const SignupPage = () => {
                         <SelectContent>
                           <SelectItem value="craftsman-card">بطاقة حرفي</SelectItem>
                           <SelectItem value="commercial-register">سجل تجاري</SelectItem>
+                          <SelectItem value="freelancer">عامل مستقل (بدون بطاقة أو سجل)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
