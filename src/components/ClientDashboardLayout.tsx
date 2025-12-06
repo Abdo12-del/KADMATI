@@ -1,7 +1,7 @@
 import React from 'react';
-import ClientHomeHeader from '@/components/ClientHomeHeader'; // استخدام ClientHomeHeader الجديد
+import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-// تم إزالة استيراد ClientSidebar
+import ClientSidebar from '@/components/ClientSidebar';
 
 interface ClientDashboardLayoutProps {
   children: React.ReactNode;
@@ -10,9 +10,9 @@ interface ClientDashboardLayoutProps {
 const ClientDashboardLayout = ({ children }: ClientDashboardLayoutProps) => {
   return (
     <div className="min-h-screen flex flex-col bg-brand-background">
-      <ClientHomeHeader /> {/* استخدام ClientHomeHeader */}
+      <Header />
       <div className="flex flex-grow">
-        {/* تم إزالة ClientSidebar */}
+        <ClientSidebar className="w-64 flex-shrink-0" />
         <main className="flex-grow container mx-auto px-8 py-10">
           {children}
         </main>

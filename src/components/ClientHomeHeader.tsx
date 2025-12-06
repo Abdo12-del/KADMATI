@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { NotificationsDropdown } from '@/components/notifications/NotificationsDropdown';
 import { ClientHomeMessagesDropdown } from '@/components/ClientHomeMessagesDropdown';
-import { ClientDashboardMenuModal } from '@/components/ClientDashboardMenuModal'; // استيراد المكون الجديد
+import { ClientHomeGeneralMenu } from '@/components/ClientHomeGeneralMenu';
 
 const ClientHomeHeader = () => {
   const unreadNotificationsCount = 3; // قيمة وهمية لعدد الإشعارات غير المقروءة
@@ -22,7 +22,7 @@ const ClientHomeHeader = () => {
           <ThemeToggle />
           <NotificationsDropdown unreadCount={unreadNotificationsCount} />
           <ClientHomeMessagesDropdown unreadCount={unreadMessagesCount} />
-          <ClientDashboardMenuModal /> {/* إضافة زر يفتح النافذة المنبثقة للقائمة العامة */}
+          <ClientHomeGeneralMenu />
         </div>
       </div>
     </header>
