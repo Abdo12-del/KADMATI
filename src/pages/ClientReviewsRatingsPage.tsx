@@ -43,33 +43,33 @@ const ClientReviewsRatingsPage = () => {
 
   return (
     <ClientDashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue">تقييماتي</h1>
+      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue text-right">تقييماتي</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {myReviews.length > 0 ? (
           myReviews.map(review => (
-            <Card key={review.id} className="shadow-sm rounded-xl">
-              <CardHeader className="flex flex-row items-center space-x-4 pb-2">
+            <Card key={review.id} className="shadow-soft-neumorphism bg-soft-white rounded-2xl p-4">
+              <CardHeader className="flex flex-row items-center space-x-4 rtl:space-x-reverse pb-2 p-0 mb-2">
                 <Avatar className="h-12 w-12">
                   <AvatarImage src={review.providerAvatarUrl} alt={review.providerName} />
                   <AvatarFallback>{review.providerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                 </Avatar>
-                <div>
+                <div className="text-right">
                   <CardTitle className="text-lg font-montserrat text-dark-blue">{review.serviceTitle}</CardTitle>
-                  <p className="text-sm text-gray-700 font-open-sans">مقدم الخدمة: {review.providerName}</p>
+                  <p className="text-sm text-gray-700 font-inter">مقدم الخدمة: {review.providerName}</p>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-2">
-                {renderStars(review.rating)}
-                <p className="text-gray-700 font-open-sans">{review.comment}</p>
-                <p className="text-xs text-gray-600 mt-2 font-open-sans">بتاريخ: {review.date}</p>
-                <div className="flex gap-2 mt-4">
-                  <Button variant="outline" size="sm" className="border-light-blue text-light-blue hover:bg-light-blue/10 rounded-lg">
-                    <Edit className="h-4 w-4 mr-2" />
+              <CardContent className="p-0 space-y-2 text-right">
+                <div className="flex justify-end">{renderStars(review.rating)}</div>
+                <p className="text-gray-700 font-inter">{review.comment}</p>
+                <p className="text-xs text-gray-600 mt-2 font-inter">بتاريخ: {review.date}</p>
+                <div className="flex justify-end gap-2 mt-4">
+                  <Button variant="outline" size="sm" className="border-light-blue text-light-blue hover:bg-light-blue/10 rounded-lg shadow-md">
+                    <Edit className="h-4 w-4 ml-2 rtl:mr-2" />
                     تعديل
                   </Button>
-                  <Button variant="destructive" size="sm" className="bg-platform-red hover:bg-platform-red/90 text-white rounded-lg">
-                    <Trash2 className="h-4 w-4 mr-2" />
+                  <Button variant="destructive" size="sm" className="bg-platform-red hover:bg-platform-red/90 text-white rounded-lg shadow-md">
+                    <Trash2 className="h-4 w-4 ml-2 rtl:mr-2" />
                     حذف
                   </Button>
                 </div>
@@ -77,7 +77,7 @@ const ClientReviewsRatingsPage = () => {
             </Card>
           ))
         ) : (
-          <p className="text-gray-600 col-span-full font-open-sans">لم تقم بتقييم أي خدمات بعد.</p>
+          <p className="text-gray-600 col-span-full font-inter text-right">لم تقم بتقييم أي خدمات بعد.</p>
         )}
       </div>
     </ClientDashboardLayout>

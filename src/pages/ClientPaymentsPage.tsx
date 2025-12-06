@@ -28,43 +28,43 @@ const ClientPaymentsPage = () => {
 
   return (
     <ClientDashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue">الدفع والمعاملات</h1>
+      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue text-right">الدفع والمعاملات</h1>
 
-      <Card className="rounded-xl">
-        <CardHeader>
+      <Card className="rounded-2xl shadow-soft-neumorphism bg-soft-white">
+        <CardHeader className="text-right">
           <CardTitle className="font-montserrat text-dark-blue">سجل المعاملات</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           {transactions.length > 0 ? (
-            <Table>
-              <TableCaption className="font-open-sans">قائمة بجميع معاملاتك السابقة.</TableCaption>
+            <Table className="text-right">
+              <TableCaption className="font-inter text-right">قائمة بجميع معاملاتك السابقة.</TableCaption>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-dark-blue font-semibold font-open-sans">الخدمة</TableHead>
-                  <TableHead className="text-dark-blue font-semibold font-open-sans">المبلغ</TableHead>
-                  <TableHead className="text-dark-blue font-semibold font-open-sans">التاريخ</TableHead>
-                  <TableHead className="text-dark-blue font-semibold font-open-sans">الحالة</TableHead>
-                  <TableHead className="text-dark-blue font-semibold font-open-sans">طريقة الدفع</TableHead>
+                  <TableHead className="text-dark-blue font-semibold font-inter text-right">الخدمة</TableHead>
+                  <TableHead className="text-dark-blue font-semibold font-inter text-right">المبلغ</TableHead>
+                  <TableHead className="text-dark-blue font-semibold font-inter text-right">التاريخ</TableHead>
+                  <TableHead className="text-dark-blue font-semibold font-inter text-right">الحالة</TableHead>
+                  <TableHead className="text-dark-blue font-semibold font-inter text-right">طريقة الدفع</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {transactions.map(transaction => (
                   <TableRow key={transaction.id}>
-                    <TableCell className="font-medium text-gray-800 font-open-sans">{transaction.service}</TableCell>
-                    <TableCell className="text-gray-800 font-open-sans">${transaction.amount}</TableCell>
-                    <TableCell className="text-gray-800 font-open-sans">{transaction.date}</TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusBadgeVariant(transaction.status)} className="rounded-md font-open-sans">
+                    <TableCell className="font-medium text-gray-800 font-inter text-right">{transaction.service}</TableCell>
+                    <TableCell className="text-gray-800 font-inter text-right">${transaction.amount}</TableCell>
+                    <TableCell className="text-gray-800 font-inter text-right">{transaction.date}</TableCell>
+                    <TableCell className="text-right">
+                      <Badge variant={getStatusBadgeVariant(transaction.status)} className="rounded-md font-inter">
                         {transaction.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-gray-800 font-open-sans">{transaction.method}</TableCell>
+                    <TableCell className="text-gray-800 font-inter text-right">{transaction.method}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           ) : (
-            <p className="text-gray-600 font-open-sans">لا توجد معاملات سابقة.</p>
+            <p className="text-gray-600 font-inter text-right">لا توجد معاملات سابقة.</p>
           )}
         </CardContent>
       </Card>

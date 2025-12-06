@@ -62,19 +62,28 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Custom colors based on new theme
-        'dark-blue': 'hsl(225 66% 35%)', // #1F3A93
-        'light-blue': 'hsl(210 73% 60%)', // #4A90E2
-        'platform-orange': 'hsl(36 90% 55%)', // #F5A623
-        'platform-red': 'hsl(359 97% 41%)', // #D0021B
-        'platform-green': 'hsl(90 69% 48%)', // #7ED321
-        'light-gray': 'hsl(210 29% 97%)', // #F4F6F8
+        // Custom colors based on new theme (pastel-like)
+        'dark-blue': 'hsl(225 66% 35%)', // #1F3A93 - for strong accents/text
+        'light-blue': 'hsl(210 73% 60%)', // #4A90E2 - for buttons/highlights
+        'platform-orange': 'hsl(36 90% 55%)', // #F5A623 - for primary actions
+        'platform-red': 'hsl(359 97% 41%)', // #D0021B - for destructive actions
+        'platform-green': 'hsl(90 69% 48%)', // #7ED321 - for success
+        'light-gray': 'hsl(210 29% 97%)', // #F4F6F8 - for backgrounds/muted elements
+        'pastel-blue': 'hsl(210 60% 85%)', // A softer blue
+        'pastel-green': 'hsl(120 40% 85%)', // A softer green
+        'pastel-orange': 'hsl(30 80% 85%)', // A softer orange
+        'soft-white': 'hsl(0 0% 98%)', // Off-white for neumorphism base
       },
       borderRadius: {
         lg: "0.5rem", // 8px
         md: "0.375rem", // 6px
         sm: "0.25rem", // 4px
         xl: "0.75rem", // 12px
+        '2xl': '1rem', // 16px for more rounded elements
+      },
+      boxShadow: {
+        'soft-neumorphism': '5px 5px 10px #d1d9e6, -5px -5px 10px #ffffff', // Custom shadow for neumorphism
+        'soft-neumorphism-inset': 'inset 5px 5px 10px #d1d9e6, inset -5px -5px 10px #ffffff', // Inset for pressed state
       },
       keyframes: {
         "accordion-down": {
@@ -102,6 +111,7 @@ export default {
         montserrat: ['Montserrat', 'sans-serif'],
         'open-sans': ['Open Sans', 'sans-serif'],
         roboto: ['Roboto', 'sans-serif'],
+        inter: ['Inter', 'sans-serif'], // Added Inter
       },
     },
   },

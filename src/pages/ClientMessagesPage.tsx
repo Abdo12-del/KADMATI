@@ -29,45 +29,45 @@ const ClientMessagesPage = () => {
 
   return (
     <ClientDashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue">الرسائل</h1>
+      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue text-right">الرسائل</h1>
 
-      <div className="flex h-[70vh] bg-white rounded-xl shadow-lg overflow-hidden">
+      <div className="flex h-[70vh] bg-soft-white rounded-2xl shadow-soft-neumorphism overflow-hidden">
         {/* Sidebar for conversations */}
-        <div className="w-1/3 border-r p-4 flex flex-col">
-          <Input placeholder="بحث عن محادثات..." className="mb-4 rounded-lg" />
+        <div className="w-1/3 border-l p-4 flex flex-col rtl:border-r rtl:border-l-0">
+          <Input placeholder="بحث عن محادثات..." className="mb-4 rounded-lg shadow-soft-neumorphism bg-soft-white text-right" />
           <Tabs defaultValue="inbox" className="flex-grow flex flex-col">
-            <TabsList className="grid w-full grid-cols-2 mb-4 bg-light-gray rounded-lg">
-              <TabsTrigger value="inbox" className="data-[state=active]:bg-light-blue data-[state=active]:text-white rounded-lg">الكل</TabsTrigger>
-              <TabsTrigger value="unread" className="data-[state=active]:bg-light-blue data-[state=active]:text-white rounded-lg">غير مقروءة</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-4 bg-light-gray rounded-xl shadow-soft-neumorphism p-2">
+              <TabsTrigger value="inbox" className="data-[state=active]:bg-light-blue data-[state=active]:text-white rounded-lg font-inter text-dark-blue data-[state=active]:shadow-soft-neumorphism-inset">الكل</TabsTrigger>
+              <TabsTrigger value="unread" className="data-[state=active]:bg-light-blue data-[state=active]:text-white rounded-lg font-inter text-dark-blue data-[state=active]:shadow-soft-neumorphism-inset">غير مقروءة</TabsTrigger>
             </TabsList>
             <TabsContent value="inbox" className="flex-grow overflow-y-auto space-y-2">
               {conversations.map(conv => (
                 <div
                   key={conv.id}
-                  className="flex items-center p-3 rounded-lg hover:bg-light-gray cursor-pointer transition-colors"
+                  className="flex items-center p-3 rounded-xl hover:bg-light-gray cursor-pointer transition-colors shadow-soft-neumorphism bg-soft-white text-right"
                 >
-                  <Avatar className="h-10 w-10 mr-3">
+                  <Avatar className="h-10 w-10 ml-3 rtl:mr-3 rtl:ml-0">
                     <AvatarImage src={conv.avatarUrl} alt={conv.participantName} />
                     <AvatarFallback>{conv.participantName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                   </Avatar>
-                  <div>
+                  <div className="flex-grow">
                     <p className="font-semibold font-montserrat text-dark-blue">{conv.participantName}</p>
-                    <p className="text-sm text-gray-700 truncate font-open-sans">{conv.lastMessage}</p>
+                    <p className="text-sm text-gray-700 font-inter line-clamp-1">{conv.lastMessage}</p>
                   </div>
                 </div>
               ))}
             </TabsContent>
             <TabsContent value="unread" className="flex-grow overflow-y-auto space-y-2">
               {/* Placeholder for unread conversations */}
-              <p className="text-gray-700 text-sm p-3 font-open-sans">لا توجد رسائل غير مقروءة.</p>
+              <p className="text-gray-700 text-sm p-3 font-inter text-right">لا توجد رسائل غير مقروءة.</p>
             </TabsContent>
           </Tabs>
         </div>
 
         {/* Chat area */}
         <div className="w-2/3 flex flex-col">
-          <CardHeader className="border-b p-4 flex flex-row items-center bg-light-gray rounded-t-xl">
-            <Avatar className="h-10 w-10 mr-3">
+          <CardHeader className="border-b p-4 flex flex-row items-center bg-light-gray rounded-tr-2xl text-right">
+            <Avatar className="h-10 w-10 ml-3 rtl:mr-3 rtl:ml-0">
               <AvatarImage src={currentConversation.avatarUrl} alt={currentConversation.participantName} />
               <AvatarFallback>{currentConversation.participantName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
             </Avatar>
@@ -77,29 +77,29 @@ const ClientMessagesPage = () => {
             {currentConversation.messages.map(msg => (
               <div
                 key={msg.id}
-                className={`flex ${msg.sender === 'client' ? 'justify-end' : 'justify-start'}`}
+                className={`flex ${msg.sender === 'client' ? 'justify-start' : 'justify-end'}`}
               >
                 <div
-                  className={`max-w-[70%] p-3 rounded-xl ${
+                  className={`max-w-[70%] p-3 rounded-xl shadow-soft-neumorphism ${
                     msg.sender === 'client'
-                      ? 'bg-light-blue text-white'
-                      : 'bg-light-gray text-dark-blue'
+                      ? 'bg-pastel-blue text-dark-blue rounded-br-none'
+                      : 'bg-soft-white text-dark-blue rounded-bl-none'
                   }`}
                 >
-                  <p className="font-open-sans">{msg.text}</p>
-                  <span className={`text-xs mt-1 block ${msg.sender === 'client' ? 'text-white/80' : 'text-gray-600'}`}>
+                  <p className="font-inter">{msg.text}</p>
+                  <span className={`text-xs mt-1 block font-inter ${msg.sender === 'client' ? 'text-dark-blue/80' : 'text-gray-600'}`}>
                     {msg.time}
                   </span>
                 </div>
               </div>
             ))}
           </CardContent>
-          <div className="border-t p-4 flex items-center space-x-2 bg-light-gray rounded-b-xl">
-            <Button variant="ghost" size="icon" className="text-gray-500 hover:text-dark-blue rounded-lg">
+          <div className="border-t p-4 flex items-center space-x-2 rtl:space-x-reverse bg-light-gray rounded-br-2xl">
+            <Button variant="ghost" size="icon" className="text-gray-500 hover:text-dark-blue rounded-lg shadow-soft-neumorphism bg-soft-white">
               <Paperclip className="h-5 w-5" />
             </Button>
-            <Textarea placeholder="اكتب رسالتك..." className="flex-grow resize-none rounded-lg" rows={1} />
-            <Button className="bg-platform-orange hover:bg-platform-orange/90 text-white p-2 rounded-lg">
+            <Textarea placeholder="اكتب رسالتك..." className="flex-grow resize-none rounded-lg shadow-soft-neumorphism bg-soft-white text-right" rows={1} />
+            <Button className="bg-platform-orange hover:bg-platform-orange/90 text-white p-2 rounded-lg shadow-md">
               <Send className="h-5 w-5" />
             </Button>
           </div>

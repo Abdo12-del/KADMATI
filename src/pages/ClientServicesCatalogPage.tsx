@@ -1,7 +1,7 @@
 import React from 'react';
 import ClientDashboardLayout from '@/components/ClientDashboardLayout';
 import ClientServiceCard from '@/components/ClientServiceCard';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/input'; // تم التصحيح هنا
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Search } from 'lucide-react';
@@ -17,18 +17,18 @@ const ClientServicesCatalogPage = () => {
 
   return (
     <ClientDashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue">كتالوج الخدمات</h1>
+      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue text-right">كتالوج الخدمات</h1>
 
       <div className="flex flex-col md:flex-row gap-4 mb-8">
         <div className="relative flex-grow">
-          <Input placeholder="ابحث عن خدمة..." className="w-full pl-10 rounded-lg" />
+          <Input placeholder="ابحث عن خدمة..." className="w-full pl-10 rounded-lg shadow-soft-neumorphism bg-soft-white" />
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
         </div>
         <Select>
-          <SelectTrigger className="w-full md:w-[200px] rounded-lg">
+          <SelectTrigger className="w-full md:w-[200px] rounded-lg shadow-soft-neumorphism bg-soft-white text-right">
             <SelectValue placeholder="الفئة" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="rounded-lg shadow-soft-neumorphism bg-soft-white">
             <SelectItem value="cleaning">نظافة</SelectItem>
             <SelectItem value="maintenance">صيانة</SelectItem>
             <SelectItem value="education">تعليم</SelectItem>
@@ -36,16 +36,16 @@ const ClientServicesCatalogPage = () => {
           </SelectContent>
         </Select>
         <Select>
-          <SelectTrigger className="w-full md:w-[200px] rounded-lg">
+          <SelectTrigger className="w-full md:w-[200px] rounded-lg shadow-soft-neumorphism bg-soft-white text-right">
             <SelectValue placeholder="الموقع" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="rounded-lg shadow-soft-neumorphism bg-soft-white">
             <SelectItem value="riyadh">الرياض</SelectItem>
             <SelectItem value="jeddah">جدة</SelectItem>
             <SelectItem value="dammam">الدمام</SelectItem>
           </SelectContent>
         </Select>
-        <Button className="bg-platform-orange hover:bg-platform-orange/90 text-white rounded-lg">
+        <Button className="bg-platform-orange hover:bg-platform-orange/90 text-white rounded-lg shadow-md">
           تطبيق الفلاتر
         </Button>
       </div>
@@ -56,7 +56,7 @@ const ClientServicesCatalogPage = () => {
             <ClientServiceCard key={service.id} service={service} />
           ))
         ) : (
-          <p className="text-gray-600 col-span-full font-open-sans">لا توجد خدمات متاحة حاليًا.</p>
+          <p className="text-gray-600 col-span-full font-inter text-right">لا توجد خدمات متاحة حاليًا.</p>
         )}
       </div>
     </ClientDashboardLayout>

@@ -53,37 +53,42 @@ const ClientServiceDetailsPage = () => {
       <main className="flex-grow container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <Card className="mb-8 rounded-xl">
+            <Card className="mb-8 rounded-2xl shadow-soft-neumorphism bg-soft-white">
               <CardContent className="p-6">
                 <img src={service.images[0]} alt={service.title} className="w-full h-80 object-cover rounded-xl mb-6" />
-                <h1 className="text-4xl font-bold mb-4 font-montserrat text-dark-blue">{service.title}</h1>
-                <p className="text-gray-700 text-lg mb-6 font-open-sans">{service.description}</p>
+                <h1 className="text-4xl font-bold mb-4 font-montserrat text-dark-blue text-right">{service.title}</h1>
+                <p className="text-gray-700 text-lg mb-6 font-inter text-right">{service.description}</p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-gray-700">
-                  <div className="flex items-center">
-                    <User className="h-5 w-5 mr-2 text-light-blue" />
-                    <span className="font-semibold">مقدم الخدمة:</span> {service.provider.name}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-gray-700 text-right">
+                  <div className="flex items-center justify-end md:justify-start">
+                    <span className="font-semibold ml-2">مقدم الخدمة:</span>
+                    <User className="h-5 w-5 text-light-blue" />
+                    <span>{service.provider.name}</span>
                   </div>
-                  <div className="flex items-center">
-                    <Star className="h-5 w-5 mr-2 text-yellow-500 fill-yellow-500" />
-                    <span className="font-semibold">التقييم:</span> {service.rating} ({service.reviewsCount} مراجعة)
+                  <div className="flex items-center justify-end md:justify-start">
+                    <span className="font-semibold ml-2">التقييم:</span>
+                    <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+                    <span>{service.rating} ({service.reviewsCount} مراجعة)</span>
                   </div>
-                  <div className="flex items-center">
-                    <Clock className="h-5 w-5 mr-2 text-light-blue" />
-                    <span className="font-semibold">وقت التنفيذ:</span> {service.deliveryTime}
+                  <div className="flex items-center justify-end md:justify-start">
+                    <span className="font-semibold ml-2">وقت التنفيذ:</span>
+                    <Clock className="h-5 w-5 text-light-blue" />
+                    <span>{service.deliveryTime}</span>
                   </div>
-                  <div className="flex items-center">
-                    <MapPin className="h-5 w-5 mr-2 text-light-blue" />
-                    <span className="font-semibold">الموقع:</span> {service.location}
+                  <div className="flex items-center justify-end md:justify-start">
+                    <span className="font-semibold ml-2">الموقع:</span>
+                    <MapPin className="h-5 w-5 text-light-blue" />
+                    <span>{service.location}</span>
                   </div>
-                  <div className="flex items-center">
-                    <LayoutList className="h-5 w-5 mr-2 text-light-blue" />
-                    <span className="font-semibold">الفئة:</span> {service.category}
+                  <div className="flex items-center justify-end md:justify-start">
+                    <span className="font-semibold ml-2">الفئة:</span>
+                    <LayoutList className="h-5 w-5 text-light-blue" />
+                    <span>{service.category}</span>
                   </div>
                 </div>
 
-                <h2 className="text-2xl font-bold mb-4 font-montserrat text-dark-blue">ماذا تشمل الخدمة؟</h2>
-                <ul className="list-disc list-inside text-gray-700 space-y-2 font-open-sans">
+                <h2 className="text-2xl font-bold mb-4 font-montserrat text-dark-blue text-right">ماذا تشمل الخدمة؟</h2>
+                <ul className="list-disc list-inside text-gray-700 space-y-2 font-inter text-right pr-5">
                   {service.details.map((detail, index) => (
                     <li key={index}>{detail}</li>
                   ))}
@@ -91,22 +96,22 @@ const ClientServiceDetailsPage = () => {
               </CardContent>
             </Card>
 
-            <Card className="mb-8 rounded-xl">
-              <CardHeader>
+            <Card className="mb-8 rounded-2xl shadow-soft-neumorphism bg-soft-white">
+              <CardHeader className="text-right">
                 <CardTitle className="font-montserrat text-dark-blue">عن مقدم الخدمة</CardTitle>
               </CardHeader>
-              <CardContent className="flex items-center space-x-4">
+              <CardContent className="flex items-center space-x-4 rtl:space-x-reverse p-6">
                 <Avatar className="h-16 w-16">
                   <AvatarImage src={service.provider.avatarUrl} alt={service.provider.name} />
                   <AvatarFallback>{service.provider.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                 </Avatar>
-                <div>
+                <div className="text-right">
                   <h3 className="text-xl font-semibold font-montserrat text-dark-blue">{service.provider.name}</h3>
-                  <div className="flex items-center text-sm text-gray-700">
+                  <div className="flex items-center justify-end text-sm text-gray-700 font-inter">
                     {renderStars(service.provider.rating)}
-                    <span className="ml-1">({service.provider.rating})</span>
+                    <span className="mr-1">({service.provider.rating})</span>
                   </div>
-                  <p className="text-sm text-gray-700 font-open-sans">عدد الخدمات المقدمة: {service.provider.totalServices}</p>
+                  <p className="text-sm text-gray-700 font-inter">عدد الخدمات المقدمة: {service.provider.totalServices}</p>
                   <Link to={`/provider/${service.provider.id}`} className="text-light-blue hover:underline text-sm mt-1 block">
                     عرض ملف مقدم الخدمة
                   </Link>
@@ -114,25 +119,25 @@ const ClientServiceDetailsPage = () => {
               </CardContent>
             </Card>
 
-            <Card className="rounded-xl">
-              <CardHeader>
+            <Card className="rounded-2xl shadow-soft-neumorphism bg-soft-white">
+              <CardHeader className="text-right">
                 <CardTitle className="font-montserrat text-dark-blue">التقييمات والمراجعات</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 <div className="space-y-4">
-                  <div className="border-b pb-4 last:border-b-0">
-                    <div className="flex items-center mb-2">
-                      <span className="font-semibold mr-2 text-gray-800 font-open-sans">سارة علي</span>
+                  <div className="border-b pb-4 last:border-b-0 text-right">
+                    <div className="flex items-center justify-end mb-2">
+                      <span className="font-semibold ml-2 text-gray-800 font-inter">سارة علي</span>
                       {renderStars(5)}
                     </div>
-                    <p className="text-gray-700 font-open-sans">خدمة ممتازة وفريق عمل محترف، المنزل أصبح يلمع!</p>
+                    <p className="text-gray-700 font-inter">خدمة ممتازة وفريق عمل محترف، المنزل أصبح يلمع!</p>
                   </div>
-                  <div className="border-b pb-4 last:border-b-0">
-                    <div className="flex items-center mb-2">
-                      <span className="font-semibold mr-2 text-gray-800 font-open-sans">خالد فهد</span>
+                  <div className="border-b pb-4 last:border-b-0 text-right">
+                    <div className="flex items-center justify-end mb-2">
+                      <span className="font-semibold ml-2 text-gray-800 font-inter">خالد فهد</span>
                       {renderStars(4)}
                     </div>
-                    <p className="text-gray-700 font-open-sans">تنظيف جيد جداً وسرعة في الاستجابة، شكراً.</p>
+                    <p className="text-gray-700 font-inter">تنظيف جيد جداً وسرعة في الاستجابة، شكراً.</p>
                   </div>
                 </div>
               </CardContent>
@@ -140,19 +145,19 @@ const ClientServiceDetailsPage = () => {
           </div>
 
           <div className="lg:col-span-1">
-            <Card className="rounded-xl">
-              <CardHeader>
+            <Card className="rounded-2xl shadow-soft-neumorphism bg-soft-white">
+              <CardHeader className="text-right">
                 <CardTitle className="font-montserrat text-dark-blue">اطلب هذه الخدمة</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between items-center text-xl font-bold text-dark-blue">
+              <CardContent className="space-y-4 p-6">
+                <div className="flex justify-between items-center text-xl font-bold text-dark-blue font-inter">
                   <span>السعر:</span>
                   <span className="text-light-blue">${service.price}</span>
                 </div>
-                <Button className="w-full bg-platform-orange hover:bg-platform-orange/90 text-white py-2 rounded-lg">
+                <Button className="w-full bg-platform-orange hover:bg-platform-orange/90 text-white py-2 rounded-lg shadow-md">
                   اطلب الخدمة الآن
                 </Button>
-                <Button variant="outline" className="w-full border-light-blue text-light-blue hover:bg-light-blue/10 rounded-lg">
+                <Button variant="outline" className="w-full border-light-blue text-light-blue hover:bg-light-blue/10 rounded-lg shadow-md">
                   تواصل مع مقدم الخدمة
                 </Button>
               </CardContent>

@@ -30,21 +30,21 @@ const ClientSupportPage = () => {
 
   return (
     <ClientDashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue">الدعم والمساعدة</h1>
+      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue text-right">الدعم والمساعدة</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="rounded-xl">
-          <CardHeader>
+        <Card className="rounded-2xl shadow-soft-neumorphism bg-soft-white">
+          <CardHeader className="text-right">
             <CardTitle className="font-montserrat text-dark-blue">الأسئلة الشائعة</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <Accordion type="single" collapsible className="w-full">
               {faqs.map((faq, index) => (
-                <AccordionItem key={index} value={`item-${index}`}>
-                  <AccordionTrigger className="font-semibold text-gray-800 font-open-sans text-right hover:no-underline hover:text-light-blue">
+                <AccordionItem key={index} value={`item-${index}`} className="border-b border-gray-200">
+                  <AccordionTrigger className="font-semibold text-gray-800 font-inter text-right hover:no-underline hover:text-light-blue">
                     {faq.question}
                   </AccordionTrigger>
-                  <AccordionContent className="text-gray-700 font-open-sans text-right">
+                  <AccordionContent className="text-gray-700 font-inter text-right">
                     {faq.answer}
                   </AccordionContent>
                 </AccordionItem>
@@ -53,28 +53,28 @@ const ClientSupportPage = () => {
           </CardContent>
         </Card>
 
-        <Card className="rounded-xl">
-          <CardHeader>
+        <Card className="rounded-2xl shadow-soft-neumorphism bg-soft-white">
+          <CardHeader className="text-right">
             <CardTitle className="font-montserrat text-dark-blue">تواصل مع الدعم الفني</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 p-6">
             <div>
-              <Label htmlFor="support-name" className="text-gray-700 font-open-sans">اسمك الكامل</Label>
-              <Input id="support-name" type="text" placeholder="ادخل اسمك" required className="rounded-lg" />
+              <Label htmlFor="support-name" className="text-gray-700 font-inter">اسمك الكامل</Label>
+              <Input id="support-name" type="text" placeholder="ادخل اسمك" required className="rounded-lg shadow-soft-neumorphism bg-soft-white text-right" />
             </div>
             <div>
-              <Label htmlFor="support-email" className="text-gray-700 font-open-sans">بريدك الإلكتروني</Label>
-              <Input id="support-email" type="email" placeholder="ادخل بريدك الإلكتروني" required className="rounded-lg" />
+              <Label htmlFor="support-email" className="text-gray-700 font-inter">بريدك الإلكتروني</Label>
+              <Input id="support-email" type="email" placeholder="ادخل بريدك الإلكتروني" required className="rounded-lg shadow-soft-neumorphism bg-soft-white text-right" />
             </div>
             <div>
-              <Label htmlFor="support-subject" className="text-gray-700 font-open-sans">الموضوع</Label>
-              <Input id="support-subject" type="text" placeholder="موضوع رسالتك" required className="rounded-lg" />
+              <Label htmlFor="support-subject" className="text-gray-700 font-inter">الموضوع</Label>
+              <Input id="support-subject" type="text" placeholder="موضوع رسالتك" required className="rounded-lg shadow-soft-neumorphism bg-soft-white text-right" />
             </div>
             <div>
-              <Label htmlFor="support-message" className="text-gray-700 font-open-sans">رسالتك</Label>
-              <Textarea id="support-message" placeholder="اكتب رسالتك هنا بالتفصيل..." rows={5} required className="rounded-lg" />
+              <Label htmlFor="support-message" className="text-gray-700 font-inter">رسالتك</Label>
+              <Textarea id="support-message" placeholder="اكتب رسالتك هنا بالتفصيل..." rows={5} required className="rounded-lg shadow-soft-neumorphism bg-soft-white text-right" />
             </div>
-            <Button className="w-full bg-platform-orange hover:bg-platform-orange/90 text-white rounded-lg">
+            <Button className="w-full bg-platform-orange hover:bg-platform-orange/90 text-white rounded-lg shadow-md">
               إرسال الرسالة
             </Button>
           </CardContent>
@@ -82,13 +82,13 @@ const ClientSupportPage = () => {
       </div>
 
       <section className="mt-8">
-        <h2 className="text-2xl font-bold mb-4 font-montserrat text-dark-blue">مركز التعلم</h2>
-        <div className="bg-white p-6 rounded-xl shadow-md">
-          <p className="text-gray-700 mb-4 font-open-sans">
+        <h2 className="text-2xl font-semibold mb-4 font-montserrat text-dark-blue text-right">مركز التعلم</h2>
+        <div className="bg-soft-white p-6 rounded-2xl shadow-soft-neumorphism">
+          <p className="text-gray-700 mb-4 font-inter text-right">
             استكشف مواردنا التعليمية لمساعدتك في استخدام المنصة بفعالية.
           </p>
           <Link to="/client-dashboard/learning-center"> {/* Placeholder link */}
-            <Button variant="outline" className="border-light-blue text-light-blue hover:bg-light-blue/10 rounded-lg">
+            <Button variant="outline" className="border-light-blue text-light-blue hover:bg-light-blue/10 rounded-lg shadow-md">
               اذهب إلى مركز التعلم
             </Button>
           </Link>

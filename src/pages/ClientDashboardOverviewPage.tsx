@@ -3,162 +3,148 @@ import ClientDashboardLayout from '@/components/ClientDashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Heart, MessageSquare, Star, TrendingUp } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { ShoppingCart, Heart, MessageSquare, Star, Plus, Search, LayoutList } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-const ordersTrendData = [
-  { name: 'يناير', completed: 5, pending: 2 },
-  { name: 'فبراير', completed: 7, pending: 3 },
-  { name: 'مارس', completed: 6, pending: 1 },
-  { name: 'أبريل', completed: 9, pending: 4 },
-  { name: 'مايو', completed: 8, pending: 2 },
+// Placeholder data
+const recentMessages = [
+  { id: 'm1', sender: 'شركة النظافة السريعة', content: 'تم تأكيد موعد التنظيف لمنزلك.', time: 'منذ 5 دقائق', avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=NS' },
+  { id: 'm2', sender: 'مهندس الديكور أحمد', content: 'هل لديك أي تعديلات على التصميم المقترح؟', time: 'منذ ساعة', avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=MA' },
 ];
+
+const recentlyViewedServices = [
+  { id: 's1', title: 'تنظيف منزلي عميق', imageUrl: '/placeholder.svg' },
+  { id: 's2', title: 'تصميم داخلي للمنازل', imageUrl: '/placeholder.svg' },
+  { id: 's3', title: 'صيانة مكيفات سبليت', imageUrl: '/placeholder.svg' },
+];
+
+const serviceCategories = [
+  { id: 'cat1', name: 'نظافة', icon: 'Sparkles' },
+  { id: 'cat2', name: 'صيانة', icon: 'Wrench' },
+  { id: 'cat3', name: 'تعليم', icon: 'BookOpen' },
+  { id: 'cat4', name: 'تصميم', icon: 'Palette' },
+  { id: 'cat5', name: 'نقل', icon: 'Truck' },
+  { id: 'cat6', name: 'جمال', icon: 'Scissors' },
+];
+
+// Helper to get Lucide icon component
+const getIconComponent = (iconName: string) => {
+  const icons: { [key: string]: React.ElementType } = {
+    Sparkles: require('lucide-react').Sparkles,
+    Wrench: require('lucide-react').Wrench,
+    BookOpen: require('lucide-react').BookOpen,
+    Palette: require('lucide-react').Palette,
+    Truck: require('lucide-react').Truck,
+    Scissors: require('lucide-react').Scissors,
+  };
+  return icons[iconName] || LayoutList; // Default to LayoutList if not found
+};
+
 
 const ClientDashboardOverviewPage = () => {
   return (
     <ClientDashboardLayout>
-      <h1 className="text-4xl font-bold mb-8 font-montserrat text-dark-blue">نظرة عامة على لوحة تحكم العميل</h1>
+      <div className="bg-light-gray p-8 rounded-2xl shadow-inner min-h-[calc(100vh-200px)]">
+        <h1 className="text-4xl font-bold mb-10 font-montserrat text-dark-blue text-right">
+          أهلاً بك، ليلى!
+        </h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card className="rounded-xl shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium font-montserrat text-dark-blue">الطلبات النشطة</CardTitle>
-            <div className="flex items-center">
-              <ShoppingCart className="h-4 w-4 text-gray-500 mr-1" />
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-platform-orange opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-platform-orange"></span>
-              </span>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-dark-blue">3</div>
-            <p className="text-xs text-gray-600 font-open-sans">لديك 3 طلبات قيد التنفيذ</p>
-          </CardContent>
-        </Card>
-        <Card className="rounded-xl shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium font-montserrat text-dark-blue">الخدمات المفضلة</CardTitle>
-            <Heart className="h-4 w-4 text-gray-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-dark-blue">7</div>
-            <p className="text-xs text-gray-600 font-open-sans">7 خدمات في قائمة المفضلة</p>
-          </CardContent>
-        </Card>
-        <Card className="rounded-xl shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium font-montserrat text-dark-blue">رسائل جديدة</CardTitle>
-            <div className="flex items-center">
-              <MessageSquare className="h-4 w-4 text-gray-500 mr-1" />
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-platform-red opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-platform-red"></span>
-              </span>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-dark-blue">1</div>
-            <p className="text-xs text-gray-600 font-open-sans">رسالة جديدة من مقدم خدمة</p>
-          </CardContent>
-        </Card>
-        <Card className="rounded-xl shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium font-montserrat text-dark-blue">التقييمات المعلقة</CardTitle>
-            <Star className="h-4 w-4 text-gray-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-dark-blue">2</div>
-            <p className="text-xs text-gray-600 font-open-sans">2 خدمة تنتظر تقييمك</p>
-          </CardContent>
-        </Card>
+        {/* Quick Actions */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-semibold mb-6 font-montserrat text-dark-blue text-right">
+            إجراءات سريعة
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Link to="/client-dashboard/requests/create">
+              <Button className="w-full h-24 bg-pastel-blue hover:bg-light-blue text-dark-blue hover:text-white text-lg font-semibold rounded-2xl shadow-soft-neumorphism transition-all duration-300 flex flex-col items-center justify-center space-y-2">
+                <Plus className="h-8 w-8" />
+                <span>إنشاء طلب جديد</span>
+              </Button>
+            </Link>
+            <Link to="/client-dashboard/services">
+              <Button className="w-full h-24 bg-pastel-green hover:bg-platform-green text-dark-blue hover:text-white text-lg font-semibold rounded-2xl shadow-soft-neumorphism transition-all duration-300 flex flex-col items-center justify-center space-y-2">
+                <Search className="h-8 w-8" />
+                <span>تصفح الخدمات</span>
+              </Button>
+            </Link>
+            <Link to="/client-dashboard/messages">
+              <Button className="w-full h-24 bg-pastel-orange hover:bg-platform-orange text-dark-blue hover:text-white text-lg font-semibold rounded-2xl shadow-soft-neumorphism transition-all duration-300 flex flex-col items-center justify-center space-y-2 relative">
+                <MessageSquare className="h-8 w-8" />
+                <span>الرسائل</span>
+                <span className="absolute top-3 right-3 h-4 w-4 bg-platform-red rounded-full flex items-center justify-center text-xs text-white">1</span>
+              </Button>
+            </Link>
+            <Link to="/client-dashboard/favorites">
+              <Button className="w-full h-24 bg-soft-white hover:bg-light-gray text-dark-blue text-lg font-semibold rounded-2xl shadow-soft-neumorphism transition-all duration-300 flex flex-col items-center justify-center space-y-2">
+                <Heart className="h-8 w-8" />
+                <span>المفضلة</span>
+              </Button>
+            </Link>
+          </div>
+        </section>
+
+        {/* Recent Messages */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-semibold mb-6 font-montserrat text-dark-blue text-right">
+            آخر الرسائل
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {recentMessages.map(message => (
+              <Card key={message.id} className="shadow-soft-neumorphism bg-soft-white rounded-2xl p-6 flex items-center space-x-4 rtl:space-x-reverse">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={message.avatarUrl} alt={message.sender} />
+                  <AvatarFallback>{message.sender.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                </Avatar>
+                <div className="flex-grow text-right">
+                  <p className="font-semibold text-dark-blue font-montserrat">{message.sender}</p>
+                  <p className="text-sm text-gray-700 font-inter line-clamp-1">{message.content}</p>
+                  <p className="text-xs text-gray-500 font-inter mt-1">{message.time}</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        {/* Recently Viewed Services */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-semibold mb-6 font-montserrat text-dark-blue text-right">
+            الخدمات التي تمت مشاهدتها مؤخرًا
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {recentlyViewedServices.map(service => (
+              <Card key={service.id} className="shadow-soft-neumorphism bg-soft-white rounded-2xl p-4">
+                <img src={service.imageUrl} alt={service.title} className="w-full h-32 object-cover rounded-xl mb-4" />
+                <h3 className="text-lg font-semibold font-montserrat text-dark-blue text-right">{service.title}</h3>
+                <Link to={`/client-dashboard/services/${service.id}`}>
+                  <Button variant="link" className="p-0 h-auto text-light-blue hover:text-dark-blue font-inter text-right">
+                    عرض التفاصيل
+                  </Button>
+                </Link>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        {/* Service Categories Grid */}
+        <section>
+          <h2 className="text-2xl font-semibold mb-6 font-montserrat text-dark-blue text-right">
+            استكشف الفئات
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
+            {serviceCategories.map(category => {
+              const IconComponent = getIconComponent(category.icon);
+              return (
+                <Link key={category.id} to={`/client-dashboard/services?category=${category.id}`}>
+                  <Card className="shadow-soft-neumorphism bg-soft-white rounded-2xl p-6 flex flex-col items-center justify-center text-center space-y-3 hover:bg-light-gray transition-colors duration-300">
+                    <IconComponent className="h-10 w-10 text-light-blue" />
+                    <p className="font-semibold text-dark-blue font-montserrat">{category.name}</p>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
       </div>
-
-      <section className="mb-8">
-        <h2 className="text-2xl font-bold mb-4 font-montserrat text-dark-blue">إجراءات سريعة</h2>
-        <div className="flex flex-wrap gap-4">
-          <Link to="/client-dashboard/services">
-            <Button className="bg-light-blue hover:bg-light-blue/90 text-white rounded-lg">
-              تصفح الخدمات
-            </Button>
-          </Link>
-          <Link to="/client-dashboard/orders">
-            <Button variant="outline" className="border-light-blue text-light-blue hover:bg-light-blue/10 rounded-lg">
-              عرض طلباتي
-            </Button>
-          </Link>
-          <Link to="/client-dashboard/messages">
-            <Button variant="outline" className="border-light-blue text-light-blue hover:bg-light-blue/10 rounded-lg">
-              مركز الرسائل
-            </Button>
-          </Link>
-        </div>
-      </section>
-
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <Card className="rounded-xl shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="font-montserrat text-dark-blue">تطور الطلبات</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[200px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={ordersTrendData}>
-                <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip />
-                <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-gray-200" />
-                <Line type="monotone" dataKey="completed" stroke="#7ED321" name="مكتملة" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                <Line type="monotone" dataKey="pending" stroke="#F5A623" name="معلقة" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-        <Card className="rounded-xl shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="font-montserrat text-dark-blue">الخدمات الأكثر طلبًا</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[200px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={[{ name: 'تنظيف', count: 10 }, { name: 'صيانة', count: 7 }, { name: 'تصميم', count: 5 }]}>
-                <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip />
-                <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-gray-200" />
-                <Bar dataKey="count" fill="#4A90E2" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </section>
-
-      <section>
-        <h2 className="text-2xl font-bold mb-4 font-montserrat text-dark-blue">آخر الأنشطة</h2>
-        <div className="bg-white p-6 rounded-xl shadow-md">
-          <ul className="space-y-4">
-            <li className="flex items-center border-b pb-2 last:border-b-0">
-              <ShoppingCart className="h-5 w-5 text-light-blue mr-3 flex-shrink-0" />
-              <div>
-                <p className="font-semibold text-gray-800 font-open-sans">تم قبول طلبك لخدمة "تنظيف منزلي"</p>
-                <p className="text-sm text-gray-600 font-open-sans">بواسطة: شركة النظافة السريعة - قبل 10 دقائق</p>
-              </div>
-            </li>
-            <li className="flex items-center border-b pb-2 last:border-b-0">
-              <MessageSquare className="h-5 w-5 text-platform-orange mr-3 flex-shrink-0" />
-              <div>
-                <p className="font-semibold text-gray-800 font-open-sans">رسالة جديدة من "مهندس الديكور أحمد"</p>
-                <p className="text-sm text-gray-600 font-open-sans">بخصوص مشروع تصميم داخلي - قبل ساعة</p>
-              </div>
-            </li>
-            <li className="flex items-center border-b pb-2 last:border-b-0">
-              <TrendingUp className="h-5 w-5 text-platform-green mr-3 flex-shrink-0" />
-              <div>
-                <p className="font-semibold text-gray-800 font-open-sans">تم إكمال خدمتك "صيانة مكيفات"</p>
-                <p className="text-sm text-gray-600 font-open-sans">بواسطة: فني الصيانة ماهر - قبل يوم</p>
-              </div>
-            </li>
-          </ul>
-        </div>
-      </section>
     </ClientDashboardLayout>
   );
 };

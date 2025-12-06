@@ -31,19 +31,19 @@ const ClientOrderCard = ({ order }: ClientOrderCardProps) => {
   };
 
   return (
-    <Card className="shadow-sm rounded-xl">
-      <CardHeader>
+    <Card className="shadow-soft-neumorphism bg-soft-white rounded-2xl p-4">
+      <CardHeader className="p-0 mb-2">
         <CardTitle className="text-lg font-montserrat text-dark-blue">{order.serviceTitle}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
-        <p className="text-sm text-gray-700">مقدم الخدمة: <span className="font-medium">{order.providerName}</span></p>
-        <p className="text-sm text-gray-700">التاريخ: {order.date}</p>
-        <div className="flex justify-between items-center pt-2">
-          <span className={`font-semibold ${getStatusColor(order.status)}`}>الحالة: {order.status}</span>
-          <span className="font-bold text-dark-blue">${order.price}</span>
+      <CardContent className="p-0 space-y-2">
+        <p className="text-sm text-gray-700 font-inter">مقدم الخدمة: <span className="font-medium">{order.providerName}</span></p>
+        <p className="text-sm text-gray-700 font-inter">التاريخ: {order.date}</p>
+        <div className="flex justify-between items-center pt-4">
+          <span className={`font-semibold font-inter ${getStatusColor(order.status)}`}>الحالة: {order.status}</span>
+          <span className="font-bold text-dark-blue text-xl">${order.price}</span>
         </div>
         <Link to={`/client-dashboard/orders/${order.id}`}>
-          <Button variant="outline" className="w-full mt-4 border-light-blue text-light-blue hover:bg-light-blue/10 rounded-lg">
+          <Button variant="outline" className="w-full mt-4 border-light-blue text-light-blue hover:bg-light-blue/10 rounded-lg shadow-md">
             عرض التفاصيل
           </Button>
         </Link>
