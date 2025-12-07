@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { ClientHomeCategoryScroll } from '@/components/ClientHomeCategoryScroll';
 import ClientServiceCard from '@/components/ClientServiceCard'; // إعادة استخدام البطاقة الموجودة
+import { Button } from '@/components/ui/button'; // Import Button
+import { Link } from 'react-router-dom'; // Import Link
 
 const ClientHomePage = () => {
   // بيانات وهمية للخدمات
@@ -33,6 +35,15 @@ const ClientHomePage = () => {
             />
             <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-6 w-6 text-brand-text-muted" />
           </div>
+        </section>
+
+        {/* زر إضافة طلب خدمة جديد */}
+        <section className="mb-10 text-center">
+          <Link to="/client-home/create-request">
+            <Button className="bg-brand-primary hover:bg-brand-primary-dark text-white text-lg px-8 py-4 rounded-2xl shadow-soft font-cairo">
+              أضف طلب خدمة جديد
+            </Button>
+          </Link>
         </section>
 
         {/* شريط الفئات الطائر */}

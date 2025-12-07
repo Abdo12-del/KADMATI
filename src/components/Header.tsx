@@ -9,8 +9,9 @@ import {
   navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { Bell, UserCircle } from 'lucide-react'; // Using Lucide for icons
-import { NotificationsDropdown } from '@/components/notifications/NotificationsDropdown.tsx'; // تم التصحيح هنا
+import { Bell, UserCircle, ListFilter } from 'lucide-react'; // Using Lucide for icons, added ListFilter
+import { NotificationsDropdown } from '@/components/notifications/NotificationsDropdown.tsx';
+import { ProviderReverseRequestsModal } from '@/components/ProviderReverseRequestsModal'; // Import the new modal
 
 const Header = () => {
   // Placeholder for unread notifications count
@@ -52,6 +53,9 @@ const Header = () => {
           
           {/* Notifications Dropdown */}
           <NotificationsDropdown unreadCount={unreadNotificationsCount} />
+
+          {/* Provider Reverse Requests Modal Trigger */}
+          <ProviderReverseRequestsModal />
 
           <Link to="/profile">
             <Button variant="ghost" size="icon" className="text-brand-text-dark hover:bg-brand-background rounded-full">
