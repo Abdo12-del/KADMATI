@@ -10,8 +10,6 @@ import ClientOrdersModal from '@/components/ClientOrdersModal';
 import { MessageCenterModal } from '@/components/MessageCenterModal'; // استيراد المكون الجديد
 
 const ClientHomeHeader = () => {
-  const unreadNotificationsCount = 3; // قيمة وهمية لعدد الإشعارات غير المقروءة
-  
   // For demonstration, let's assume a dummy client user ID
   // In a real app, this would come from an authentication context
   const currentClientId = 'client456'; 
@@ -24,7 +22,7 @@ const ClientHomeHeader = () => {
         </Link>
         <div className="flex items-center space-x-4 rtl:space-x-reverse">
           <ThemeToggle />
-          <NotificationsDropdown unreadCount={unreadNotificationsCount} />
+          <NotificationsDropdown currentUserId={currentClientId} /> {/* تمرير معرف المستخدم */}
           <MessageCenterModal currentUserId={currentClientId} /> {/* تحديد المستخدم الحالي كطالب خدمة */}
           <ClientOrdersModal /> {/* زر الطلبات يفتح نافذة منبثقة */}
           <ClientGeneralMenuModal /> {/* زر القائمة العامة يفتح نافذة منبثقة */}

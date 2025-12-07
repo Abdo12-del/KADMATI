@@ -13,7 +13,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner'; // For share functionality
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface Service {
   id: string;
@@ -44,7 +44,7 @@ interface Rating {
   clientId: string;
   rating: number;
   comment?: string;
-  createdAt?: Date;
+  createdAt?: string; // Changed to string to match backend
   clientName?: string; // Joined from user table
   clientAvatarUrl?: string; // Joined from user table
 }
@@ -99,8 +99,36 @@ const fetchServiceRatings = async (serviceId: string): Promise<Rating[]> => {
   return ratingsWithClientDetails;
 };
 
+const createOrder = async (orderData: { serviceId: string; clientId: string; providerId: string; price: number; details?: string }) => {
+  const response = await fetch('http://localhost:3000/api/orders', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(orderData),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to create order');
+  }
+  return response.json();
+};
+
+const createConversation = async (participant1Id: string, participant2Id: string) => {
+  const response = await fetch('http://localhost:3000/api/conversations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ participant1Id, participant2Id }),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to create conversation');
+  }
+  return response.json();
+};
+
+
 const ClientServiceDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
+  const queryClient = useQueryClient();
+  // Placeholder for current client ID - replace with actual auth context
+  const currentClientId = 'client456';
 
   const { data: service, isLoading: isLoadingService, error: serviceError } = useQuery<Service, Error>({
     queryKey: ['serviceDetails', id],
@@ -118,6 +146,33 @@ const ClientServiceDetailsPage = () => {
     queryKey: ['serviceRatings', id],
     queryFn: () => fetchServiceRatings(id!),
     enabled: !!id,
+  });
+
+  const createOrderMutation = useMutation({
+    mutationFn: createOrder,
+    onSuccess: () => {
+      toast.success('تم طلب الخدمة بنجاح!');
+      queryClient.invalidateQueries({ queryKey: ['clientOrders'] }); // Invalidate client orders
+      queryClient.invalidateQueries({ queryKey: ['providerOrders'] }); // Invalidate provider orders
+      queryClient.invalidateQueries({ queryKey: ['notifications'] }); // Invalidate notifications
+    },
+    onError: (err) => {
+      toast.error(`فشل في طلب الخدمة: ${err.message}`);
+    },
+  });
+
+  const createConversationMutation = useMutation({
+    mutationFn: ({ participant1Id, participant2Id }: { participant1Id: string; participant2Id: string }) =>
+      createConversation(participant1Id, participant2Id),
+    onSuccess: (data) => {
+      toast.success('تم فتح المحادثة بنجاح!');
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      // Optionally, open the message center modal and select this conversation
+      // This would require a state management solution to control the modal from here
+    },
+    onError: (err) => {
+      toast.error(`فشل في فتح المحادثة: ${err.message}`);
+    },
   });
 
   // Placeholder for FAQs (can be fetched from API later)
@@ -145,6 +200,31 @@ const ClientServiceDetailsPage = () => {
   const handleAddToFavorites = () => {
     toast.success('تمت إضافة الخدمة إلى المفضلة!');
     // Logic to add to favorites
+  };
+
+  const handleOrderService = () => {
+    if (!service || !currentClientId || !provider) {
+      toast.error('لا يمكن طلب الخدمة. البيانات غير مكتملة.');
+      return;
+    }
+    createOrderMutation.mutate({
+      serviceId: service.id,
+      clientId: currentClientId,
+      providerId: provider.id,
+      price: service.price,
+      details: `طلب خدمة: ${service.title}`,
+    });
+  };
+
+  const handleContactProvider = () => {
+    if (!currentClientId || !provider) {
+      toast.error('لا يمكن التواصل. البيانات غير مكتملة.');
+      return;
+    }
+    createConversationMutation.mutate({
+      participant1Id: currentClientId,
+      participant2Id: provider.id,
+    });
   };
 
   if (isLoadingService || isLoadingProvider || isLoadingReviews) return (
@@ -243,7 +323,7 @@ const ClientServiceDetailsPage = () => {
                   <div className="text-right">
                     <p className="font-cairo text-xl text-brand-text-dark font-semibold">{provider.name}</p>
                     <div className="flex items-center justify-end text-sm text-brand-text-muted font-ibm-plex-arabic">
-                      <span className="ml-1">({service.rating})</span>
+                      <span className="ml-1">({service.rating.toFixed(1)})</span>
                       {renderStars(service.rating)}
                     </div>
                     <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">
@@ -280,9 +360,8 @@ const ClientServiceDetailsPage = () => {
                       {provider.phone && <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">الهاتف: {provider.phone}</p>}
                     </div>
                     <div className="mt-6 text-center">
-                      <Button className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
-                        <MessageSquare className="ml-2 h-5 w-5" />
-                        إرسال رسالة
+                      <Button onClick={handleContactProvider} className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg" disabled={createConversationMutation.isPending}>
+                        {createConversationMutation.isPending ? 'جاري الفتح...' : <><MessageSquare className="ml-2 h-5 w-5" /> إرسال رسالة</>}
                       </Button>
                     </div>
                   </DialogContent>
@@ -390,12 +469,11 @@ const ClientServiceDetailsPage = () => {
                   </div>
                 )} */}
 
-                <Button className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white py-3 rounded-xl shadow-soft font-ibm-plex-arabic text-lg">
-                  اطلب الخدمة الآن
+                <Button onClick={handleOrderService} className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white py-3 rounded-xl shadow-soft font-ibm-plex-arabic text-lg" disabled={createOrderMutation.isPending}>
+                  {createOrderMutation.isPending ? 'جاري الطلب...' : 'اطلب الخدمة الآن'}
                 </Button>
-                <Button variant="outline" className="w-full border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
-                  <MessageSquare className="ml-2 h-5 w-5" />
-                  تواصل مع مقدم الخدمة
+                <Button onClick={handleContactProvider} variant="outline" className="w-full border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg" disabled={createConversationMutation.isPending}>
+                  {createConversationMutation.isPending ? 'جاري الفتح...' : <><MessageSquare className="ml-2 h-5 w-5" /> تواصل مع مقدم الخدمة</>}
                 </Button>
 
                 <Separator className="my-6 bg-border" />

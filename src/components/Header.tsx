@@ -15,9 +15,6 @@ import { ProviderReverseRequestsModal } from '@/components/ProviderReverseReques
 import { MessageCenterModal } from '@/components/MessageCenterModal'; // استيراد المكون الجديد
 
 const Header = () => {
-  // Placeholder for unread notifications count
-  const unreadNotificationsCount = 3; 
-  
   // For demonstration, let's assume a dummy provider user ID
   // In a real app, this would come from an authentication context
   const currentProviderId = 'provider123'; 
@@ -57,7 +54,7 @@ const Header = () => {
           <ThemeToggle />
           
           {/* Notifications Dropdown */}
-          <NotificationsDropdown unreadCount={unreadNotificationsCount} />
+          <NotificationsDropdown currentUserId={currentProviderId} /> {/* تمرير معرف المستخدم */}
 
           {/* Provider Reverse Requests Modal Trigger */}
           <ProviderReverseRequestsModal />

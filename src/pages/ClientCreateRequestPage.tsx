@@ -49,6 +49,7 @@ const ClientCreateRequestPage = () => {
     mutationFn: createRequest,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clientRequests'] }); // Invalidate client requests cache
+      queryClient.invalidateQueries({ queryKey: ['allRequests'] }); // Invalidate all requests for providers
       toast.success('تم إرسال طلبك بنجاح! سيتم مراجعته من قبل مقدمي الخدمات.');
       navigate('/client-home'); // Redirect to client home after submission
     },

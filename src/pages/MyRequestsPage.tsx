@@ -7,9 +7,14 @@ import { useQuery } from '@tanstack/react-query';
 
 interface Request {
   id: string;
+  clientId: string;
   title: string;
   description: string;
+  location?: string;
+  dueDate?: string;
+  additionalOptions?: string;
   status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled';
+  createdAt: string;
 }
 
 const fetchClientRequests = async (clientId: string): Promise<Request[]> => {
@@ -28,6 +33,7 @@ const MyRequestsPage = () => {
     queryKey: ['clientRequests', currentClientId],
     queryFn: () => fetchClientRequests(currentClientId),
     enabled: !!currentClientId,
+    refetchInterval: 5000, // Poll for updates
   });
 
   const pendingRequests = requests?.filter(req => req.status === 'Pending') || [];

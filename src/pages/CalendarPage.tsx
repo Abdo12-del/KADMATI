@@ -4,21 +4,59 @@ import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useQuery } from '@tanstack/react-query';
+
+interface CalendarEvent {
+  id: string;
+  userId: string;
+  title: string;
+  description?: string;
+  start: string; // ISO string
+  end?: string; // ISO string
+  type?: 'appointment' | 'task' | 'vacation';
+  createdAt: string;
+}
+
+const fetchCalendarEvents = async (userId: string): Promise<CalendarEvent[]> => {
+  const response = await fetch(`http://localhost:3000/api/calendar/user/${userId}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch calendar events');
+  }
+  return response.json();
+};
 
 const CalendarPage = () => {
   const [date, setDate] = React.useState<Date | undefined>(new Date());
+  // Placeholder for current user ID - replace with actual auth context
+  const currentUserId = 'provider123'; // Example: 'provider123' or 'client456'
 
-  // Placeholder for events/bookings - will be fetched from API
-  const events = [];
+  const { data: events = [], isLoading, error } = useQuery<CalendarEvent[], Error>({
+    queryKey: ['calendarEvents', currentUserId],
+    queryFn: () => fetchCalendarEvents(currentUserId),
+    enabled: !!currentUserId,
+    refetchInterval: 60000, // Poll for updates every minute
+  });
 
   const getEventsForDate = (selectedDate: Date | undefined) => {
     if (!selectedDate) return [];
-    return events.filter(event =>
-      event.date.toDateString() === selectedDate.toDateString()
-    );
+    return events.filter(event => {
+      const eventStartDate = new Date(event.start);
+      return eventStartDate.toDateString() === selectedDate.toDateString();
+    });
   };
 
   const selectedDateEvents = getEventsForDate(date);
+
+  if (isLoading) return (
+    <DashboardLayout>
+      <div className="text-center text-brand-text-dark font-ibm-plex-arabic">جاري تحميل التقويم...</div>
+    </DashboardLayout>
+  );
+  if (error) return (
+    <DashboardLayout>
+      <div className="text-center text-brand-danger font-ibm-plex-arabic">خطأ في تحميل التقويم: {error.message}</div>
+    </DashboardLayout>
+  );
 
   return (
     <DashboardLayout>
@@ -50,7 +88,11 @@ const CalendarPage = () => {
                 {selectedDateEvents.map(event => (
                   <li key={event.id} className="border-b border-border pb-3 last:border-b-0 last:pb-0">
                     <p className="font-cairo text-brand-text-dark font-semibold">{event.title}</p>
-                    <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">{event.time}</p>
+                    <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">
+                      {new Date(event.start).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                      {event.end && ` - ${new Date(event.end).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}`}
+                    </p>
+                    {event.description && <p className="text-xs text-brand-text-muted font-ibm-plex-arabic mt-1">{event.description}</p>}
                   </li>
                 ))}
               </ul>
