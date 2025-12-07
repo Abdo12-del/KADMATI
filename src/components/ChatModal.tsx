@@ -64,15 +64,15 @@ const ChatModal = ({ isOpen, onClose, conversation }: ChatModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px] h-[90vh] flex flex-col rounded-2xl shadow-soft bg-brand-card-bg p-6 overflow-hidden">
-        <DialogHeader className="border-b border-border pb-4 flex flex-row-reverse items-center bg-brand-card-bg rounded-tr-2xl -mx-6 px-6 pt-0">
+      <DialogContent className="sm:max-w-[700px] h-[90vh] flex flex-col rounded-2xl shadow-soft bg-red-500 p-6 overflow-hidden"> {/* تم تغيير اللون هنا مؤقتًا */}
+        <DialogHeader className="border-b border-border pb-4 flex flex-row-reverse items-center bg-red-500 rounded-tr-2xl -mx-6 px-6 pt-0"> {/* تم تغيير اللون هنا مؤقتًا */}
           <Avatar className="h-12 w-12 ml-3">
             <AvatarImage src={conversation.avatarUrl} alt={conversation.customerName} />
             <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{conversation.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
           </Avatar>
-          <DialogTitle className="font-cairo text-brand-text-dark text-xl">{conversation.customerName}</DialogTitle>
+          <DialogTitle className="font-cairo text-white text-xl">{conversation.customerName}</DialogTitle> {/* تم تغيير لون النص ليتناسب مع الخلفية الحمراء */}
         </DialogHeader>
-        <div className="flex-grow overflow-y-auto p-0 space-y-4 mt-4"> {/* Removed px-6, pt-0, -mx-6 from original CardContent */}
+        <div className="flex-grow overflow-y-auto p-0 space-y-4 mt-4">
           {conversation.messages.map(msg => (
             <div
               key={msg.id}
@@ -94,8 +94,8 @@ const ChatModal = ({ isOpen, onClose, conversation }: ChatModalProps) => {
           ))}
           <div ref={messagesEndRef} />
         </div>
-        <div className="border-t border-border pt-4 flex flex-row-reverse items-center space-x-4 rtl:space-x-reverse bg-brand-card-bg -mx-6 px-6 pb-0">
-          <Button variant="ghost" size="icon" className="text-brand-text-muted hover:text-brand-primary rounded-full shadow-soft bg-brand-background">
+        <div className="border-t border-border pt-4 flex flex-row-reverse items-center space-x-4 rtl:space-x-reverse bg-red-500 -mx-6 px-6 pb-0"> {/* تم تغيير اللون هنا مؤقتًا */}
+          <Button variant="ghost" size="icon" className="text-white hover:text-brand-primary rounded-full shadow-soft bg-brand-background">
             <Paperclip className="h-5 w-5" />
           </Button>
           <Textarea
