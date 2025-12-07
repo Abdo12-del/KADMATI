@@ -33,7 +33,7 @@ const Header = () => {
             </NavigationMenuItem>
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
-                <Link to="/client-dashboard" className={`${navigationMenuTriggerStyle()} text-brand-text-dark hover:text-brand-primary font-ibm-plex-arabic rounded-lg`}>
+                <Link to="/client-home" className={`${navigationMenuTriggerStyle()} text-brand-text-dark hover:text-brand-primary font-ibm-plex-arabic rounded-lg`}>
                   لوحة العميل
                 </Link>
               </NavigationMenuLink>
