@@ -18,7 +18,7 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { Badge } from '@/components/ui/badge';
 import { Star, Edit, Trash2, Menu, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom'; // For internal links within the modal content
-import { ScrollArea } from '@/components/ui/scroll-area'; // Import ScrollArea
+// import { ScrollArea } from '@/components/ui/scroll-area'; // Removed ScrollArea import
 
 // Helper for stars
 const renderStars = (rating: number) => {
@@ -126,7 +126,7 @@ export const ClientGeneralMenuModal = () => {
             <TabsTrigger value="support" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">الدعم</TabsTrigger>
           </TabsList>
 
-          <ScrollArea className="flex-grow"> {/* Wrap TabsContent with ScrollArea */}
+          <div className="flex-grow overflow-y-auto pr-2"> {/* Replaced ScrollArea with div for better flex control */}
             {/* Profile Tab Content */}
             <TabsContent value="profile" className="mt-0">
               <Card className="bg-brand-card-bg p-6 rounded-2xl shadow-soft w-full max-w-2xl mx-auto text-right">
@@ -383,7 +383,7 @@ export const ClientGeneralMenuModal = () => {
                 </CardContent>
               </Card>
             </TabsContent>
-          </ScrollArea>
+          </div>
           <div className="mt-6 border-t border-border pt-4 text-center">
             <Button asChild variant="destructive" className="bg-brand-danger hover:bg-brand-danger/90 text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
               <Link to="/login">
