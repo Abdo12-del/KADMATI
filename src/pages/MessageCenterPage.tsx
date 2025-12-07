@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Send, Paperclip, MessageSquare } from 'lucide-react'; // تم إضافة MessageSquare هنا
-import ChatModal from '@/components/ChatModal'; // استيراد المكون الجديد
+import { MessageSquare } from 'lucide-react';
+import ChatModal from '@/components/ChatModal';
 
 interface Message {
   id: string;
@@ -24,8 +21,7 @@ interface Conversation {
 }
 
 const MessageCenterPage = () => {
-  // Placeholder for conversations
-  const [conversations, setConversations] = useState<Conversation[]>([
+  const [conversations] = useState<Conversation[]>([
     {
       id: 'conv1',
       customerName: 'أحمد محمد',
@@ -64,11 +60,13 @@ const MessageCenterPage = () => {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
 
   const handleOpenChatModal = (conv: Conversation) => {
+    console.log("Attempting to open chat modal for conversation:", conv.id); // Debug log
     setSelectedConversation(conv);
     setIsChatModalOpen(true);
   };
 
   const handleCloseChatModal = () => {
+    console.log("Closing chat modal."); // Debug log
     setIsChatModalOpen(false);
     setSelectedConversation(null);
   };
