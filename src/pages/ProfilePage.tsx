@@ -6,16 +6,51 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useQuery } from '@tanstack/react-query';
+
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  role: 'seeker' | 'provider';
+  bio?: string;
+  avatarUrl?: string;
+}
+
+const fetchUserProfile = async (userId: string): Promise<UserProfile> => {
+  // In a real app, you'd get the userId from auth context
+  const response = await fetch(`http://localhost:3000/api/users/${userId}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch user profile');
+  }
+  return response.json();
+};
 
 const ProfilePage = () => {
-  // Placeholder user data
-  const user = {
-    name: 'أحمد محمد',
-    email: 'ahmed.mohamed@example.com',
-    role: 'مقدم خدمة',
-    bio: 'مصمم جرافيك بخبرة 5 سنوات في تصميم الشعارات والهويات البصرية.',
-    avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=AM', // Example avatar
-  };
+  // Placeholder for current user ID - replace with actual auth context
+  const currentUserId = 'provider123'; // Example: 'provider123' or 'client456'
+
+  const { data: user, isLoading, error } = useQuery<UserProfile, Error>({
+    queryKey: ['userProfile', currentUserId],
+    queryFn: () => fetchUserProfile(currentUserId),
+    enabled: !!currentUserId,
+  });
+
+  if (isLoading) return (
+    <DashboardLayout>
+      <div className="text-center text-brand-text-dark font-ibm-plex-arabic">جاري تحميل الملف الشخصي...</div>
+    </DashboardLayout>
+  );
+  if (error) return (
+    <DashboardLayout>
+      <div className="text-center text-brand-danger font-ibm-plex-arabic">خطأ في تحميل الملف الشخصي: {error.message}</div>
+    </DashboardLayout>
+  );
+  if (!user) return (
+    <DashboardLayout>
+      <div className="text-center text-brand-text-muted font-ibm-plex-arabic">لا توجد بيانات للملف الشخصي.</div>
+    </DashboardLayout>
+  );
 
   return (
     <DashboardLayout>
@@ -31,7 +66,7 @@ const ProfilePage = () => {
             </Avatar>
             <h2 className="text-2xl font-cairo text-brand-text-dark">{user.name}</h2>
             <p className="text-brand-text-muted font-ibm-plex-arabic">{user.email}</p>
-            <p className="text-brand-primary font-semibold mt-2 font-ibm-plex-arabic">{user.role}</p>
+            <p className="text-brand-primary font-semibold mt-2 font-ibm-plex-arabic">{user.role === 'provider' ? 'مقدم خدمة' : 'طالب خدمة'}</p>
           </div>
 
           <Card className="rounded-2xl shadow-soft bg-brand-background p-6">
@@ -49,7 +84,7 @@ const ProfilePage = () => {
               </div>
               <div>
                 <Label htmlFor="profile-bio" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">نبذة عني</Label>
-                <Textarea id="profile-bio" defaultValue={user.bio} rows={4} className="rounded-xl shadow-soft bg-brand-card-bg border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                <Textarea id="profile-bio" defaultValue={user.bio || ''} rows={4} className="rounded-xl shadow-soft bg-brand-card-bg border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
               </div>
               <Button className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
                 حفظ التعديلات

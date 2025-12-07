@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import ClientHomeHeader from '@/components/ClientHomeHeader'; // تم التحديث هنا
-import Footer from '@/components/Footer'; // تم التحديث هنا
+import ClientHomeHeader from '@/components/ClientHomeHeader';
+import Footer from '@/components/Footer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NotificationCard } from '@/components/notifications/NotificationCard.tsx';
 import { Input } from '@/components/ui/input';
@@ -16,16 +16,7 @@ interface Notification {
 }
 
 const NotificationsPage = () => {
-  const [notifications, setNotifications] = useState<Notification[]>([
-    { id: '1', type: 'order', title: 'طلب جديد لخدمة "تصميم شعار"', description: 'من العميل: أحمد محمد', time: 'قبل 5 دقائق', read: false },
-    { id: '2', type: 'message', title: 'رسالة جديدة من سارة علي', description: 'بخصوص مشروع تطوير الويب', time: 'قبل ساعة', read: false },
-    { id: '3', type: 'payment', title: 'تم استلام دفعة لخدمة "كتابة محتوى"', description: 'المبلغ: $100', time: 'قبل 3 ساعات', read: true },
-    { id: '4', type: 'system', title: 'تحديث جديد للمنصة', description: 'تحسينات في الأداء والأمان', time: 'أمس', read: true },
-    { id: '5', type: 'general', title: 'تذكير: لديك اجتماع غداً', description: 'اجتماع مشروع تصميم الساعة 10 صباحاً', time: 'أمس', read: false },
-    { id: '6', type: 'order', title: 'تم قبول طلبك لخدمة "صيانة مكيفات"', description: 'من مقدم الخدمة: فني الصيانة ماهر', time: 'منذ يومين', read: true },
-    { id: '7', type: 'message', title: 'رد على استفسارك', description: 'من فريق الدعم الفني', time: 'منذ يومين', read: true },
-  ]);
-
+  const [notifications, setNotifications] = useState<Notification[]>([]); // Empty array
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleMarkAsRead = (id: string) => {

@@ -22,7 +22,7 @@ interface Notification {
 }
 
 interface NotificationsDropdownProps {
-  unreadCount: number;
+  unreadCount: number; // This will now be passed from parent, or fetched
 }
 
 const getNotificationIcon = (type: Notification['type']) => {
@@ -42,14 +42,8 @@ const getNotificationIcon = (type: Notification['type']) => {
 };
 
 export const NotificationsDropdown = ({ unreadCount }: NotificationsDropdownProps) => {
-  // Placeholder data for recent notifications
-  const notifications: Notification[] = [
-    { id: '1', type: 'order', title: 'طلب جديد لخدمة "تصميم شعار"', description: 'من العميل: أحمد محمد', time: 'قبل 5 دقائق', read: false },
-    { id: '2', type: 'message', title: 'رسالة جديدة من سارة علي', description: 'بخصوص مشروع تطوير الويب', time: 'قبل ساعة', read: false },
-    { id: '3', type: 'payment', title: 'تم استلام دفعة لخدمة "كتابة محتوى"', description: 'المبلغ: $100', time: 'قبل 3 ساعات', read: true },
-    { id: '4', type: 'system', title: 'تحديث جديد للمنصة', description: 'تحسينات في الأداء والأمان', time: 'أمس', read: true },
-    { id: '5', type: 'general', title: 'تذكير: لديك اجتماع غداً', description: 'اجتماع مشروع تصميم الساعة 10 صباحاً', time: 'أمس', read: false },
-  ];
+  // Placeholder data for recent notifications - will be fetched from API
+  const notifications: Notification[] = [];
 
   return (
     <DropdownMenu dir="rtl">

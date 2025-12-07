@@ -4,15 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BarChart, LineChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Bar, Line } from 'recharts';
 
-const data = [
-  { name: 'يناير', sales: 4000, orders: 2400 },
-  { name: 'فبراير', sales: 3000, orders: 1398 },
-  { name: 'مارس', sales: 2000, orders: 9800 },
-  { name: 'أبريل', sales: 2780, orders: 3908 },
-  { name: 'مايو', sales: 1890, orders: 4800 },
-  { name: 'يونيو', sales: 2390, orders: 3800 },
-  { name: 'يوليو', sales: 3490, orders: 4300 },
-];
+// Placeholder for actual data fetching
+const data = []; // Empty array for chart data
 
 const ReportsPage = () => {
   return (
@@ -35,8 +28,8 @@ const ReportsPage = () => {
             </Select>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-4xl font-cairo text-brand-text-dark font-bold mb-2">$12,345</div>
-            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">+15% عن الشهر الماضي</p>
+            <div className="text-4xl font-cairo text-brand-text-dark font-bold mb-2">$0</div>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">+0% عن الشهر الماضي</p>
             <div className="h-[200px] mt-4">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data}>
@@ -67,8 +60,8 @@ const ReportsPage = () => {
             </Select>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-4xl font-cairo text-brand-text-dark font-bold mb-2">250</div>
-            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">+8% عن الشهر الماضي</p>
+            <div className="text-4xl font-cairo text-brand-text-dark font-bold mb-2">0</div>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">+0% عن الشهر الماضي</p>
             <div className="h-[200px] mt-4">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data}>
@@ -91,27 +84,19 @@ const ReportsPage = () => {
         </CardHeader>
         <CardContent className="p-0">
           <ul className="space-y-4">
-            <li className="flex flex-row-reverse justify-between items-center border-b border-border pb-3 last:border-b-0 last:pb-0">
-              <div className="text-right">
-                <p className="font-cairo text-brand-text-dark font-semibold">تصميم شعار احترافي</p>
-                <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">50 طلب، متوسط تقييم 4.9</p>
-              </div>
-              <span className="font-bold text-brand-primary text-lg font-cairo">$7,500</span>
-            </li>
-            <li className="flex flex-row-reverse justify-between items-center border-b border-border pb-3 last:border-b-0 last:pb-0">
-              <div className="text-right">
-                <p className="font-cairo text-brand-text-dark font-semibold">تطوير موقع ويب شخصي</p>
-                <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">20 طلب، متوسط تقييم 4.7</p>
-              </div>
-              <span className="font-bold text-brand-primary text-lg font-cairo">$10,000</span>
-            </li>
-            <li className="flex flex-row-reverse justify-between items-center border-b border-border pb-3 last:border-b-0 last:pb-0">
-              <div className="text-right">
-                <p className="font-cairo text-brand-text-dark font-semibold">كتابة محتوى تسويقي</p>
-                <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">30 طلب، متوسط تقييم 4.8</p>
-              </div>
-              <span className="font-bold text-brand-primary text-lg font-cairo">$3,000</span>
-            </li>
+            {data.length > 0 ? ( // Assuming 'data' would also hold service performance
+              data.map((service, index) => (
+                <li key={index} className="flex flex-row-reverse justify-between items-center border-b border-border pb-3 last:border-b-0 last:pb-0">
+                  <div className="text-right">
+                    <p className="font-cairo text-brand-text-dark font-semibold">{service.name}</p>
+                    <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">0 طلب، متوسط تقييم 0.0</p>
+                  </div>
+                  <span className="font-bold text-brand-primary text-lg font-cairo">$0</span>
+                </li>
+              ))
+            ) : (
+              <li className="text-sm text-brand-text-muted font-ibm-plex-arabic text-right">لا توجد بيانات أداء للخدمات.</li>
+            )}
           </ul>
         </CardContent>
       </Card>

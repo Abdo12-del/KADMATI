@@ -6,40 +6,14 @@ import { Link } from 'react-router-dom';
 import { Briefcase, Package, Star, Users, MessageSquare, DollarSign, TrendingUp, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { cn } from '@/lib/utils'; // تم إضافة هذا الاستيراد
+import { cn } from '@/lib/utils';
 
-const performanceData = [
-  { name: 'يناير', sales: 4000, orders: 2400 },
-  { name: 'فبراير', sales: 3000, orders: 1398 },
-  { name: 'مارس', sales: 2000, orders: 9800 },
-  { name: 'أبريل', sales: 2780, orders: 3908 },
-  { name: 'مايو', sales: 1890, orders: 4800 },
-  { name: 'يونيو', sales: 2390, orders: 3800 },
-];
-
-const ordersBreakdownData = [
-  { name: 'معلقة', value: 15, color: 'var(--brand-warning)' },
-  { name: 'مقبولة', value: 30, color: 'var(--brand-primary)' },
-  { name: 'مكتملة', value: 55, color: 'var(--brand-success)' },
-  { name: 'ملغاة', value: 10, color: 'var(--brand-danger)' },
-];
-
-const recentTasks = [
-  { id: 't1', title: 'الرد على طلب خدمة تصميم شعار', status: 'Pending', dueDate: '2023-11-10' },
-  { id: 't2', title: 'مراجعة خدمة تطوير موقع ويب', status: 'Completed', dueDate: '2023-11-05' },
-  { id: 't3', title: 'إرسال عرض سعر لعميل جديد', status: 'Pending', dueDate: '2023-11-12' },
-];
-
-const customerMessages = [
-  { id: 'cm1', customerName: 'أحمد محمد', message: 'متى يمكن البدء بالمشروع؟', avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=AM' },
-  { id: 'cm2', customerName: 'سارة علي', message: 'شكراً على الخدمة الممتازة!', avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=SA' },
-];
-
-const recentActivity = [
-  { id: 'a1', type: 'طلب جديد', description: 'طلب جديد لخدمة "تصميم شعار"', time: 'قبل 5 دقائق', icon: Package, iconColor: 'text-brand-primary' },
-  { id: 'a2', type: 'خدمة مقبولة', description: 'تم قبول خدمتك "تطوير موقع ويب"', time: 'قبل ساعة', icon: Briefcase, iconColor: 'text-brand-success' },
-  { id: 'a3', type: 'تقييم جديد', description: 'تقييم جديد لخدمة "كتابة محتوى" (5 نجوم)', time: 'قبل يوم', icon: Star, iconColor: 'text-yellow-500' },
-];
+// Placeholder for actual data fetching
+const performanceData = [];
+const ordersBreakdownData = [];
+const recentTasks = [];
+const customerMessages = [];
+const recentActivity = [];
 
 const DashboardOverviewPage = () => {
   return (
@@ -54,8 +28,8 @@ const DashboardOverviewPage = () => {
             <Package className="h-6 w-6 text-brand-primary" />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-3xl font-cairo text-brand-text-dark font-bold">125</div>
-            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">+10% عن الشهر الماضي</p>
+            <div className="text-3xl font-cairo text-brand-text-dark font-bold">0</div>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">+0% عن الشهر الماضي</p>
           </CardContent>
         </Card>
         <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 text-right">
@@ -64,8 +38,8 @@ const DashboardOverviewPage = () => {
             <Clock className="h-6 w-6 text-brand-warning" />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-3xl font-cairo text-brand-text-dark font-bold">12</div>
-            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">3 طلبات جديدة</p>
+            <div className="text-3xl font-cairo text-brand-text-dark font-bold">0</div>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">0 طلب جديد</p>
           </CardContent>
         </Card>
         <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 text-right">
@@ -74,8 +48,8 @@ const DashboardOverviewPage = () => {
             <DollarSign className="h-6 w-6 text-brand-success" />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-3xl font-cairo text-brand-text-dark font-bold">$15,230</div>
-            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">+5% هذا الشهر</p>
+            <div className="text-3xl font-cairo text-brand-text-dark font-bold">$0</div>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">+0% هذا الشهر</p>
           </CardContent>
         </Card>
         <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 text-right">
@@ -84,8 +58,8 @@ const DashboardOverviewPage = () => {
             <Star className="h-6 w-6 text-yellow-500" />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-3xl font-cairo text-brand-text-dark font-bold">4.8</div>
-            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">من 250 تقييم</p>
+            <div className="text-3xl font-cairo text-brand-text-dark font-bold">0.0</div>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">من 0 تقييم</p>
           </CardContent>
         </Card>
         <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 text-right">
@@ -94,7 +68,7 @@ const DashboardOverviewPage = () => {
             <MessageSquare className="h-6 w-6 text-brand-info" />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-3xl font-cairo text-brand-text-dark font-bold">5</div>
+            <div className="text-3xl font-cairo text-brand-text-dark font-bold">0</div>
             <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">في انتظار الرد</p>
           </CardContent>
         </Card>
@@ -147,24 +121,28 @@ const DashboardOverviewPage = () => {
           </CardHeader>
           <CardContent className="p-0">
             <ul className="space-y-4">
-              {recentTasks.map(task => (
-                <li key={task.id} className="flex flex-row-reverse items-center justify-between border-b border-border pb-3 last:border-b-0 last:pb-0">
-                  <div className="flex flex-row-reverse items-center">
-                    {task.status === 'Completed' ? (
-                      <CheckCircle className="h-5 w-5 text-brand-success ml-3" />
-                    ) : (
-                      <Clock className="h-5 w-5 text-brand-warning ml-3" />
-                    )}
-                    <div>
-                      <p className="font-cairo text-brand-text-dark font-semibold">{task.title}</p>
-                      <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">تاريخ الاستحقاق: {task.dueDate}</p>
+              {recentTasks.length > 0 ? (
+                recentTasks.map(task => (
+                  <li key={task.id} className="flex flex-row-reverse items-center justify-between border-b border-border pb-3 last:border-b-0 last:pb-0">
+                    <div className="flex flex-row-reverse items-center">
+                      {task.status === 'Completed' ? (
+                        <CheckCircle className="h-5 w-5 text-brand-success ml-3" />
+                      ) : (
+                        <Clock className="h-5 w-5 text-brand-warning ml-3" />
+                      )}
+                      <div>
+                        <p className="font-cairo text-brand-text-dark font-semibold">{task.title}</p>
+                        <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">تاريخ الاستحقاق: {task.dueDate}</p>
+                      </div>
                     </div>
-                  </div>
-                  <Button variant="ghost" size="sm" className="text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic">
-                    عرض
-                  </Button>
-                </li>
-              ))}
+                    <Button variant="ghost" size="sm" className="text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic">
+                      عرض
+                    </Button>
+                  </li>
+                ))
+              ) : (
+                <li className="text-sm text-brand-text-muted font-ibm-plex-arabic text-right">لا توجد مهام حالية.</li>
+              )}
             </ul>
           </CardContent>
         </Card>
@@ -179,21 +157,25 @@ const DashboardOverviewPage = () => {
           </CardHeader>
           <CardContent className="p-0">
             <ul className="space-y-4">
-              {customerMessages.map(msg => (
-                <li key={msg.id} className="flex flex-row-reverse items-center border-b border-border pb-3 last:border-b-0 last:pb-0">
-                  <Avatar className="h-10 w-10 ml-3">
-                    <AvatarImage src={msg.avatarUrl} alt={msg.customerName} />
-                    <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{msg.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-grow text-right">
-                    <p className="font-cairo text-brand-text-dark font-semibold">{msg.customerName}</p>
-                    <p className="text-sm text-brand-text-muted font-ibm-plex-arabic line-clamp-1">{msg.message}</p>
-                  </div>
-                  <Button variant="ghost" size="sm" className="text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic">
-                    رد
-                  </Button>
-                </li>
-              ))}
+              {customerMessages.length > 0 ? (
+                customerMessages.map(msg => (
+                  <li key={msg.id} className="flex flex-row-reverse items-center border-b border-border pb-3 last:border-b-0 last:pb-0">
+                    <Avatar className="h-10 w-10 ml-3">
+                      <AvatarImage src={msg.avatarUrl} alt={msg.customerName} />
+                      <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{msg.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-grow text-right">
+                      <p className="font-cairo text-brand-text-dark font-semibold">{msg.customerName}</p>
+                      <p className="text-sm text-brand-text-muted font-ibm-plex-arabic line-clamp-1">{msg.message}</p>
+                    </div>
+                    <Button variant="ghost" size="sm" className="text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic">
+                      رد
+                    </Button>
+                  </li>
+                ))
+              ) : (
+                <li className="text-sm text-brand-text-muted font-ibm-plex-arabic text-right">لا توجد رسائل عملاء جديدة.</li>
+              )}
             </ul>
           </CardContent>
         </Card>
@@ -205,18 +187,22 @@ const DashboardOverviewPage = () => {
           </CardHeader>
           <CardContent className="p-0">
             <ul className="space-y-4">
-              {recentActivity.map(activity => {
-                const IconComponent = activity.icon;
-                return (
-                  <li key={activity.id} className="flex flex-row-reverse items-center border-b border-border pb-3 last:border-b-0 last:pb-0">
-                    <IconComponent className={cn("h-5 w-5 ml-3", activity.iconColor)} />
-                    <div className="flex-grow text-right">
-                      <p className="font-cairo text-brand-text-dark font-semibold">{activity.description}</p>
-                      <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">{activity.time}</p>
-                    </div>
-                  </li>
-                );
-              })}
+              {recentActivity.length > 0 ? (
+                recentActivity.map(activity => {
+                  const IconComponent = activity.icon;
+                  return (
+                    <li key={activity.id} className="flex flex-row-reverse items-center border-b border-border pb-3 last:border-b-0 last:pb-0">
+                      <IconComponent className={cn("h-5 w-5 ml-3", activity.iconColor)} />
+                      <div className="flex-grow text-right">
+                        <p className="font-cairo text-brand-text-dark font-semibold">{activity.description}</p>
+                        <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">{activity.time}</p>
+                      </div>
+                    </li>
+                  );
+                })
+              ) : (
+                <li className="text-sm text-brand-text-muted font-ibm-plex-arabic text-right">لا توجد أنشطة حديثة.</li>
+              )}
             </ul>
           </CardContent>
         </Card>

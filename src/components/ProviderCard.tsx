@@ -10,8 +10,8 @@ interface ProviderCardProps {
     id: string;
     name: string;
     avatarUrl?: string;
-    rating: number;
-    serviceCount: number;
+    rating: number; // Assuming this comes from aggregated service ratings
+    serviceCount: number; // Assuming this comes from aggregated service count
   };
 }
 
@@ -39,7 +39,7 @@ const ProviderCard = ({ provider }: ProviderCardProps) => {
         <div>
           <CardTitle className="text-lg font-cairo text-brand-text-dark">{provider.name}</CardTitle>
           <div className="flex items-center justify-end text-sm text-brand-text-muted font-ibm-plex-arabic">
-            <span className="ml-1">({provider.rating})</span>
+            <span className="ml-1">({provider.rating.toFixed(1)})</span>
             {renderStars(provider.rating)}
           </div>
         </div>

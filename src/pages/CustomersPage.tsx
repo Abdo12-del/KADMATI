@@ -5,13 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 
 const CustomersPage = () => {
-  // Placeholder for customers
-  const customers = [
-    { id: 'c1', name: 'أحمد محمد', email: 'ahmed@example.com', avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=AM', totalOrders: 3, lastOrderDate: '2023-10-20' },
-    { id: 'c2', name: 'سارة علي', email: 'sara@example.com', avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=SA', totalOrders: 1, lastOrderDate: '2023-10-25' },
-    { id: 'c3', name: 'خالد فهد', email: 'khalid@example.com', avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=KF', totalOrders: 2, lastOrderDate: '2023-10-18' },
-    { id: 'c4', name: 'ليلى ناصر', email: 'layla@example.com', avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=LN', totalOrders: 5, lastOrderDate: '2023-11-01' },
-  ];
+  // Placeholder for customers - will be fetched from API
+  const customers = [];
 
   return (
     <DashboardLayout>

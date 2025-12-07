@@ -10,8 +10,8 @@ interface CustomerCardProps {
     name: string;
     email: string;
     avatarUrl?: string;
-    totalOrders: number;
-    lastOrderDate: string;
+    totalOrders: number; // Placeholder, would be aggregated from orders
+    lastOrderDate: string; // Placeholder, would be aggregated from orders
   };
 }
 

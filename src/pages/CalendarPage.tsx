@@ -8,12 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 const CalendarPage = () => {
   const [date, setDate] = React.useState<Date | undefined>(new Date());
 
-  // Placeholder for events/bookings
-  const events = [
-    { id: 'e1', date: new Date(2023, 10, 28), title: 'اجتماع مشروع تصميم', time: '10:00 ص' },
-    { id: 'e2', date: new Date(2023, 10, 28), title: 'تسليم خدمة تطوير', time: '02:00 م' },
-    { id: 'e3', date: new Date(2023, 10, 30), title: 'مكالمة عميل جديد', time: '11:00 ص' },
-  ];
+  // Placeholder for events/bookings - will be fetched from API
+  const events = [];
 
   const getEventsForDate = (selectedDate: Date | undefined) => {
     if (!selectedDate) return [];

@@ -6,16 +6,51 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+
+interface Service {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  price: number;
+  deliveryTime: number;
+  imageUrl?: string;
+}
+
+const fetchServiceById = async (serviceId: string): Promise<Service> => {
+  const response = await fetch(`http://localhost:3000/api/services/${serviceId}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch service');
+  }
+  return response.json();
+};
 
 const EditServicePage = () => {
-  // Placeholder for service data to be edited
-  const service = {
-    title: 'تصميم شعار احترافي',
-    description: 'أقدم خدمة تصميم شعارات احترافية ومبتكرة لشركتك أو مشروعك. تصميم فريد يعروس هويتك.',
-    category: 'design',
-    price: 150,
-    deliveryTime: 3,
-  };
+  const { id } = useParams<{ id: string }>();
+
+  const { data: service, isLoading, error } = useQuery<Service, Error>({
+    queryKey: ['service', id],
+    queryFn: () => fetchServiceById(id!),
+    enabled: !!id, // Only run query if id is available
+  });
+
+  if (isLoading) return (
+    <DashboardLayout>
+      <div className="text-center text-brand-text-dark font-ibm-plex-arabic">جاري تحميل الخدمة...</div>
+    </DashboardLayout>
+  );
+  if (error) return (
+    <DashboardLayout>
+      <div className="text-center text-brand-danger font-ibm-plex-arabic">خطأ في تحميل الخدمة: {error.message}</div>
+    </DashboardLayout>
+  );
+  if (!service) return (
+    <DashboardLayout>
+      <div className="text-center text-brand-text-muted font-ibm-plex-arabic">الخدمة غير موجودة.</div>
+    </DashboardLayout>
+  );
 
   return (
     <DashboardLayout>

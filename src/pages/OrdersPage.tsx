@@ -4,20 +4,11 @@ import OrderCard from '@/components/OrderCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const OrdersPage = () => {
-  // Placeholder for orders
-  const pendingOrders = [
-    { id: 'ord1', serviceTitle: 'تصميم شعار', customerName: 'أحمد محمد', status: 'Pending' as const, date: '2023-10-26', price: 150, description: 'طلب تصميم شعار لشركة ناشئة في مجال التقنية.' },
-    { id: 'ord2', serviceTitle: 'كتابة مقال', customerName: 'سارة علي', status: 'Pending' as const, date: '2023-10-25', price: 80, description: 'مقال تسويقي عن أحدث تقنيات الذكاء الاصطناعي.' },
-  ];
-  const acceptedOrders = [
-    { id: 'ord3', serviceTitle: 'تطوير موقع', customerName: 'خالد فهد', status: 'Accepted' as const, date: '2023-10-20', price: 500, description: 'تطوير موقع شخصي لعرض الأعمال الفنية.' },
-  ];
-  const completedOrders = [
-    { id: 'ord4', serviceTitle: 'استشارة تسويقية', customerName: 'ليلى ناصر', status: 'Completed' as const, date: '2023-10-15', price: 200, description: 'جلسة استشارية حول استراتيجيات التسويق الرقمي.' },
-  ];
-  const cancelledOrders = [
-    { id: 'ord5', serviceTitle: 'تصميم هوية بصرية', customerName: 'محمد سعيد', status: 'Cancelled' as const, date: '2023-10-10', price: 300, description: 'تم إلغاء الطلب بسبب تغيير في متطلبات العميل.' },
-  ];
+  // Placeholder for orders - will be fetched from API
+  const pendingOrders = [];
+  const acceptedOrders = [];
+  const completedOrders = [];
+  const cancelledOrders = [];
 
   return (
     <DashboardLayout>

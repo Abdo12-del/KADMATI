@@ -8,20 +8,11 @@ import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
 
 const ClientOrdersModal = () => {
-  // Placeholder for client orders
-  const pendingOrders = [
-    { id: 'ord1', serviceTitle: 'تنظيف منزلي عميق', providerName: 'شركة النظافة السريعة', status: 'Pending' as const, date: '2023-11-01', price: 250 },
-    { id: 'ord2', serviceTitle: 'تصميم داخلي لغرفة معيشة', providerName: 'مهندس الديكور أحمد', status: 'Pending' as const, date: '2023-10-29', price: 1200 },
-  ];
-  const activeOrders = [
-    { id: 'ord3', serviceTitle: 'صيانة مكيفات', providerName: 'فني الصيانة ماهر', status: 'Accepted' as const, date: '2023-10-28', price: 300 },
-  ];
-  const completedOrders = [
-    { id: 'ord4', serviceTitle: 'تركيب كاميرات مراقبة', providerName: 'شركة الأمان', status: 'Completed' as const, date: '2023-10-20', price: 800 },
-  ];
-  const cancelledOrders = [
-    { id: 'ord5', serviceTitle: 'تصميم هوية بصرية', providerName: 'محمد سعيد', status: 'Cancelled' as const, date: '2023-10-10', price: 300 },
-  ];
+  // Placeholder for client orders - will be fetched from API
+  const pendingOrders = [];
+  const activeOrders = [];
+  const completedOrders = [];
+  const cancelledOrders = [];
 
   return (
     <Dialog>

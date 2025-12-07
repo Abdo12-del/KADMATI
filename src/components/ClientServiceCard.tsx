@@ -14,7 +14,7 @@ interface ClientServiceCardProps {
     price: number;
     providerName: string;
     rating: number;
-    location: string;
+    location: string; // Assuming location is now part of the service object or derived
     imageUrl?: string;
   };
 }
@@ -44,7 +44,7 @@ const ClientServiceCard = ({ service }: ClientServiceCardProps) => {
           <MapPin className="h-4 w-4 mr-1 text-brand-primary" />
         </div>
         <div className="flex items-center justify-end text-sm text-yellow-500">
-          <span className="ml-1 text-brand-text-muted font-ibm-plex-arabic">({service.rating})</span>
+          <span className="ml-1 text-brand-text-muted font-ibm-plex-arabic">({service.rating.toFixed(1)})</span>
           {renderStars(service.rating)}
         </div>
         <div className="flex justify-between items-center pt-4">

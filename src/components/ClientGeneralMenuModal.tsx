@@ -17,8 +17,8 @@ import ProviderCard from '@/components/ProviderCard';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Star, Edit, Trash2, Menu, LogOut } from 'lucide-react';
-import { Link } from 'react-router-dom'; // For internal links within the modal content
-// Removed ScrollArea import as we're using overflow-y-auto on a div
+import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 
 // Helper for stars
 const renderStars = (rating: number) => {
@@ -34,51 +34,12 @@ const renderStars = (rating: number) => {
   );
 };
 
-// Placeholder Data
-const user = {
-  name: 'ليلى ناصر',
-  email: 'layla.nasser@example.com',
-  phone: '+966501234567',
-  avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=LN',
-};
-
-const favoriteServices = [
-  { id: 's1', title: 'تنظيف منزلي عميق', description: 'خدمة تنظيف شاملة للمنازل والشقق.', price: 250, providerName: 'شركة النظافة السريعة', rating: 4.8, location: 'الرياض', imageUrl: '/placeholder.svg' },
-  { id: 's2', title: 'تصميم داخلي للمنازل', description: 'تصميمات داخلية عصرية ومبتكرة.', price: 1200, providerName: 'مهندس الديكور أحمد', rating: 4.9, location: 'جدة', imageUrl: '/placeholder.svg' },
-];
-
-const favoriteProviders = [
-  { id: 'p1', name: 'شركة النظافة السريعة', avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=NS', rating: 4.8, serviceCount: 15 },
-  { id: 'p2', name: 'فني الصيانة ماهر', avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=FM', rating: 4.5, serviceCount: 8 },
-];
-
-const transactions = [
-  { id: 't1', service: 'تنظيف منزلي عميق', amount: 250, date: '2023-11-01', status: 'Completed', method: 'بطاقة ائتمان' },
-  { id: 't2', service: 'صيانة مكيفات سبليت', amount: 300, date: '2023-10-28', status: 'Completed', method: 'Apple Pay' },
-  { id: 't3', service: 'تصميم داخلي لغرفة معيشة', amount: 1200, date: '2023-10-29', status: 'Pending', method: 'تحويل بنكي' },
-];
-
-const myReviews = [
-  {
-    id: 'rev1',
-    serviceTitle: 'تنظيف منزلي عميق',
-    providerName: 'شركة النظافة السريعة',
-    rating: 5,
-    comment: 'خدمة ممتازة وفريق عمل محترف، المنزل أصبح يلمع!',
-    date: '2023-11-01',
-    providerAvatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=NS',
-  },
-  {
-    id: 'rev2',
-    serviceTitle: 'صيانة مكيفات سبليت',
-    providerName: 'فني الصيانة ماهر',
-    rating: 4,
-    comment: 'تنظيف جيد جداً وسرعة في الاستجابة، شكراً.',
-    date: '2023-10-28',
-    providerAvatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=FM',
-  },
-];
-
+// Placeholder Data - will be fetched from API or managed by state
+const user = null; // Will be fetched
+const favoriteServices = [];
+const favoriteProviders = [];
+const transactions = [];
+const myReviews = [];
 const faqs = [
   {
     question: 'كيف يمكنني طلب خدمة جديدة؟',
@@ -103,7 +64,60 @@ const getStatusBadgeVariant = (status: string) => {
   }
 };
 
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  avatarUrl?: string;
+}
+
+const fetchUserProfile = async (userId: string): Promise<UserProfile> => {
+  const response = await fetch(`http://localhost:3000/api/users/${userId}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch user profile');
+  }
+  return response.json();
+};
+
 export const ClientGeneralMenuModal = () => {
+  // Placeholder for current client ID - replace with actual auth context
+  const currentClientId = 'client456';
+
+  const { data: userProfile, isLoading, error } = useQuery<UserProfile, Error>({
+    queryKey: ['clientProfile', currentClientId],
+    queryFn: () => fetchUserProfile(currentClientId),
+    enabled: !!currentClientId,
+  });
+
+  if (isLoading) return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon" className="text-brand-text-dark hover:bg-brand-background rounded-full">
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">القائمة العامة</span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[900px] max-h-[90vh] flex flex-col rounded-2xl shadow-soft bg-brand-card-bg p-6 overflow-hidden">
+        <div className="text-center text-brand-text-dark font-ibm-plex-arabic">جاري تحميل البيانات...</div>
+      </DialogContent>
+    </Dialog>
+  );
+
+  if (error) return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon" className="text-brand-text-dark hover:bg-brand-background rounded-full">
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">القائمة العامة</span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[900px] max-h-[90vh] flex flex-col rounded-2xl shadow-soft bg-brand-card-bg p-6 overflow-hidden">
+        <div className="text-center text-brand-danger font-ibm-plex-arabic">خطأ في تحميل البيانات: {error.message}</div>
+      </DialogContent>
+    </Dialog>
+  );
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -136,22 +150,22 @@ export const ClientGeneralMenuModal = () => {
                 <CardContent className="p-0 space-y-4">
                   <div className="flex flex-col items-center mb-4">
                     <Avatar className="h-20 w-20 mb-3">
-                      <AvatarImage src={user.avatarUrl} alt={user.name} />
-                      <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                      <AvatarImage src={userProfile?.avatarUrl} alt={userProfile?.name} />
+                      <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{userProfile?.name?.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                     </Avatar>
                     <Button variant="outline" size="sm" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-lg shadow-soft font-ibm-plex-arabic">تغيير الصورة</Button>
                   </div>
                   <div>
                     <Label htmlFor="profile-name" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">الاسم الكامل</Label>
-                    <Input id="profile-name" type="text" defaultValue={user.name} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                    <Input id="profile-name" type="text" defaultValue={userProfile?.name} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
                   </div>
                   <div>
                     <Label htmlFor="profile-email" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">البريد الإلكتروني</Label>
-                    <Input id="profile-email" type="email" defaultValue={user.email} disabled className="rounded-xl shadow-soft bg-brand-background border-none font-ibm-plex-arabic text-right" />
+                    <Input id="profile-email" type="email" defaultValue={userProfile?.email} disabled className="rounded-xl shadow-soft bg-brand-background border-none font-ibm-plex-arabic text-right" />
                   </div>
                   <div>
                     <Label htmlFor="profile-phone" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">رقم الهاتف</Label>
-                    <Input id="profile-phone" type="tel" defaultValue={user.phone} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                    <Input id="profile-phone" type="tel" defaultValue={userProfile?.phone || ''} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
                   </div>
                   <Button className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
                     حفظ التعديلات
