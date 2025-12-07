@@ -18,7 +18,7 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { Badge } from '@/components/ui/badge';
 import { Star, Edit, Trash2, Menu, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom'; // For internal links within the modal content
-// import { ScrollArea } from '@/components/ui/scroll-area'; // Removed ScrollArea import
+// Removed ScrollArea import as we're using overflow-y-auto on a div
 
 // Helper for stars
 const renderStars = (rating: number) => {
@@ -112,12 +112,12 @@ export const ClientGeneralMenuModal = () => {
           <span className="sr-only">القائمة العامة</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[900px] h-[90vh] flex flex-col rounded-2xl shadow-soft bg-brand-card-bg p-6">
-        <DialogHeader className="text-right pb-4">
+      <DialogContent className="sm:max-w-[900px] max-h-[90vh] flex flex-col rounded-2xl shadow-soft bg-brand-card-bg p-6 overflow-hidden">
+        <DialogHeader className="text-right pb-4 flex-shrink-0">
           <DialogTitle className="text-3xl font-cairo text-brand-text-dark">القائمة العامة</DialogTitle>
         </DialogHeader>
-        <Tabs defaultValue="profile" className="flex-grow flex flex-col">
-          <TabsList className="grid w-full grid-cols-6 bg-brand-background rounded-xl shadow-soft p-2 mb-4">
+        <Tabs defaultValue="profile" className="flex-grow flex flex-col h-full">
+          <TabsList className="grid w-full grid-cols-6 bg-brand-background rounded-xl shadow-soft p-2 mb-4 flex-shrink-0">
             <TabsTrigger value="profile" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">الملف الشخصي</TabsTrigger>
             <TabsTrigger value="settings" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">الإعدادات</TabsTrigger>
             <TabsTrigger value="favorites" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">المفضلة</TabsTrigger>
@@ -126,7 +126,7 @@ export const ClientGeneralMenuModal = () => {
             <TabsTrigger value="support" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">الدعم</TabsTrigger>
           </TabsList>
 
-          <div className="flex-grow overflow-y-auto pr-2"> {/* Replaced ScrollArea with div for better control */}
+          <div className="flex-grow overflow-y-auto pr-2"> {/* This div handles the scrolling for all tab contents */}
             {/* Profile Tab Content */}
             <TabsContent value="profile" className="mt-0">
               <Card className="bg-brand-card-bg p-6 rounded-2xl shadow-soft w-full max-w-2xl mx-auto text-right">
@@ -384,7 +384,7 @@ export const ClientGeneralMenuModal = () => {
               </Card>
             </TabsContent>
           </div>
-          <div className="mt-6 border-t border-border pt-4 text-center">
+          <div className="mt-6 border-t border-border pt-4 text-center flex-shrink-0">
             <Button asChild variant="destructive" className="bg-brand-danger hover:bg-brand-danger/90 text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
               <Link to="/login">
                 <LogOut className="ml-2 h-5 w-5" />
