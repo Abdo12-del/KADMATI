@@ -15,7 +15,6 @@ import MyServicesListPage from "./pages/MyServicesListPage";
 import AddServicePage from "./pages/AddServicePage";
 import EditServicePage from "./pages/EditServicePage";
 import OrdersPage from "./pages/OrdersPage";
-import MessageCenterPage from "./pages/MessageCenterPage";
 import CalendarPage from "./pages/CalendarPage";
 import CustomersPage from "./pages/CustomersPage";
 import RatingsReviewsPage from "./pages/RatingsReviewsPage";
@@ -58,7 +57,7 @@ const App = () => (
           <Route path="/dashboard/services/add" element={<AddServicePage />} />
           <Route path="/dashboard/services/edit/:id" element={<EditServicePage />} />
           <Route path="/dashboard/orders" element={<OrdersPage />} />
-          <Route path="/dashboard/messages" element={<MessageCenterPage />} />
+          {/* <Route path="/dashboard/messages" element={<MessageCenterPage />} /> */} {/* تم إزالة هذا المسار */}
           <Route path="/dashboard/calendar" element={<CalendarPage />} />
           <Route path="/dashboard/customers" element={<CustomersPage />} />
           <Route path="/dashboard/ratings" element={<RatingsReviewsPage />} />
