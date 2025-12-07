@@ -17,8 +17,10 @@ import { MessageCenterModal } from '@/components/MessageCenterModal'; // است�
 const Header = () => {
   // Placeholder for unread notifications count
   const unreadNotificationsCount = 3; 
-  // Placeholder for unread messages count (will be managed by MessageCenterModal internally)
-  // const unreadMessagesCount = 2; 
+  
+  // For demonstration, let's assume a dummy provider user ID
+  // In a real app, this would come from an authentication context
+  const currentProviderId = 'provider123'; 
 
   return (
     <header className="bg-brand-card-bg text-brand-text-dark p-4 shadow-soft border-b border-border">
@@ -61,7 +63,7 @@ const Header = () => {
           <ProviderReverseRequestsModal />
 
           {/* Message Center Modal Trigger (for provider) */}
-          <MessageCenterModal currentUserId="provider" /> {/* تحديد المستخدم الحالي كمقدم خدمة */}
+          <MessageCenterModal currentUserId={currentProviderId} /> {/* تحديد المستخدم الحالي كمقدم خدمة */}
 
           <Link to="/profile">
             <Button variant="ghost" size="icon" className="text-brand-text-dark hover:bg-brand-background rounded-full">

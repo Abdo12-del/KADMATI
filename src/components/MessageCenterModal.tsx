@@ -8,74 +8,84 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MessageSquare, Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ChatWindow from '@/components/ChatWindow'; // استيراد مكون ChatWindow
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 
 interface Message {
   id: string;
-  sender: 'customer' | 'provider';
+  senderId: string; // Changed from 'sender' to 'senderId' to match backend
   text: string;
-  time: string;
-  read: boolean; // إضافة حالة القراءة للرسائل
+  timestamp: string; // Changed from 'time' to 'timestamp'
+  read: boolean;
 }
 
-interface Conversation {
+interface ConversationListItem {
   id: string;
   customerName: string;
   avatarUrl: string;
-  messages: Message[];
-  unreadCount: number;
+  lastMessage: string;
   lastMessageTime: string;
+  unreadCount: number;
 }
-
-// بيانات وهمية للمحادثات
-const dummyConversations: Conversation[] = [
-  {
-    id: 'conv1',
-    customerName: 'أحمد محمد',
-    avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=AM',
-    messages: [
-      { id: 'msg1', sender: 'customer', text: 'مرحباً، هل أنت متاح لمشروع تصميم شعار جديد؟', time: '10:00 ص', read: true },
-      { id: 'msg2', sender: 'provider', text: 'أهلاً بك! نعم، أنا متاح. ما هي تفاصيل المشروع؟', time: '10:05 ص', read: true },
-      { id: 'msg3', sender: 'customer', text: 'أحتاج شعارًا لشركة تقنية ناشئة. أريد شيئًا حديثًا وبسيطًا.', time: '10:15 ص', read: false },
-      { id: 'msg4', sender: 'provider', text: 'بالتأكيد، يمكننا مناقشة الأفكار. هل لديك أي أمثلة تفضلها؟', time: '10:20 ص', read: false },
-    ],
-    unreadCount: 1,
-    lastMessageTime: '10:20 ص',
-  },
-  {
-    id: 'conv2',
-    customerName: 'سارة علي',
-    avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=SA',
-    messages: [
-      { id: 'msg5', sender: 'customer', text: 'شكراً جزيلاً على الخدمة الممتازة، أنا راضية تماماً عن النتيجة!', time: '03:00 م', read: true },
-      { id: 'msg6', sender: 'provider', text: 'يسعدني جداً سماع ذلك! هدفنا هو رضاكم.', time: '03:05 م', read: true },
-    ],
-    unreadCount: 0,
-    lastMessageTime: '03:05 م',
-  },
-  {
-    id: 'conv3',
-    customerName: 'خالد فهد',
-    avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=KF',
-    messages: [
-      { id: 'msg7', sender: 'customer', text: 'مرحباً، هل يمكننا تعديل موعد تسليم المشروع إلى الأسبوع القادم؟', time: '09:00 ص', read: true },
-      { id: 'msg8', sender: 'provider', text: 'دعني أتحقق من جدول أعمالي وسأرد عليك قريباً.', time: '09:10 ص', read: true },
-      { id: 'msg9', sender: 'customer', text: 'تمام، في انتظار ردك.', time: '09:15 ص', read: false },
-    ],
-    unreadCount: 1,
-    lastMessageTime: '09:15 ص',
-  },
-];
 
 interface MessageCenterModalProps {
-  initialUnreadCount?: number;
-  currentUserId?: 'provider' | 'customer'; // لتحديد من هو المستخدم الحالي
+  currentUserId: string; // يجب أن يكون معرف المستخدم الحقيقي
 }
 
-export const MessageCenterModal = ({ initialUnreadCount = 0, currentUserId = 'provider' }: MessageCenterModalProps) => {
+const fetchConversations = async (userId: string): Promise<ConversationListItem[]> => {
+  const response = await fetch(`http://localhost:3000/api/conversations/user/${userId}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch conversations');
+  }
+  return response.json();
+};
+
+const fetchMessages = async (conversationId: string): Promise<Message[]> => {
+  const response = await fetch(`http://localhost:3000/api/messages/conversation/${conversationId}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch messages');
+  }
+  return response.json();
+};
+
+const markConversationAsRead = async ({ conversationId, userId }: { conversationId: string; userId: string }) => {
+  const response = await fetch(`http://localhost:3000/api/messages/read/${conversationId}/${userId}`, {
+    method: 'PUT',
+  });
+  if (!response.ok) {
+    throw new Error('Failed to mark messages as read');
+  }
+  return response.json();
+};
+
+export const MessageCenterModal = ({ currentUserId }: MessageCenterModalProps) => {
+  const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
-  const [conversations, setConversations] = useState<Conversation[]>(dummyConversations);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Fetch conversations
+  const { data: conversations = [], isLoading: isLoadingConversations, error: conversationsError } = useQuery<ConversationListItem[], Error>({
+    queryKey: ['conversations', currentUserId],
+    queryFn: () => fetchConversations(currentUserId),
+    enabled: isOpen, // Only fetch when modal is open
+    refetchInterval: 5000, // Poll for new conversations/messages every 5 seconds
+  });
+
+  // Fetch messages for selected conversation
+  const { data: messages = [], isLoading: isLoadingMessages, error: messagesError } = useQuery<Message[], Error>({
+    queryKey: ['messages', selectedConversationId],
+    queryFn: () => fetchMessages(selectedConversationId!),
+    enabled: !!selectedConversationId, // Only fetch when a conversation is selected
+    refetchInterval: 3000, // Poll for new messages in active chat every 3 seconds
+  });
+
+  const markAsReadMutation = useMutation({
+    mutationFn: markConversationAsRead,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations', currentUserId] });
+      queryClient.invalidateQueries({ queryKey: ['messages', selectedConversationId] });
+    },
+  });
 
   const totalUnreadCount = useMemo(() => {
     return conversations.reduce((sum, conv) => sum + conv.unreadCount, 0);
@@ -84,40 +94,44 @@ export const MessageCenterModal = ({ initialUnreadCount = 0, currentUserId = 'pr
   const sortedAndFilteredConversations = useMemo(() => {
     let filtered = conversations.filter(conv =>
       conv.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      conv.messages.some(msg => msg.text.toLowerCase().includes(searchTerm.toLowerCase()))
+      conv.lastMessage.toLowerCase().includes(searchTerm.toLowerCase())
     );
     return filtered.sort((a, b) => {
       // Sort by unread first, then by last message time
       if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
       if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
-      return new Date(`2000/01/01 ${b.lastMessageTime}`).getTime() - new Date(`2000/01/01 ${a.lastMessageTime}`).getTime();
+      return new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime();
     });
   }, [conversations, searchTerm]);
 
   const selectedConversation = useMemo(() => {
-    return conversations.find(conv => conv.id === selectedConversationId);
-  }, [conversations, selectedConversationId]);
+    const conv = conversations.find(conv => conv.id === selectedConversationId);
+    if (conv) {
+      return {
+        ...conv,
+        messages: messages.map(msg => ({
+          ...msg,
+          sender: msg.senderId === currentUserId ? 'provider' : 'customer', // Map senderId to 'provider'/'customer' for ChatWindow
+          time: new Date(msg.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+        })),
+      };
+    }
+    return null;
+  }, [conversations, selectedConversationId, messages, currentUserId]);
 
   const handleSelectConversation = (id: string) => {
     setSelectedConversationId(id);
     // Mark messages as read for the selected conversation
-    setConversations(prevConversations =>
-      prevConversations.map(conv =>
-        conv.id === id
-          ? {
-              ...conv,
-              unreadCount: 0,
-              messages: conv.messages.map(msg => ({ ...msg, read: true })),
-            }
-          : conv
-      )
-    );
+    markAsReadMutation.mutate({ conversationId: id, userId: currentUserId });
   };
 
   const handleCloseModal = () => {
     setIsOpen(false);
     setSelectedConversationId(null); // Reset selected conversation when closing
   };
+
+  if (conversationsError) console.error("Error fetching conversations:", conversationsError);
+  if (messagesError) console.error("Error fetching messages:", messagesError);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -157,7 +171,9 @@ export const MessageCenterModal = ({ initialUnreadCount = 0, currentUserId = 'pr
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-brand-text-muted" />
             </div>
             <div className="flex-grow overflow-y-auto space-y-3 pr-2">
-              {sortedAndFilteredConversations.length > 0 ? (
+              {isLoadingConversations ? (
+                <p className="text-brand-text-muted text-center p-4 font-ibm-plex-arabic">جاري تحميل المحادثات...</p>
+              ) : sortedAndFilteredConversations.length > 0 ? (
                 sortedAndFilteredConversations.map(conv => (
                   <div
                     key={conv.id}
@@ -181,7 +197,7 @@ export const MessageCenterModal = ({ initialUnreadCount = 0, currentUserId = 'pr
                         )}
                       </div>
                       <p className="text-sm text-brand-text-muted font-ibm-plex-arabic line-clamp-1">
-                        {conv.messages[conv.messages.length - 1]?.text || 'لا توجد رسائل'}
+                        {conv.lastMessage || 'لا توجد رسائل'}
                       </p>
                       <p className="text-xs text-brand-text-muted font-ibm-plex-arabic mt-1">
                         {conv.lastMessageTime}
@@ -215,7 +231,11 @@ export const MessageCenterModal = ({ initialUnreadCount = 0, currentUserId = 'pr
                   </Avatar>
                   <h3 className="font-cairo text-brand-text-dark text-xl flex-grow text-right">{selectedConversation.customerName}</h3>
                 </div>
-                <ChatWindow conversation={selectedConversation} currentUserId={currentUserId} />
+                {isLoadingMessages ? (
+                  <div className="flex-grow flex items-center justify-center text-brand-text-muted font-ibm-plex-arabic">جاري تحميل الرسائل...</div>
+                ) : (
+                  <ChatWindow conversation={selectedConversation} currentUserId={currentUserId} />
+                )}
               </>
             ) : (
               <div className="flex flex-col items-center justify-center h-full">
