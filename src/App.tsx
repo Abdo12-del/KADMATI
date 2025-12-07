@@ -25,9 +25,9 @@ import SupportCenterPage from "./pages/SupportCenterPage";
 
 // New Client Home Page
 import ClientHomePage from "./pages/ClientHomePage"; // استيراد الصفحة الرئيسية الجديدة
+import ClientServiceDetailsPage from "./pages/ClientServiceDetailsPage"; // استيراد صفحة تفاصيل خدمة العميل الجديدة
 
 // Other existing routes
-import ServiceDetailsPage from "./pages/ServiceDetailsPage"; // Generic service details
 import MyRequestsPage from "./pages/MyRequestsPage"; // General requests page
 import ProfilePage from "./pages/ProfilePage"; // General profile page
 import NotificationsPage from "./pages/NotificationsPage"; // صفحة الإشعارات الجديدة
@@ -48,6 +48,7 @@ const App = () => (
           
           {/* مسار الصفحة الرئيسية الجديدة لطالب الخدمة */}
           <Route path="/client-home" element={<ClientHomePage />} />
+          <Route path="/client-home/services/:id" element={<ClientServiceDetailsPage />} /> {/* مسار تفاصيل خدمة العميل */}
           
           {/* Service Provider Dashboard Routes */}
           <Route path="/dashboard" element={<DashboardOverviewPage />} />
@@ -64,7 +65,6 @@ const App = () => (
           <Route path="/dashboard/support" element={<SupportCenterPage />} />
 
           {/* Other existing routes (consider if they are generic or need client/provider specific versions) */}
-          <Route path="/service/:id" element={<ServiceDetailsPage />} /> {/* Generic service details */}
           <Route path="/requests" element={<MyRequestsPage />} /> {/* General requests page */}
           <Route path="/profile" element={<ProfilePage />} /> {/* General profile page */}
           <Route path="/notifications" element={<NotificationsPage />} /> {/* مسار صفحة الإشعارات الجديدة */}
