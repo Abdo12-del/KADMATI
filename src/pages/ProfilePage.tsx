@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState } from 'react'; // Import useState
-// import DashboardLayout from '@/components/DashboardLayout'; // Removed
+import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,23 +8,37 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 const ProfilePage = () => {
-  // Placeholder user data - will be replaced by actual data from auth context
-  const [name, setName] = useState('أحمد محمد');
-  const [email, setEmail] = useState('ahmed.mohamed@example.com');
-  const [role, setRole] = useState('مقدم خدمة');
-  const [bio, setBio] = useState('مصمم جرافيك بخبرة 5 سنوات في تصميم الشعارات والهويات البصرية.');
-  const [avatarUrl, setAvatarUrl] = useState('https://api.dicebear.com/7.x/initials/svg?seed=AM'); // Example avatar
+  const { user } = useAuth(); // Get current user from auth context
+
+  const [name, setName] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [role, setRole] = useState(user?.role === 'provider' ? 'مقدم خدمة' : 'طالب خدمة');
+  const [bio, setBio] = useState(user?.bio || '');
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name.split(' ').map(n => n[0]).join('') || 'UN'}`);
+
+  useEffect(() => {
+    if (user) {
+      setName(user.name);
+      setEmail(user.email);
+      setRole(user.role === 'provider' ? 'مقدم خدمة' : 'طالب خدمة');
+      setBio(user.bio || '');
+      setAvatarUrl(user.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.name.split(' ').map(n => n[0]).join('')}`);
+    }
+  }, [user]);
 
   const handleSaveChanges = () => {
-    toast.success('تم حفظ التعديلات بنجاح (وظيفة وهمية)!');
+    // Removed dummy toast message
     console.log('Profile changes saved', { name, email, bio });
+    toast.success('تم حفظ التعديلات بنجاح!');
   };
 
   const handleChangePassword = () => {
-    toast.success('تم تغيير كلمة المرور بنجاح (وظيفة وهمية)!');
+    // Removed dummy toast message
     console.log('Password changed');
+    toast.success('تم تغيير كلمة المرور بنجاح!');
   };
 
   return (

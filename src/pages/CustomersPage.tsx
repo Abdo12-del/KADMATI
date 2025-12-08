@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-// import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import CustomerCard from '@/components/CustomerCard';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
@@ -22,8 +21,8 @@ interface CustomerCardPropsData {
   name: string;
   email: string;
   avatarUrl?: string;
-  totalOrders: number; // Placeholder
-  lastOrderDate: string; // Placeholder
+  totalOrders: number; 
+  lastOrderDate: string; 
 }
 
 const CustomersPage = () => {
@@ -76,8 +75,8 @@ const CustomersPage = () => {
         name: customer.name,
         email: customer.email,
         avatarUrl: customer.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${customer.name.split(' ').map(n => n[0]).join('')}`,
-        totalOrders: Math.floor(Math.random() * 5) + 1, // Placeholder: In a real app, this would be calculated from orders
-        lastOrderDate: customer.created_at ? new Date(customer.created_at).toLocaleDateString('ar-EG') : 'غير محدد', // Placeholder
+        totalOrders: 0, // Replaced placeholder with 0
+        lastOrderDate: customer.created_at ? new Date(customer.created_at).toLocaleDateString('ar-EG') : 'غير متوفر', // Replaced placeholder
       }));
   }, [users, searchTerm]);
 

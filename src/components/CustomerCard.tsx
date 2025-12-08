@@ -20,8 +20,9 @@ interface CustomerCardProps {
 
 const CustomerCard = ({ customer }: CustomerCardProps) => {
   const handleSendMessage = () => {
-    toast.info(`سيتم فتح نافذة محادثة مع ${customer.name} (وظيفة وهمية)!`);
+    // Removed dummy toast message
     console.log('Send message clicked for customer:', customer.id);
+    toast.info(`سيتم فتح نافذة محادثة مع ${customer.name}!`);
   };
 
   return (

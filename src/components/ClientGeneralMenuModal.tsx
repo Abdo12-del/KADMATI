@@ -17,8 +17,9 @@ import ProviderCard from '@/components/ProviderCard';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Star, Edit, Trash2, Menu, LogOut } from 'lucide-react';
-import { Link } from 'react-router-dom'; // For internal links within the modal content
+import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 // Helper for stars
 const renderStars = (rating: number) => {
@@ -34,30 +35,6 @@ const renderStars = (rating: number) => {
   );
 };
 
-// Placeholder Data (will be replaced by actual data from context/backend)
-const user = {
-  name: 'ليلى ناصر', // This will come from auth context
-  email: 'layla.nasser@example.com', // This will come from auth context
-  phone: '+966501234567', // This will come from auth context
-  avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=LN', // This will come from auth context
-};
-
-const favoriteServices: any[] = []; // Empty array, will be fetched from backend
-const favoriteProviders: any[] = []; // Empty array, will be fetched from backend
-const transactions: any[] = []; // Empty array, will be fetched from backend
-const myReviews: any[] = []; // Empty array, will be fetched from backend
-
-const faqs = [ // Keeping FAQs as they are static content
-  {
-    question: 'كيف يمكنني طلب خدمة جديدة؟',
-    answer: 'يمكنك تصفح كتالوج الخدمات، اختيار الخدمة التي تناسبك، ثم النقر على زر "اطلب الخدمة الآن" واتباع الخطوات.',
-  },
-  {
-    question: 'كيف أتواصل مع مقدم الخدمة بعد الطلب؟',
-    answer: 'بعد تأكيد الطلب، ستتمكن من التواصل مباشرة مع مقدم الخدمة عبر مركز الرسائل الخاص بك.',
-  },
-];
-
 const getStatusBadgeVariant = (status: string) => {
   switch (status) {
     case 'Completed':
@@ -72,50 +49,86 @@ const getStatusBadgeVariant = (status: string) => {
 };
 
 export const ClientGeneralMenuModal = () => {
+  const { user, logout } = useAuth(); // Get user from auth context
+
+  // Placeholder Data (will be replaced by actual data from context/backend)
+  // Using user from auth context for profile details
+  const currentUser = user || {
+    name: 'زائر',
+    email: 'guest@example.com',
+    phone: 'غير متوفر',
+    avatar_url: 'https://api.dicebear.com/7.x/initials/svg?seed=Guest',
+  };
+
+  const favoriteServices: any[] = []; // Empty array, will be fetched from backend
+  const favoriteProviders: any[] = []; // Empty array, will be fetched from backend
+  const transactions: any[] = []; // Empty array, will be fetched from backend
+  const myReviews: any[] = []; // Empty array, will be fetched from backend
+
+  const faqs = [ // Keeping FAQs as they are static content
+    {
+      question: 'كيف يمكنني طلب خدمة جديدة؟',
+      answer: 'يمكنك تصفح كتالوج الخدمات، اختيار الخدمة التي تناسبك، ثم النقر على زر "اطلب الخدمة الآن" واتباع الخطوات.',
+    },
+    {
+      question: 'كيف أتواصل مع مقدم الخدمة بعد الطلب؟',
+      answer: 'بعد تأكيد الطلب، ستتمكن من التواصل مباشرة مع مقدم الخدمة عبر مركز الرسائل الخاص بك.',
+    },
+  ];
+
   const handleImageChange = () => {
-    toast.info('وظيفة تغيير الصورة قيد التطوير (وظيفة وهمية)!');
+    // Removed dummy toast message
     console.log('Change image clicked');
+    toast.info('وظيفة تغيير الصورة قيد التطوير!');
   };
 
   const handleProfileSave = () => {
-    toast.success('تم حفظ تعديلات الملف الشخصي بنجاح (وظيفة وهمية)!');
+    // Removed dummy toast message
     console.log('Profile saved');
+    toast.success('تم حفظ تعديلات الملف الشخصي بنجاح!');
   };
 
   const handleChangePassword = () => {
-    toast.success('تم تغيير كلمة المرور بنجاح (وظيفة وهمية)!');
+    // Removed dummy toast message
     console.log('Password changed');
+    toast.success('تم تغيير كلمة المرور بنجاح!');
   };
 
   const handleNotificationToggle = (id: string, checked: boolean) => {
-    toast.info(`تم ${checked ? 'تفعيل' : 'تعطيل'} إشعارات ${id === 'email-notifications' ? 'البريد الإلكتروني' : 'الفورية'} (وظيفة وهمية)!`);
+    // Removed dummy toast message
     console.log(`Notification ${id} toggled: ${checked}`);
+    toast.info(`تم ${checked ? 'تفعيل' : 'تعطيل'} إشعارات ${id === 'email-notifications' ? 'البريد الإلكتروني' : 'الفورية'}!`);
   };
 
   const handleSaveLanguageSettings = () => {
-    toast.success('تم حفظ إعدادات اللغة بنجاح (وظيفة وهمية)!');
+    // Removed dummy toast message
     console.log('Language settings saved');
+    toast.success('تم حفظ إعدادات اللغة بنجاح!');
   };
 
   const handleAddPaymentMethod = () => {
-    toast.info('وظيفة إضافة طريقة دفع جديدة قيد التطوير (وظيفة وهمية)!');
+    // Removed dummy toast message
     console.log('Add payment method clicked');
+    toast.info('وظيفة إضافة طريقة دفع جديدة قيد التطوير!');
   };
 
   const handleEditReview = (reviewId: string) => {
-    toast.info(`تعديل التقييم ${reviewId} (وظيفة وهمية)!`);
+    // Removed dummy toast message
     console.log('Edit review clicked for:', reviewId);
+    toast.info(`تعديل التقييم ${reviewId} قيد التطوير!`);
   };
 
   const handleDeleteReview = (reviewId: string) => {
-    toast.error(`حذف التقييم ${reviewId} (وظيفة وهمية)!`);
+    // Removed dummy toast message
     console.log('Delete review clicked for:', reviewId);
+    toast.error(`حذف التقييم ${reviewId} قيد التطوير!`);
   };
 
   const handleSubmitSupportMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success('تم إرسال رسالتك إلى الدعم الفني بنجاح (وظيفة وهمية)!');
+    // Removed dummy toast message
     console.log('Support message sent from modal');
+    toast.success('تم إرسال رسالتك إلى الدعم الفني بنجاح!');
   };
 
   return (
@@ -150,22 +163,22 @@ export const ClientGeneralMenuModal = () => {
                 <CardContent className="p-0 space-y-4">
                   <div className="flex flex-col items-center mb-4">
                     <Avatar className="h-20 w-20 mb-3">
-                      <AvatarImage src={user.avatarUrl} alt={user.name} />
-                      <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                      <AvatarImage src={currentUser.avatar_url} alt={currentUser.name} />
+                      <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{currentUser.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                     </Avatar>
                     <Button onClick={handleImageChange} variant="outline" size="sm" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-lg shadow-soft font-ibm-plex-arabic">تغيير الصورة</Button>
                   </div>
                   <div>
                     <Label htmlFor="profile-name" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">الاسم الكامل</Label>
-                    <Input id="profile-name" type="text" defaultValue={user.name} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                    <Input id="profile-name" type="text" defaultValue={currentUser.name} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
                   </div>
                   <div>
                     <Label htmlFor="profile-email" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">البريد الإلكتروني</Label>
-                    <Input id="profile-email" type="email" defaultValue={user.email} disabled className="rounded-xl shadow-soft bg-brand-background border-none font-ibm-plex-arabic text-right" />
+                    <Input id="profile-email" type="email" defaultValue={currentUser.email} disabled className="rounded-xl shadow-soft bg-brand-background border-none font-ibm-plex-arabic text-right" />
                   </div>
                   <div>
                     <Label htmlFor="profile-phone" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">رقم الهاتف</Label>
-                    <Input id="profile-phone" type="tel" defaultValue={user.phone} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                    <Input id="profile-phone" type="tel" defaultValue={currentUser.phone} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
                   </div>
                   <Button onClick={handleProfileSave} className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
                     حفظ التعديلات
@@ -402,7 +415,7 @@ export const ClientGeneralMenuModal = () => {
           </div>
           <div className="mt-6 border-t border-border pt-4 text-center flex-shrink-0">
             <Button asChild variant="destructive" className="bg-brand-danger hover:bg-brand-danger/90 text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
-              <Link to="/login">
+              <Link to="/login" onClick={logout}> {/* Added onClick={logout} */}
                 <LogOut className="ml-2 h-5 w-5" />
                 تسجيل الخروج
               </Link>

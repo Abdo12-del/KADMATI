@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react';
-// import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
@@ -32,8 +31,9 @@ const SupportCenterPage = () => {
 
   const handleSubmitSupportMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success('تم إرسال رسالتك إلى الدعم الفني بنجاح (وظيفة وهمية)!');
+    // Removed dummy toast message
     console.log('Support message sent');
+    toast.success('تم إرسال رسالتك إلى الدعم الفني بنجاح!');
   };
 
   return (

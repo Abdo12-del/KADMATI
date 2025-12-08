@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-// import ClientHomeHeader from '@/components/ClientHomeHeader'; // Removed
-// import Footer from '@/components/Footer'; // Removed
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NotificationCard } from '@/components/notifications/NotificationCard.tsx';
 import { Input } from '@/components/ui/input';
@@ -206,9 +204,11 @@ const NotificationsPage = () => {
       setNotifications(prev =>
         prev.map(notif => (notif.id === id ? { ...notif, read: true } : notif))
       );
+      // Removed dummy toast message
       toast.success('تم تمييز الإشعار كمقروء.');
       fetchNotifications(); // Re-fetch to ensure consistency
     } catch (err: any) {
+      // Removed dummy toast message
       toast.error('فشل تمييز الإشعار كمقروء: ' + err.message);
     }
   };
@@ -224,9 +224,11 @@ const NotificationsPage = () => {
       // For requests/ratings, you'd need a delete API
       // For now, we'll just update frontend state for other types
       setNotifications(prev => prev.filter(notif => notif.id !== id));
+      // Removed dummy toast message
       toast.success('تم حذف الإشعار.');
       fetchNotifications(); // Re-fetch to ensure consistency
     } catch (err: any) {
+      // Removed dummy toast message
       toast.error('فشل حذف الإشعار: ' + err.message);
     }
   };
