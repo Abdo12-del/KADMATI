@@ -59,11 +59,7 @@ const ordersBreakdownData = [
   { name: 'ملغاة', value: 10, color: 'var(--brand-danger)' },
 ];
 
-const recentActivity = [
-  { id: 'a1', type: 'طلب جديد', description: 'طلب جديد لخدمة "تصميم شعار"', time: 'قبل 5 دقائق', icon: Package, iconColor: 'text-brand-primary' },
-  { id: 'a2', type: 'خدمة مقبولة', description: 'تم قبول خدمتك "تطوير موقع ويب"', time: 'قبل ساعة', icon: Briefcase, iconColor: 'text-brand-success' },
-  { id: 'a3', type: 'تقييم جديد', description: 'تقييم جديد لخدمة "كتابة محتوى" (5 نجوم)', time: 'قبل يوم', icon: Star, iconColor: 'text-yellow-500' },
-];
+// Removed hardcoded recentActivity array
 
 const DashboardOverviewPage = () => {
   const PROVIDER_ID = 1; // Hardcoded provider ID for Ahmed Provider
@@ -353,26 +349,13 @@ const DashboardOverviewPage = () => {
           </CardContent>
         </Card>
 
-        {/* Recent Activity Module */}
+        {/* Removed Recent Activity Module */}
         <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6">
           <CardHeader className="p-0 pb-4 text-right">
             <CardTitle className="text-2xl font-cairo text-brand-text-dark">آخر الأنشطة</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <ul className="space-y-4">
-              {recentActivity.map(activity => {
-                const IconComponent = activity.icon;
-                return (
-                  <li key={activity.id} className="flex flex-row-reverse items-center border-b border-border pb-3 last:border-b-0 last:pb-0">
-                    <IconComponent className={cn("h-5 w-5 ml-3", activity.iconColor)} />
-                    <div className="flex-grow text-right">
-                      <p className="font-cairo text-brand-text-dark font-semibold">{activity.description}</p>
-                      <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">{activity.time}</p>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
+            <p className="text-brand-text-muted font-ibm-plex-arabic text-right">لا توجد أنشطة حديثة لعرضها.</p>
           </CardContent>
         </Card>
       </div>
