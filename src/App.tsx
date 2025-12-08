@@ -21,6 +21,7 @@ import RatingsReviewsPage from "./pages/RatingsReviewsPage";
 import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
 import SupportCenterPage from "./pages/SupportCenterPage";
+import MessageCenterPage from "./pages/MessageCenterPage"; // New import for MessageCenterPage
 
 // New Client Home Page
 import ClientHomePage from "./pages/ClientHomePage"; // استيراد الصفحة الرئيسية الجديدة
@@ -32,7 +33,7 @@ import ClientOrderServicePage from "./pages/ClientOrderServicePage"; // استي
 import MyRequestsPage from "./pages/MyRequestsPage"; // General requests page
 import ProfilePage from "./pages/ProfilePage"; // General profile page
 import NotificationsPage from "./pages/NotificationsPage"; // صفحة الإشعارات الجديدة
-import NotFound from "./pages/NotFound";
+import NotFound from "./pages/NotFound"; // Corrected import path for NotFound
 
 const queryClient = new QueryClient();
 
@@ -59,7 +60,7 @@ const App = () => (
           <Route path="/dashboard/services/add" element={<AddServicePage />} />
           <Route path="/dashboard/services/edit/:id" element={<EditServicePage />} />
           <Route path="/dashboard/orders" element={<OrdersPage />} />
-          {/* <Route path="/dashboard/messages" element={<MessageCenterPage />} /> */} {/* تم إزالة هذا المسار */}
+          <Route path="/dashboard/messages" element={<MessageCenterPage />} /> {/* New route for Message Center Page */}
           <Route path="/dashboard/calendar" element={<CalendarPage />} />
           <Route path="/dashboard/customers" element={<CustomersPage />} />
           <Route path="/dashboard/ratings" element={<RatingsReviewsPage />} />

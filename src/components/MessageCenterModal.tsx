@@ -43,9 +43,10 @@ interface Conversation {
 
 interface MessageCenterModalProps {
   currentUserId?: 'provider' | 'customer'; // لتحديد من هو المستخدم الحالي
+  isPage?: boolean; // New prop to indicate if it's rendered as a full page
 }
 
-export const MessageCenterModal = ({ currentUserId = 'provider' }: MessageCenterModalProps) => {
+export const MessageCenterModal = ({ currentUserId = 'provider', isPage = false }: MessageCenterModalProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [allMessages, setAllMessages] = useState<MessageData[]>([]);
   const [allUsers, setAllUsers] = useState<UserData[]>([]);
@@ -88,10 +89,10 @@ export const MessageCenterModal = ({ currentUserId = 'provider' }: MessageCenter
   }, []);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen || isPage) { // Fetch data if modal is open or if rendered as a page
       fetchMessagesAndUsers();
     }
-  }, [isOpen, fetchMessagesAndUsers]);
+  }, [isOpen, isPage, fetchMessagesAndUsers]);
 
   const conversations = useMemo(() => {
     const convMap = new Map<string, Conversation>();
@@ -195,40 +196,112 @@ export const MessageCenterModal = ({ currentUserId = 'provider' }: MessageCenter
     setSelectedConversationId(null); // Reset selected conversation when closing
   };
 
-  if (loading) {
-    return (
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTrigger asChild>
-          <Button variant="ghost" size="icon" className="relative text-brand-text-dark hover:bg-brand-background rounded-full">
-            <MessageSquare className="h-5 w-5" />
-            {totalUnreadCount > 0 && (
-              <span className="absolute top-0 right-0 h-4 w-4 rounded-full bg-brand-danger flex items-center justify-center text-xs text-white font-ibm-plex-arabic">
-                {totalUnreadCount}
-              </span>
-            )}
-            <span className="sr-only">الرسائل</span>
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[900px] h-[90vh] flex flex-col rounded-2xl shadow-soft bg-brand-card-bg p-6 overflow-hidden">
-          <div className="flex items-center justify-center h-full text-brand-text-dark font-ibm-plex-arabic">جاري تحميل الرسائل...</div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
+  const content = (
+    <div className={cn("flex flex-grow overflow-hidden rtl:flex-row-reverse", isPage ? "h-[calc(100vh-200px)]" : "")}>
+      {/* Conversation List Sidebar */}
+      <div className={cn(
+        "w-full lg:w-1/3 border-l border-border p-4 flex flex-col flex-shrink-0 rtl:border-r rtl:border-l-0",
+        selectedConversationId && "hidden lg:flex" // Hide on small screens if a chat is selected
+      )}>
+        <div className="relative mb-4">
+          <Input
+            placeholder="بحث في المحادثات..."
+            className="w-full pr-10 rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-brand-text-muted" />
+        </div>
+        <div className="flex-grow overflow-y-auto space-y-3 pr-2">
+          {sortedAndFilteredConversations.length > 0 ? (
+            sortedAndFilteredConversations.map(conv => (
+              <div
+                key={conv.id}
+                onClick={() => handleSelectConversation(conv.id)}
+                className={cn(
+                  "flex flex-row-reverse items-center p-3 rounded-xl hover:bg-brand-background cursor-pointer transition-colors shadow-soft text-right",
+                  selectedConversationId === conv.id && "bg-brand-primary-light/20"
+                )}
+              >
+                <Avatar className="h-12 w-12 ml-3 flex-shrink-0">
+                  <AvatarImage src={conv.avatarUrl} alt={conv.customerName} />
+                  <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{conv.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                </Avatar>
+                <div className="flex-grow overflow-hidden">
+                  <div className="flex justify-between items-center">
+                    <p className="font-cairo text-brand-text-dark font-semibold truncate">{conv.customerName}</p>
+                    {conv.unreadCount > 0 && (
+                      <span className="flex-shrink-0 ml-2 h-5 w-5 rounded-full bg-brand-danger flex items-center justify-center text-xs text-white font-ibm-plex-arabic">
+                        {conv.unreadCount}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-brand-text-muted font-ibm-plex-arabic line-clamp-1">
+                    {conv.messages[conv.messages.length - 1]?.text || 'لا توجد رسائل'}
+                  </p>
+                  <p className="text-xs text-brand-text-muted font-ibm-plex-arabic mt-1">
+                    {conv.lastMessageTime}
+                  </p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-brand-text-muted text-center p-4 font-ibm-plex-arabic">لا توجد محادثات مطابقة.</p>
+          )}
+        </div>
+      </div>
 
-  if (error) {
+      {/* Chat Window Area */}
+      <div className={cn(
+        "flex-grow flex flex-col",
+        !selectedConversationId && "hidden lg:flex items-center justify-center text-brand-text-muted font-ibm-plex-arabic",
+        selectedConversationId && "w-full" // Take full width on small screens if chat is selected
+      )}>
+        {selectedConversation ? (
+          <>
+            {/* Chat Window Header */}
+            <div className="flex flex-row-reverse items-center border-b border-border pb-4 px-4 pt-0 flex-shrink-0">
+              <Button variant="ghost" size="icon" onClick={() => setSelectedConversationId(null)} className="lg:hidden text-brand-text-muted hover:bg-brand-background rounded-full ml-2">
+                <X className="h-5 w-5" />
+                <span className="sr-only">العودة للمحادثات</span>
+              </Button>
+              <Avatar className="h-12 w-12 ml-3 flex-shrink-0">
+                <AvatarImage src={selectedConversation.avatarUrl} alt={selectedConversation.customerName} />
+                <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{selectedConversation.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+              </Avatar>
+              <h3 className="font-cairo text-brand-text-dark text-xl flex-grow text-right">{selectedConversation.customerName}</h3>
+            </div>
+            <ChatWindow
+              conversation={selectedConversation}
+              currentUserId={currentUserId}
+              currentBackendUserId={CURRENT_USER_BACKEND_ID}
+              onMessageSent={fetchMessagesAndUsers} // Pass the re-fetch callback
+            />
+          </>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full">
+            <MessageSquare className="h-16 w-16 mb-4 text-brand-primary-light" />
+            <p className="text-lg">اختر محادثة من القائمة للبدء.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  if (isPage) {
     return (
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTrigger asChild>
-          <Button variant="ghost" size="icon" className="relative text-brand-text-dark hover:bg-brand-background rounded-full">
-            <MessageSquare className="h-5 w-5 text-brand-danger" />
-            <span className="sr-only">الرسائل (خطأ)</span>
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[900px] h-[90vh] flex flex-col rounded-2xl shadow-soft bg-brand-card-bg p-6 overflow-hidden">
+      <div className="bg-brand-card-bg rounded-2xl shadow-soft p-6 h-full flex flex-col">
+        <div className="flex flex-row-reverse items-center justify-between border-b border-border pb-4 flex-shrink-0">
+          <DialogTitle className="text-3xl font-cairo text-brand-text-dark">مركز الرسائل</DialogTitle>
+        </div>
+        {loading ? (
+          <div className="flex items-center justify-center h-full text-brand-text-dark font-ibm-plex-arabic">جاري تحميل الرسائل...</div>
+        ) : error ? (
           <div className="flex items-center justify-center h-full text-brand-danger font-ibm-plex-arabic">خطأ: {error}</div>
-        </DialogContent>
-      </Dialog>
+        ) : (
+          content
+        )}
+      </div>
     );
   }
 
@@ -253,96 +326,13 @@ export const MessageCenterModal = ({ currentUserId = 'provider' }: MessageCenter
             <span className="sr-only">إغلاق</span>
           </Button>
         </DialogHeader>
-
-        <div className="flex flex-grow overflow-hidden rtl:flex-row-reverse">
-          {/* Conversation List Sidebar */}
-          <div className={cn(
-            "w-full lg:w-1/3 border-l border-border p-4 flex flex-col flex-shrink-0 rtl:border-r rtl:border-l-0",
-            selectedConversationId && "hidden lg:flex" // Hide on small screens if a chat is selected
-          )}>
-            <div className="relative mb-4">
-              <Input
-                placeholder="بحث في المحادثات..."
-                className="w-full pr-10 rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-brand-text-muted" />
-            </div>
-            <div className="flex-grow overflow-y-auto space-y-3 pr-2">
-              {sortedAndFilteredConversations.length > 0 ? (
-                sortedAndFilteredConversations.map(conv => (
-                  <div
-                    key={conv.id}
-                    onClick={() => handleSelectConversation(conv.id)}
-                    className={cn(
-                      "flex flex-row-reverse items-center p-3 rounded-xl hover:bg-brand-background cursor-pointer transition-colors shadow-soft text-right",
-                      selectedConversationId === conv.id && "bg-brand-primary-light/20"
-                    )}
-                  >
-                    <Avatar className="h-12 w-12 ml-3 flex-shrink-0">
-                      <AvatarImage src={conv.avatarUrl} alt={conv.customerName} />
-                      <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{conv.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-grow overflow-hidden">
-                      <div className="flex justify-between items-center">
-                        <p className="font-cairo text-brand-text-dark font-semibold truncate">{conv.customerName}</p>
-                        {conv.unreadCount > 0 && (
-                          <span className="flex-shrink-0 ml-2 h-5 w-5 rounded-full bg-brand-danger flex items-center justify-center text-xs text-white font-ibm-plex-arabic">
-                            {conv.unreadCount}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm text-brand-text-muted font-ibm-plex-arabic line-clamp-1">
-                        {conv.messages[conv.messages.length - 1]?.text || 'لا توجد رسائل'}
-                      </p>
-                      <p className="text-xs text-brand-text-muted font-ibm-plex-arabic mt-1">
-                        {conv.lastMessageTime}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-brand-text-muted text-center p-4 font-ibm-plex-arabic">لا توجد محادثات مطابقة.</p>
-              )}
-            </div>
-          </div>
-
-          {/* Chat Window Area */}
-          <div className={cn(
-            "flex-grow flex flex-col",
-            !selectedConversationId && "hidden lg:flex items-center justify-center text-brand-text-muted font-ibm-plex-arabic",
-            selectedConversationId && "w-full" // Take full width on small screens if chat is selected
-          )}>
-            {selectedConversation ? (
-              <>
-                {/* Chat Window Header */}
-                <div className="flex flex-row-reverse items-center border-b border-border pb-4 px-4 pt-0 flex-shrink-0">
-                  <Button variant="ghost" size="icon" onClick={() => setSelectedConversationId(null)} className="lg:hidden text-brand-text-muted hover:bg-brand-background rounded-full ml-2">
-                    <X className="h-5 w-5" />
-                    <span className="sr-only">العودة للمحادثات</span>
-                  </Button>
-                  <Avatar className="h-12 w-12 ml-3 flex-shrink-0">
-                    <AvatarImage src={selectedConversation.avatarUrl} alt={selectedConversation.customerName} />
-                    <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{selectedConversation.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                  </Avatar>
-                  <h3 className="font-cairo text-brand-text-dark text-xl flex-grow text-right">{selectedConversation.customerName}</h3>
-                </div>
-                <ChatWindow
-                  conversation={selectedConversation}
-                  currentUserId={currentUserId}
-                  currentBackendUserId={CURRENT_USER_BACKEND_ID}
-                  onMessageSent={fetchMessagesAndUsers} // Pass the re-fetch callback
-                />
-              </>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full">
-                <MessageSquare className="h-16 w-16 mb-4 text-brand-primary-light" />
-                <p className="text-lg">اختر محادثة من القائمة للبدء.</p>
-              </div>
-            )}
-          </div>
-        </div>
+        {loading ? (
+          <div className="flex items-center justify-center h-full text-brand-text-dark font-ibm-plex-arabic">جاري تحميل الرسائل...</div>
+        ) : error ? (
+          <div className="flex items-center justify-center h-full text-brand-danger font-ibm-plex-arabic">خطأ: {error}</div>
+        ) : (
+          content
+        )}
       </DialogContent>
     </Dialog>
   );
