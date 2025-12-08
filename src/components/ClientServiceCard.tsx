@@ -55,9 +55,11 @@ const ClientServiceCard = ({ service }: ClientServiceCardProps) => {
                 عرض التفاصيل
               </Button>
             </Link>
-            <Button className="bg-brand-primary hover:bg-brand-primary-dark text-white px-3 py-2 rounded-lg shadow-soft font-ibm-plex-arabic text-sm">
-              اطلب الخدمة
-            </Button>
+            <Link to={`/client-home/order-service/${service.id}`}> {/* Updated link */}
+              <Button className="bg-brand-primary hover:bg-brand-primary-dark text-white px-3 py-2 rounded-lg shadow-soft font-ibm-plex-arabic text-sm">
+                اطلب الخدمة
+              </Button>
+            </Link>
           </div>
         </div>
       </CardContent>

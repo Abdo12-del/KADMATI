@@ -5,7 +5,7 @@ import ClientHomeHeader from '@/components/ClientHomeHeader';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom'; // Import Link
 import { Star, Clock, MapPin, LayoutList, Share2, Heart, MessageSquare, HelpCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -419,9 +419,11 @@ const ClientServiceDetailsPage = () => {
                   </div>
                 )} */}
 
-                <Button className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white py-3 rounded-xl shadow-soft font-ibm-plex-arabic text-lg">
-                  اطلب الخدمة الآن
-                </Button>
+                <Link to={`/client-home/order-service/${service.id}`}> {/* Updated link */}
+                  <Button className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white py-3 rounded-xl shadow-soft font-ibm-plex-arabic text-lg">
+                    اطلب الخدمة الآن
+                  </Button>
+                </Link>
                 <Button variant="outline" className="w-full border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
                   <MessageSquare className="ml-2 h-5 w-5" />
                   تواصل مع مقدم الخدمة

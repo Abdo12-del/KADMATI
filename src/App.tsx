@@ -26,6 +26,7 @@ import SupportCenterPage from "./pages/SupportCenterPage";
 import ClientHomePage from "./pages/ClientHomePage"; // استيراد الصفحة الرئيسية الجديدة
 import ClientServiceDetailsPage from "./pages/ClientServiceDetailsPage"; // استيراد صفحة تفاصيل خدمة العميل الجديدة
 import ClientCreateRequestPage from "./pages/ClientCreateRequestPage"; // استيراد صفحة إضافة طلب خدمة جديد
+import ClientOrderServicePage from "./pages/ClientOrderServicePage"; // استيراد صفحة طلب الخدمة الجديدة
 
 // Other existing routes
 import MyRequestsPage from "./pages/MyRequestsPage"; // General requests page
@@ -50,6 +51,7 @@ const App = () => (
           <Route path="/client-home" element={<ClientHomePage />} />
           <Route path="/client-home/services/:id" element={<ClientServiceDetailsPage />} /> {/* مسار تفاصيل خدمة العميل */}
           <Route path="/client-home/create-request" element={<ClientCreateRequestPage />} /> {/* مسار إضافة طلب خدمة جديد */}
+          <Route path="/client-home/order-service/:id" element={<ClientOrderServicePage />} /> {/* مسار طلب الخدمة الجديد */}
           
           {/* Service Provider Dashboard Routes */}
           <Route path="/dashboard" element={<DashboardOverviewPage />} />
