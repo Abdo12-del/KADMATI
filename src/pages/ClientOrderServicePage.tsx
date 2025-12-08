@@ -9,6 +9,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Clock, MapPin, LayoutList } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 interface ServiceData {
   id: number;
@@ -33,12 +34,13 @@ interface UserData {
 const ClientOrderServicePage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth(); // Get current user from auth context
+  const CLIENT_ID = user?.id; // Use actual client ID
+
   const [service, setService] = useState<ServiceData | null>(null);
   const [provider, setProvider] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const CLIENT_ID = 2; // Hardcoded client ID for Laila Seeker
 
   const fetchServiceDetails = useCallback(async () => {
     setLoading(true);
@@ -76,6 +78,10 @@ const ClientOrderServicePage = () => {
   const handlePlaceOrder = async () => {
     if (!service) {
       toast.error('لا يمكن إتمام الطلب، بيانات الخدمة غير متوفرة.');
+      return;
+    }
+    if (!CLIENT_ID) {
+      toast.error('معرف العميل غير متاح. الرجاء تسجيل الدخول كطالب خدمة.');
       return;
     }
 

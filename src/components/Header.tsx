@@ -9,16 +9,14 @@ import {
   navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { UserCircle } from 'lucide-react'; // Using Lucide for icons
+import { UserCircle } from 'lucide-react';
 import { NotificationsDropdown } from '@/components/notifications/NotificationsDropdown.tsx';
 import { ProviderReverseRequestsModal } from '@/components/ProviderReverseRequestsModal';
-import { MessageCenterModal } from '@/components/MessageCenterModal'; // استيراد المكون الجديد
+import { MessageCenterModal } from '@/components/MessageCenterModal';
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 const Header = () => {
-  // The unread notifications count is now managed internally by NotificationsDropdown
-  // const unreadNotificationsCount = 3; 
-  // Placeholder for unread messages count (will be managed by MessageCenterModal internally)
-  // const unreadMessagesCount = 2; 
+  const { isLoggedIn, userRole, logout } = useAuth();
 
   return (
     <header className="bg-brand-card-bg text-brand-text-dark p-4 shadow-soft border-b border-border">
@@ -35,49 +33,58 @@ const Header = () => {
                 </Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <Link to="/client-home" className={`${navigationMenuTriggerStyle()} text-brand-text-dark hover:text-brand-primary font-ibm-plex-arabic rounded-lg`}>
-                  لوحة العميل
-                </Link>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <Link to="/dashboard" className={`${navigationMenuTriggerStyle()} text-brand-text-dark hover:text-brand-primary font-ibm-plex-arabic rounded-lg`}>
-                  لوحة مقدم الخدمة
-                </Link>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
+            {isLoggedIn && userRole === 'seeker' && (
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild>
+                  <Link to="/client-home" className={`${navigationMenuTriggerStyle()} text-brand-text-dark hover:text-brand-primary font-ibm-plex-arabic rounded-lg`}>
+                    لوحة العميل
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            )}
+            {isLoggedIn && userRole === 'provider' && (
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild>
+                  <Link to="/dashboard" className={`${navigationMenuTriggerStyle()} text-brand-text-dark hover:text-brand-primary font-ibm-plex-arabic rounded-lg`}>
+                    لوحة مقدم الخدمة
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            )}
           </NavigationMenuList>
         </NavigationMenu>
         <div className="flex items-center space-x-4 rtl:space-x-reverse">
           <ThemeToggle />
           
-          {/* Notifications Dropdown */}
-          <NotificationsDropdown /> {/* Removed unreadCount prop */}
-
-          {/* Provider Reverse Requests Modal Trigger */}
-          <ProviderReverseRequestsModal />
-
-          {/* Message Center Modal Trigger (for provider) */}
-          <MessageCenterModal currentUserId="provider" /> {/* تحديد المستخدم الحالي كمقدم خدمة */}
-
-          <Link to="/profile">
-            <Button variant="ghost" size="icon" className="text-brand-text-dark hover:bg-brand-background rounded-full">
-              <UserCircle className="h-6 w-6" />
-            </Button>
-          </Link>
-          <Link to="/login">
-            <Button variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic px-4 py-2">
-              تسجيل الدخول
-            </Button>
-          </Link>
-          <Link to="/signup">
-            <Button className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-lg font-ibm-plex-arabic px-4 py-2">
-              إنشاء حساب
-            </Button>
-          </Link>
+          {isLoggedIn && (
+            <>
+              <NotificationsDropdown />
+              {userRole === 'provider' && <ProviderReverseRequestsModal />}
+              <MessageCenterModal currentUserId={userRole === 'provider' ? 'provider' : 'customer'} />
+              <Link to="/profile"> {/* This can be a generic profile page, or redirect based on role */}
+                <Button variant="ghost" size="icon" className="text-brand-text-dark hover:bg-brand-background rounded-full">
+                  <UserCircle className="h-6 w-6" />
+                </Button>
+              </Link>
+              <Button onClick={logout} variant="outline" className="border-brand-danger text-brand-danger hover:bg-brand-danger/10 rounded-lg font-ibm-plex-arabic px-4 py-2">
+                تسجيل الخروج
+              </Button>
+            </>
+          )}
+          {!isLoggedIn && (
+            <>
+              <Link to="/login">
+                <Button variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic px-4 py-2">
+                  تسجيل الدخول
+                </Button>
+              </Link>
+              <Link to="/signup">
+                <Button className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-lg font-ibm-plex-arabic px-4 py-2">
+                  إنشاء حساب
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

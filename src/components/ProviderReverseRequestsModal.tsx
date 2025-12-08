@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, ListFilter } from 'lucide-react';
 import ProviderRequestCard from '@/components/ProviderRequestCard';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 interface RequestData {
   id: number;
@@ -38,6 +39,9 @@ interface ProviderRequestCardPropsData {
 }
 
 export const ProviderReverseRequestsModal = () => {
+  const { user } = useAuth(); // Get current user from auth context
+  const PROVIDER_ID = user?.id; // Use actual provider ID
+
   const [requests, setRequests] = useState<RequestData[]>([]);
   const [users, setUsers] = useState<UserData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -50,6 +54,12 @@ export const ProviderReverseRequestsModal = () => {
   const locations = ['الرياض', 'جدة', 'الدمام', 'مكة المكرمة', 'الخبر']; // Example locations
 
   const fetchAllData = useCallback(async () => {
+    if (!PROVIDER_ID) {
+      setLoading(false);
+      setError('Provider ID not available. Please log in as a provider.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -70,7 +80,10 @@ export const ProviderReverseRequestsModal = () => {
       const requestsResult = await requestsResponse.json();
       const usersResult = await usersResponse.json();
 
-      setRequests(requestsResult.data);
+      // Filter requests that are not yet accepted/completed/cancelled
+      // and are potentially open for this provider to offer a service
+      const openRequests = requestsResult.data.filter((req: RequestData) => req.status === 'pending');
+      setRequests(openRequests);
       setUsers(usersResult.data);
     } catch (err: any) {
       setError(err.message);
@@ -78,7 +91,7 @@ export const ProviderReverseRequestsModal = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [PROVIDER_ID]);
 
   useEffect(() => {
     fetchAllData();

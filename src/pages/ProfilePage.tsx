@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react'; // Import useState
 import DashboardLayout from '@/components/DashboardLayout';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -11,18 +11,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 
 const ProfilePage = () => {
-  // Placeholder user data
-  const user = {
-    name: 'أحمد محمد',
-    email: 'ahmed.mohamed@example.com',
-    role: 'مقدم خدمة',
-    bio: 'مصمم جرافيك بخبرة 5 سنوات في تصميم الشعارات والهويات البصرية.',
-    avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=AM', // Example avatar
-  };
+  // Placeholder user data - will be replaced by actual data from auth context
+  const [name, setName] = useState('أحمد محمد');
+  const [email, setEmail] = useState('ahmed.mohamed@example.com');
+  const [role, setRole] = useState('مقدم خدمة');
+  const [bio, setBio] = useState('مصمم جرافيك بخبرة 5 سنوات في تصميم الشعارات والهويات البصرية.');
+  const [avatarUrl, setAvatarUrl] = useState('https://api.dicebear.com/7.x/initials/svg?seed=AM'); // Example avatar
 
   const handleSaveChanges = () => {
     toast.success('تم حفظ التعديلات بنجاح (وظيفة وهمية)!');
-    console.log('Profile changes saved');
+    console.log('Profile changes saved', { name, email, bio });
   };
 
   const handleChangePassword = () => {
@@ -39,12 +37,12 @@ const ProfilePage = () => {
         <CardContent className="p-0 space-y-8">
           <div className="flex flex-col items-center mb-8">
             <Avatar className="h-24 w-24 mb-4">
-              <AvatarImage src={user.avatarUrl} alt={user.name} />
-              <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+              <AvatarImage src={avatarUrl} alt={name} />
+              <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
             </Avatar>
-            <h2 className="text-2xl font-cairo text-brand-text-dark">{user.name}</h2>
-            <p className="text-brand-text-muted font-ibm-plex-arabic">{user.email}</p>
-            <p className="text-brand-primary font-semibold mt-2 font-ibm-plex-arabic">{user.role}</p>
+            <h2 className="text-2xl font-cairo text-brand-text-dark">{name}</h2>
+            <p className="text-brand-text-muted font-ibm-plex-arabic">{email}</p>
+            <p className="text-brand-primary font-semibold mt-2 font-ibm-plex-arabic">{role}</p>
           </div>
 
           <Card className="rounded-2xl shadow-soft bg-brand-background p-6">
@@ -54,15 +52,15 @@ const ProfilePage = () => {
             <CardContent className="p-0 space-y-4">
               <div>
                 <Label htmlFor="profile-name" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">الاسم الكامل</Label>
-                <Input id="profile-name" type="text" defaultValue={user.name} className="rounded-xl shadow-soft bg-brand-card-bg border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                <Input id="profile-name" type="text" value={name} onChange={(e) => setName(e.target.value)} className="rounded-xl shadow-soft bg-brand-card-bg border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
               </div>
               <div>
                 <Label htmlFor="profile-email" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">البريد الإلكتروني</Label>
-                <Input id="profile-email" type="email" defaultValue={user.email} disabled className="rounded-xl shadow-soft bg-brand-card-bg border-none font-ibm-plex-arabic text-right" />
+                <Input id="profile-email" type="email" value={email} disabled className="rounded-xl shadow-soft bg-brand-card-bg border-none font-ibm-plex-arabic text-right" />
               </div>
               <div>
                 <Label htmlFor="profile-bio" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">نبذة عني</Label>
-                <Textarea id="profile-bio" defaultValue={user.bio} rows={4} className="rounded-xl shadow-soft bg-brand-card-bg border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                <Textarea id="profile-bio" value={bio} onChange={(e) => setBio(e.target.value)} rows={4} className="rounded-xl shadow-soft bg-brand-card-bg border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
               </div>
               <Button onClick={handleSaveChanges} className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
                 حفظ التعديلات

@@ -34,52 +34,20 @@ const renderStars = (rating: number) => {
   );
 };
 
-// Placeholder Data
+// Placeholder Data (will be replaced by actual data from context/backend)
 const user = {
-  name: 'ليلى ناصر',
-  email: 'layla.nasser@example.com',
-  phone: '+966501234567',
-  avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=LN',
+  name: 'ليلى ناصر', // This will come from auth context
+  email: 'layla.nasser@example.com', // This will come from auth context
+  phone: '+966501234567', // This will come from auth context
+  avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=LN', // This will come from auth context
 };
 
-const favoriteServices = [
-  { id: 's1', title: 'تنظيف منزلي عميق', description: 'خدمة تنظيف شاملة للمنازل والشقق.', price: 250, providerName: 'شركة النظافة السريعة', rating: 4.8, location: 'الرياض', imageUrl: '/placeholder.svg' },
-  { id: 's2', title: 'تصميم داخلي للمنازل', description: 'تصميمات داخلية عصرية ومبتكرة.', price: 1200, providerName: 'مهندس الديكور أحمد', rating: 4.9, location: 'جدة', imageUrl: '/placeholder.svg' },
-];
+const favoriteServices: any[] = []; // Empty array, will be fetched from backend
+const favoriteProviders: any[] = []; // Empty array, will be fetched from backend
+const transactions: any[] = []; // Empty array, will be fetched from backend
+const myReviews: any[] = []; // Empty array, will be fetched from backend
 
-const favoriteProviders = [
-  { id: 'p1', name: 'شركة النظافة السريعة', avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=NS', rating: 4.8, serviceCount: 15 },
-  { id: 'p2', name: 'فني الصيانة ماهر', avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=FM', rating: 4.5, serviceCount: 8 },
-];
-
-const transactions = [
-  { id: 't1', service: 'تنظيف منزلي عميق', amount: 250, date: '2023-11-01', status: 'Completed', method: 'بطاقة ائتمان' },
-  { id: 't2', service: 'صيانة مكيفات سبليت', amount: 300, date: '2023-10-28', status: 'Completed', method: 'Apple Pay' },
-  { id: 't3', service: 'تصميم داخلي لغرفة معيشة', amount: 1200, date: '2023-10-29', status: 'Pending', method: 'تحويل بنكي' },
-];
-
-const myReviews = [
-  {
-    id: 'rev1',
-    serviceTitle: 'تنظيف منزلي عميق',
-    providerName: 'شركة النظافة السريعة',
-    rating: 5,
-    comment: 'خدمة ممتازة وفريق عمل محترف، المنزل أصبح يلمع!',
-    date: '2023-11-01',
-    providerAvatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=NS',
-  },
-  {
-    id: 'rev2',
-    serviceTitle: 'صيانة مكيفات سبليت',
-    providerName: 'فني الصيانة ماهر',
-    rating: 4,
-    comment: 'تنظيف جيد جداً وسرعة في الاستجابة، شكراً.',
-    date: '2023-10-28',
-    providerAvatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=FM',
-  },
-];
-
-const faqs = [
+const faqs = [ // Keeping FAQs as they are static content
   {
     question: 'كيف يمكنني طلب خدمة جديدة؟',
     answer: 'يمكنك تصفح كتالوج الخدمات، اختيار الخدمة التي تناسبك، ثم النقر على زر "اطلب الخدمة الآن" واتباع الخطوات.',

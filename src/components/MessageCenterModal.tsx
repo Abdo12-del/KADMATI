@@ -9,6 +9,7 @@ import { MessageSquare, Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ChatWindow from '@/components/ChatWindow';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 interface MessageData {
   id: number;
@@ -47,6 +48,9 @@ interface MessageCenterModalProps {
 }
 
 export const MessageCenterModal = ({ currentUserId = 'provider', isPage = false }: MessageCenterModalProps) => {
+  const { user } = useAuth(); // Get current user from auth context
+  const CURRENT_USER_BACKEND_ID = user?.id; // Use actual current user ID
+
   const [isOpen, setIsOpen] = useState(false);
   const [allMessages, setAllMessages] = useState<MessageData[]>([]);
   const [allUsers, setAllUsers] = useState<UserData[]>([]);
@@ -55,9 +59,13 @@ export const MessageCenterModal = ({ currentUserId = 'provider', isPage = false 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const CURRENT_USER_BACKEND_ID = currentUserId === 'provider' ? 1 : 2; // Map frontend role to backend user ID
-
   const fetchMessagesAndUsers = useCallback(async () => {
+    if (!CURRENT_USER_BACKEND_ID) {
+      setLoading(false);
+      setError('User ID not available. Please log in.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -86,7 +94,7 @@ export const MessageCenterModal = ({ currentUserId = 'provider', isPage = false 
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [CURRENT_USER_BACKEND_ID]);
 
   useEffect(() => {
     if (isOpen || isPage) { // Fetch data if modal is open or if rendered as a page

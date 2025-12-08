@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Star } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 interface RatingData {
   id: number;
@@ -19,6 +20,7 @@ interface RatingData {
 interface ServiceData {
   id: number;
   title: string;
+  provider_id: number; // Added provider_id to filter services
 }
 
 interface UserData {
@@ -38,6 +40,9 @@ interface ReviewCardPropsData {
 }
 
 const RatingsReviewsPage = () => {
+  const { user } = useAuth(); // Get current user from auth context
+  const PROVIDER_ID = user?.id; // Use actual provider ID
+
   const [ratings, setRatings] = useState<RatingData[]>([]);
   const [services, setServices] = useState<ServiceData[]>([]);
   const [users, setUsers] = useState<UserData[]>([]);
@@ -45,6 +50,12 @@ const RatingsReviewsPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchAllData = useCallback(async () => {
+    if (!PROVIDER_ID) {
+      setLoading(false);
+      setError('Provider ID not available. Please log in as a provider.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -71,8 +82,15 @@ const RatingsReviewsPage = () => {
       const servicesResult = await servicesResponse.json();
       const usersResult = await usersResponse.json();
 
-      setRatings(ratingsResult.data);
-      setServices(servicesResult.data);
+      // Filter services to only include those belonging to the current provider
+      const providerServices = servicesResult.data.filter((s: ServiceData) => s.provider_id === PROVIDER_ID);
+      setServices(providerServices);
+
+      // Filter ratings to only include those for the current provider's services
+      const providerServiceIds = providerServices.map((s: ServiceData) => s.id);
+      const providerRatings = ratingsResult.data.filter((r: RatingData) => providerServiceIds.includes(r.service_id));
+      setRatings(providerRatings);
+      
       setUsers(usersResult.data);
     } catch (err: any) {
       setError(err.message);
@@ -80,7 +98,7 @@ const RatingsReviewsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [PROVIDER_ID]);
 
   useEffect(() => {
     fetchAllData();

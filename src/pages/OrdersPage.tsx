@@ -5,6 +5,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import OrderCard from '@/components/OrderCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 interface RequestData {
   id: number;
@@ -38,12 +39,21 @@ interface OrderCardPropsData {
 }
 
 const OrdersPage = () => {
+  const { user } = useAuth(); // Get current user from auth context
+  const PROVIDER_ID = user?.id; // Use actual provider ID
+
   const [requests, setRequests] = useState<RequestData[]>([]);
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchAllData = useCallback(async () => {
+    if (!PROVIDER_ID) {
+      setLoading(false);
+      setError('Provider ID not available. Please log in as a provider.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -64,6 +74,9 @@ const OrdersPage = () => {
       const requestsResult = await requestsResponse.json();
       const usersResult = await usersResponse.json();
 
+      // Filter requests that are relevant to this provider (e.g., requests for their services)
+      // For now, we'll assume all requests are visible to the provider for simplicity,
+      // but in a real app, this would involve checking service_id or provider_id on the request.
       setRequests(requestsResult.data);
       setUsers(usersResult.data);
     } catch (err: any) {
@@ -72,7 +85,7 @@ const OrdersPage = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [PROVIDER_ID]);
 
   useEffect(() => {
     fetchAllData();

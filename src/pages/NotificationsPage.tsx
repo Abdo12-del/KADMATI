@@ -8,6 +8,7 @@ import { NotificationCard } from '@/components/notifications/NotificationCard.ts
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 interface BackendMessage {
   id: number;
@@ -44,6 +45,7 @@ interface BackendUser {
 interface BackendService {
   id: number;
   title: string;
+  provider_id: number; // Added provider_id
 }
 
 interface Notification {
@@ -57,15 +59,22 @@ interface Notification {
 }
 
 const NotificationsPage = () => {
+  const { user } = useAuth(); // Get current user from auth context
+  const CURRENT_USER_ID = user?.id; // Use actual current user ID
+  const CURRENT_USER_ROLE = user?.role; // Use actual current user role
+
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Hardcoded current user ID for demonstration (Ahmed Provider)
-  const CURRENT_USER_ID = 1; 
-
   const fetchNotifications = useCallback(async () => {
+    if (!CURRENT_USER_ID) {
+      setLoading(false);
+      setError('User ID not available. Please log in.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -74,20 +83,20 @@ const NotificationsPage = () => {
         fetch('http://localhost:3000/api/requests'),
         fetch('http://localhost:3000/api/ratings'),
         fetch('http://localhost:3000/api/users'),
-        fetch('http://localhost:3000/api/services'), // Fetch services
+        fetch('http://localhost:3000/api/services'),
       ]);
 
       if (!messagesResponse.ok) throw new Error('فشل جلب الرسائل.');
       if (!requestsResponse.ok) throw new Error('فشل جلب الطلبات.');
       if (!ratingsResponse.ok) throw new Error('فشل جلب التقييمات.');
       if (!usersResponse.ok) throw new Error('فشل جلب المستخدمين.');
-      if (!servicesResponse.ok) throw new Error('فشل جلب الخدمات.'); // Check services response
+      if (!servicesResponse.ok) throw new Error('فشل جلب الخدمات.');
 
       const messagesData: BackendMessage[] = (await messagesResponse.json()).data;
       const requestsData: BackendRequest[] = (await requestsResponse.json()).data;
       const ratingsData: BackendRating[] = (await ratingsResponse.json()).data;
       const usersData: BackendUser[] = (await usersResponse.json()).data;
-      const servicesData: BackendService[] = (await servicesResponse.json()).data; // Get services data
+      const servicesData: BackendService[] = (await servicesResponse.json()).data;
 
       const newNotifications: Notification[] = [];
 
@@ -102,43 +111,66 @@ const NotificationsPage = () => {
             description: msg.text,
             time: new Date(msg.created_at || '').toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
             read: msg.read || false,
-            link: '/dashboard/messages', // Link to message center
+            link: CURRENT_USER_ROLE === 'provider' ? '/dashboard/messages' : '/client-messages', // Link to message center
           });
         }
       });
 
-      // Process Requests (new requests relevant to CURRENT_USER_ID, assuming provider)
+      // Process Requests
       requestsData.forEach(req => {
-        // Assuming provider gets notified of new pending requests
-        // In a real app, you'd check if the request is for a service offered by CURRENT_USER_ID
-        if (req.status === 'pending') { 
-          const client = usersData.find(u => u.id === req.client_id);
-          newNotifications.push({
-            id: `req-${req.id}`,
-            type: 'order',
-            title: `طلب خدمة جديد: ${req.title}`,
-            description: `من العميل: ${client?.name || 'عميل غير معروف'}`,
-            time: new Date(req.created_at || '').toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
-            read: false, // Assuming new requests are unread by default
-            link: '/dashboard/orders', // Link to orders page
-          });
+        if (CURRENT_USER_ROLE === 'provider') {
+          // As a provider, get notified of new pending requests (for any service for now)
+          // In a real app, you'd filter requests for services offered by this provider
+          if (req.status === 'pending') {
+            const client = usersData.find(u => u.id === req.client_id);
+            newNotifications.push({
+              id: `req-${req.id}`,
+              type: 'order',
+              title: `طلب خدمة جديد: ${req.title}`,
+              description: `من العميل: ${client?.name || 'عميل غير معروف'}`,
+              time: new Date(req.created_at || '').toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+              read: false,
+              link: '/dashboard/orders',
+            });
+          }
+        } else if (CURRENT_USER_ROLE === 'seeker') {
+          // As a seeker, get notified about status updates on their requests
+          if (req.client_id === CURRENT_USER_ID && req.status !== 'pending') { // Assuming 'pending' is initial, other statuses are updates
+            const statusText = req.status === 'accepted' ? 'تم قبول' : req.status === 'completed' ? 'تم إكمال' : 'تم إلغاء';
+            newNotifications.push({
+              id: `req-${req.id}`,
+              type: 'order',
+              title: `${statusText} طلبك: ${req.title}`,
+              description: `حالة الطلب: ${req.status}`,
+              time: new Date(req.updated_at || '').toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+              read: false,
+              link: '/client-requests', // Link to client's requests page
+            });
+          }
         }
       });
 
-      // Process Ratings (new ratings for services provided by CURRENT_USER_ID)
+      // Process Ratings
       ratingsData.forEach(rating => {
         const client = usersData.find(u => u.id === rating.client_id);
-        const service = servicesData.find(s => s.id === rating.service_id); // Find the service
-        // In a real app, you'd check if the service_id belongs to CURRENT_USER_ID
-        newNotifications.push({
-          id: `rating-${rating.id}`,
-          type: 'rating',
-          title: `تقييم جديد (${rating.rating} نجوم)`,
-          description: `من ${client?.name || 'عميل غير معروف'} على خدمة: ${service?.title || 'غير معروفة'}.`, // Use service title
-          time: new Date(rating.created_at || '').toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
-          read: false, // Assuming new ratings are unread by default
-          link: '/dashboard/ratings', // Link to ratings page
-        });
+        const service = servicesData.find(s => s.id === rating.service_id);
+
+        if (CURRENT_USER_ROLE === 'provider' && service?.provider_id === CURRENT_USER_ID) {
+          // Provider gets notified of new ratings for their services
+          newNotifications.push({
+            id: `rating-${rating.id}`,
+            type: 'rating',
+            title: `تقييم جديد (${rating.rating} نجوم)`,
+            description: `من ${client?.name || 'عميل غير معروف'} على خدمة: ${service?.title || 'غير معروفة'}.`,
+            time: new Date(rating.created_at || '').toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+            read: false,
+            link: '/dashboard/ratings',
+          });
+        } else if (CURRENT_USER_ROLE === 'seeker' && rating.client_id === CURRENT_USER_ID) {
+          // Seeker might get a confirmation of their rating (less common as a notification)
+          // Or a notification if a provider responds to their review (not implemented yet)
+          // For now, we'll skip seeker-side rating notifications to avoid redundancy.
+        }
       });
 
       // Sort notifications by time (most recent first)
@@ -152,7 +184,7 @@ const NotificationsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [CURRENT_USER_ID, CURRENT_USER_ROLE]);
 
   useEffect(() => {
     fetchNotifications();

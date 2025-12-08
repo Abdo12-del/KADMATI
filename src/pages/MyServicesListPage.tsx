@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Link } from 'react-router-dom';
 import { Search, Plus } from 'lucide-react';
 import { toast } from 'sonner'; // Import toast for notifications
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 interface Service {
   id: string;
@@ -19,9 +20,13 @@ interface Service {
   imageUrl?: string;
   category: string; // Added category for filtering
   status: 'active' | 'paused' | 'draft'; // Added status for filtering
+  provider_id: number; // Ensure provider_id is present
 }
 
 const MyServicesListPage = () => {
+  const { user } = useAuth(); // Get current user from auth context
+  const PROVIDER_ID = user?.id; // Use actual provider ID
+
   const [services, setServices] = useState<Service[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
@@ -30,6 +35,12 @@ const MyServicesListPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchServices = useCallback(async () => {
+    if (!PROVIDER_ID) {
+      setLoading(false);
+      setError('Provider ID not available. Please log in as a provider.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -39,7 +50,10 @@ const MyServicesListPage = () => {
         throw new Error(errorData.message || 'فشل جلب الخدمات.');
       }
       const result = await response.json();
-      setServices(result.data.map((service: any) => ({
+      // Filter services by the current provider's ID
+      const providerServices = result.data.filter((service: any) => service.provider_id === PROVIDER_ID);
+
+      setServices(providerServices.map((service: any) => ({
         ...service,
         id: service.id.toString(), // Ensure ID is string for key prop
         imageUrl: service.image_url || '/placeholder.svg',
@@ -52,7 +66,7 @@ const MyServicesListPage = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [PROVIDER_ID]);
 
   useEffect(() => {
     fetchServices();

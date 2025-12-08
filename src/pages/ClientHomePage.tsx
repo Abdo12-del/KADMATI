@@ -10,6 +10,7 @@ import ClientServiceCard from '@/components/ClientServiceCard';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 interface ServiceData {
   id: number;
@@ -43,6 +44,9 @@ interface ClientServiceCardPropsData {
 }
 
 const ClientHomePage = () => {
+  const { user } = useAuth(); // Get current user from auth context
+  const CLIENT_ID = user?.id; // Use actual client ID
+
   const [services, setServices] = useState<ServiceData[]>([]);
   const [users, setUsers] = useState<UserData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -50,6 +54,12 @@ const ClientHomePage = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchAllData = useCallback(async () => {
+    if (!CLIENT_ID) {
+      setLoading(false);
+      setError('Client ID not available. Please log in as a seeker.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -78,7 +88,7 @@ const ClientHomePage = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [CLIENT_ID]);
 
   useEffect(() => {
     fetchAllData();

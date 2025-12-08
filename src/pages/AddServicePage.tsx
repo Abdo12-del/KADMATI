@@ -10,9 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 const AddServicePage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth(); // Get current user from auth context
+  const PROVIDER_ID = user?.id; // Use actual provider ID
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -23,13 +27,18 @@ const AddServicePage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!PROVIDER_ID) {
+      toast.error('معرف مقدم الخدمة غير متاح. الرجاء تسجيل الدخول كمقدم خدمة.');
+      return;
+    }
+
     if (!title || !description || !category || price === '' || deliveryTime === '') {
       toast.error('الرجاء ملء جميع الحقول المطلوبة.');
       return;
     }
 
     const newService = {
-      provider_id: 1, // Placeholder: In a real app, this would come from authenticated user context
+      provider_id: PROVIDER_ID, // Use actual provider ID from context
       title,
       description,
       category,

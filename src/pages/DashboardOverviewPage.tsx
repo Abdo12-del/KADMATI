@@ -10,6 +10,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 interface RequestData {
   id: number;
@@ -59,18 +60,24 @@ const ordersBreakdownData = [
   { name: 'ملغاة', value: 10, color: 'var(--brand-danger)' },
 ];
 
-// Removed hardcoded recentActivity array
-
 const DashboardOverviewPage = () => {
-  const PROVIDER_ID = 1; // Hardcoded provider ID for Ahmed Provider
+  const { user } = useAuth(); // Get current user from auth context
+  const PROVIDER_ID = user?.id; // Use actual provider ID
+
   const [requests, setRequests] = useState<RequestData[]>([]);
   const [ratings, setRatings] = useState<RatingData[]>([]);
   const [messages, setMessages] = useState<MessageData[]>([]);
-  const [users, setUsers] = useState<UserData[]>([]);
+  const [allUsers, setAllUsers] = useState<UserData[]>([]); // Renamed to avoid conflict with 'user' from auth context
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchDashboardData = useCallback(async () => {
+    if (!PROVIDER_ID) {
+      setLoading(false);
+      setError('Provider ID not available.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -94,7 +101,7 @@ const DashboardOverviewPage = () => {
       setRequests(requestsResult.data);
       setRatings(ratingsResult.data);
       setMessages(messagesResult.data);
-      setUsers(usersResult.data);
+      setAllUsers(usersResult.data);
 
     } catch (err: any) {
       setError(err.message);
@@ -102,7 +109,7 @@ const DashboardOverviewPage = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [PROVIDER_ID]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -158,7 +165,7 @@ const DashboardOverviewPage = () => {
       .sort((a, b) => (b.created_at ? new Date(b.created_at).getTime() : 0) - (a.created_at ? new Date(a.created_at).getTime() : 0))
       .slice(0, 2) // Show up to 2 recent messages
       .map(msg => {
-        const customer = users.find(u => u.id === msg.sender_id);
+        const customer = allUsers.find(u => u.id === msg.sender_id);
         return {
           id: msg.id.toString(),
           customerName: customer?.name || 'عميل غير معروف',
@@ -166,7 +173,7 @@ const DashboardOverviewPage = () => {
           avatarUrl: customer?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${customer?.name.split(' ').map(n => n[0]).join('') || 'UN'}`,
         };
       });
-  }, [messages, users, PROVIDER_ID]);
+  }, [messages, allUsers, PROVIDER_ID]);
 
 
   if (loading) {

@@ -7,12 +7,11 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { NotificationsDropdown } from '@/components/notifications/NotificationsDropdown';
 import { ClientGeneralMenuModal } from '@/components/ClientGeneralMenuModal';
 import ClientOrdersModal from '@/components/ClientOrdersModal';
-import { MessageCenterModal } from '@/components/MessageCenterModal'; // استيراد المكون الجديد
+import { MessageCenterModal } from '@/components/MessageCenterModal';
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 const ClientHomeHeader = () => {
-  // The unread notifications count is now managed internally by NotificationsDropdown
-  // const unreadNotificationsCount = 3; // قيمة وهمية لعدد الإشعارات غير المقروءة
-  // const unreadMessagesCount = 1; // قيمة وهمية لعدد الرسائل غير المقروءة (سيتم إدارتها بواسطة MessageCenterModal)
+  const { isLoggedIn, userRole, logout } = useAuth();
 
   return (
     <header className="bg-brand-card-bg text-brand-text-dark p-4 shadow-soft border-b border-border">
@@ -22,10 +21,31 @@ const ClientHomeHeader = () => {
         </Link>
         <div className="flex items-center space-x-4 rtl:space-x-reverse">
           <ThemeToggle />
-          <NotificationsDropdown /> {/* Removed unreadCount prop */}
-          <MessageCenterModal currentUserId="customer" /> {/* تحديد المستخدم الحالي كطالب خدمة */}
-          <ClientOrdersModal /> {/* زر الطلبات يفتح نافذة منبثقة */}
-          <ClientGeneralMenuModal /> {/* زر القائمة العامة يفتح نافذة منبثقة */}
+          {isLoggedIn && userRole === 'seeker' && (
+            <>
+              <NotificationsDropdown />
+              <MessageCenterModal currentUserId="customer" />
+              <ClientOrdersModal />
+              <ClientGeneralMenuModal />
+              <Button onClick={logout} variant="outline" className="border-brand-danger text-brand-danger hover:bg-brand-danger/10 rounded-lg font-ibm-plex-arabic px-4 py-2">
+                تسجيل الخروج
+              </Button>
+            </>
+          )}
+          {!isLoggedIn && (
+            <>
+              <Link to="/login">
+                <Button variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic px-4 py-2">
+                  تسجيل الدخول
+                </Button>
+              </Link>
+              <Link to="/signup">
+                <Button className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-lg font-ibm-plex-arabic px-4 py-2">
+                  إنشاء حساب
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

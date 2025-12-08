@@ -9,6 +9,10 @@ import Index from "./pages/Index"; // Landing Page
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 
+// Auth Context and Protected Route
+import { AuthProvider } from "./hooks/use-auth";
+import ProtectedRoute from "./components/ProtectedRoute";
+
 // Service Provider Dashboard Pages
 import DashboardOverviewPage from "./pages/DashboardOverviewPage";
 import MyServicesListPage from "./pages/MyServicesListPage";
@@ -20,20 +24,20 @@ import CustomersPage from "./pages/CustomersPage";
 import RatingsReviewsPage from "./pages/RatingsReviewsPage";
 import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
+import MessageCenterPage from "./pages/MessageCenterPage";
 import SupportCenterPage from "./pages/SupportCenterPage";
-import MessageCenterPage from "./pages/MessageCenterPage"; // New import for MessageCenterPage
 
-// New Client Home Page
-import ClientHomePage from "./pages/ClientHomePage"; // استيراد الصفحة الرئيسية الجديدة
-import ClientServiceDetailsPage from "./pages/ClientServiceDetailsPage"; // استيراد صفحة تفاصيل خدمة العميل الجديدة
-import ClientCreateRequestPage from "./pages/ClientCreateRequestPage"; // استيراد صفحة إضافة طلب خدمة جديد
-import ClientOrderServicePage from "./pages/ClientOrderServicePage"; // استيراد صفحة طلب الخدمة الجديد
+// Client Home Pages
+import ClientHomePage from "./pages/ClientHomePage";
+import ClientServiceDetailsPage from "./pages/ClientServiceDetailsPage";
+import ClientCreateRequestPage from "./pages/ClientCreateRequestPage";
+import ClientOrderServicePage from "./pages/ClientOrderServicePage";
 
 // Other existing routes
-import MyRequestsPage from "./pages/MyRequestsPage"; // General requests page
-import ProfilePage from "./pages/ProfilePage"; // General profile page
-import NotificationsPage from "./pages/NotificationsPage"; // صفحة الإشعارات الجديدة
-import NotFound from "./pages/NotFound"; // Corrected import path for NotFound
+import MyRequestsPage from "./pages/MyRequestsPage";
+import ProfilePage from "./pages/ProfilePage";
+import NotificationsPage from "./pages/NotificationsPage";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -43,39 +47,53 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} /> {/* Landing Page */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-          
-          {/* مسار الصفحة الرئيسية الجديدة لطالب الخدمة */}
-          <Route path="/client-home" element={<ClientHomePage />} />
-          <Route path="/client-home/services/:id" element={<ClientServiceDetailsPage />} /> {/* مسار تفاصيل خدمة العميل */}
-          <Route path="/client-home/create-request" element={<ClientCreateRequestPage />} /> {/* مسار إضافة طلب خدمة جديد */}
-          <Route path="/client-home/order-service/:id" element={<ClientOrderServicePage />} /> {/* مسار طلب الخدمة الجديد */}
-          
-          {/* Service Provider Dashboard Routes */}
-          <Route path="/dashboard" element={<DashboardOverviewPage />} />
-          <Route path="/dashboard/services" element={<MyServicesListPage />} />
-          <Route path="/dashboard/services/add" element={<AddServicePage />} />
-          <Route path="/dashboard/services/edit/:id" element={<EditServicePage />} />
-          <Route path="/dashboard/orders" element={<OrdersPage />} />
-          <Route path="/dashboard/messages" element={<MessageCenterPage />} /> {/* New route for Message Center Page */}
-          <Route path="/dashboard/calendar" element={<CalendarPage />} />
-          <Route path="/dashboard/customers" element={<CustomersPage />} />
-          <Route path="/dashboard/ratings" element={<RatingsReviewsPage />} />
-          <Route path="/dashboard/reports" element={<ReportsPage />} />
-          <Route path="/dashboard/settings" element={<SettingsPage />} />
-          <Route path="/dashboard/support" element={<SupportCenterPage />} />
+        <AuthProvider> {/* Wrap the entire application with AuthProvider */}
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            
+            {/* Client Home Protected Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['seeker']} layout="client-home" />}>
+              <Route path="/client-home" element={<ClientHomePage />} />
+              <Route path="/client-home/services/:id" element={<ClientServiceDetailsPage />} />
+              <Route path="/client-home/create-request" element={<ClientCreateRequestPage />} />
+              <Route path="/client-home/order-service/:id" element={<ClientOrderServicePage />} />
+              {/* Client-specific profile/settings if different from provider */}
+              <Route path="/client-profile" element={<ProfilePage />} /> {/* Example: Client's own profile */}
+              <Route path="/client-settings" element={<SettingsPage />} /> {/* Example: Client's own settings */}
+              <Route path="/client-notifications" element={<NotificationsPage />} /> {/* Example: Client's own notifications */}
+              <Route path="/client-requests" element={<MyRequestsPage />} /> {/* Client's requests */}
+            </Route>
 
-          {/* Other existing routes (consider if they are generic or need client/provider specific versions) */}
-          <Route path="/requests" element={<MyRequestsPage />} /> {/* General requests page */}
-          <Route path="/profile" element={<ProfilePage />} /> {/* General profile page */}
-          <Route path="/notifications" element={<NotificationsPage />} /> {/* مسار صفحة الإشعارات الجديدة */}
-          
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            {/* Service Provider Dashboard Protected Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['provider']} layout="dashboard" />}>
+              <Route path="/dashboard" element={<DashboardOverviewPage />} />
+              <Route path="/dashboard/services" element={<MyServicesListPage />} />
+              <Route path="/dashboard/services/add" element={<AddServicePage />} />
+              <Route path="/dashboard/services/edit/:id" element={<EditServicePage />} />
+              <Route path="/dashboard/orders" element={<OrdersPage />} />
+              <Route path="/dashboard/messages" element={<MessageCenterPage />} />
+              <Route path="/dashboard/calendar" element={<CalendarPage />} />
+              <Route path="/dashboard/customers" element={<CustomersPage />} />
+              <Route path="/dashboard/ratings" element={<RatingsReviewsPage />} />
+              <Route path="/dashboard/reports" element={<ReportsPage />} />
+              <Route path="/dashboard/settings" element={<SettingsPage />} />
+              <Route path="/dashboard/support" element={<SupportCenterPage />} />
+              {/* Provider-specific profile/notifications if different from client */}
+              <Route path="/provider-profile" element={<ProfilePage />} /> {/* Example: Provider's own profile */}
+              <Route path="/provider-notifications" element={<NotificationsPage />} /> {/* Example: Provider's own notifications */}
+            </Route>
+
+            {/* Generic/Unprotected Routes that might use Auth Context for conditional rendering */}
+            <Route path="/profile" element={<ProfilePage />} /> {/* Can be generic, or redirect based on role */}
+            <Route path="/notifications" element={<NotificationsPage />} /> {/* Can be generic, or redirect based on role */}
+            <Route path="/requests" element={<MyRequestsPage />} /> {/* Can be generic, or redirect based on role */}
+            
+            {/* Catch-all route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

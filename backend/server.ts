@@ -4,9 +4,10 @@ import { env } from './config/env';
 import { errorHandler } from './utils/errorHandler';
 import usersRoutes from './api/users';
 import servicesRoutes from './api/services';
-import requestsRoutes from './api/requests'; // New import
-import ratingsRoutes from './api/ratings';   // New import
-import messagesRoutes from './api/messages'; // New import
+import requestsRoutes from './api/requests';
+import ratingsRoutes from './api/ratings';
+import messagesRoutes from './api/messages';
+import authRoutes from './api/auth'; // New import for auth routes
 
 // Global error handlers for better debugging
 process.on('unhandledRejection', (reason, promise) => {
@@ -35,9 +36,10 @@ app.get('/', (req, res) => {
 // API Routes
 app.use('/api/users', usersRoutes);
 app.use('/api/services', servicesRoutes);
-app.use('/api/requests', requestsRoutes); // New route
-app.use('/api/ratings', ratingsRoutes);   // New route
-app.use('/api/messages', messagesRoutes); // New route
+app.use('/api/requests', requestsRoutes);
+app.use('/api/ratings', ratingsRoutes);
+app.use('/api/messages', messagesRoutes);
+app.use('/api/auth', authRoutes); // New route for authentication
 
 // Global error handler middleware
 app.use(errorHandler);

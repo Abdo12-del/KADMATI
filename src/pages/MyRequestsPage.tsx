@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import RequestCard from '@/components/RequestCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 interface RequestData {
   id: number;
@@ -24,12 +25,20 @@ interface RequestCardPropsData {
 }
 
 const MyRequestsPage = () => {
-  const CLIENT_ID = 2; // Hardcoded client ID for Laila Seeker
+  const { user } = useAuth(); // Get current user from auth context
+  const CLIENT_ID = user?.id; // Use actual client ID
+
   const [requests, setRequests] = useState<RequestData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchRequests = useCallback(async () => {
+    if (!CLIENT_ID) {
+      setLoading(false);
+      setError('Client ID not available. Please log in as a seeker.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -39,14 +48,16 @@ const MyRequestsPage = () => {
         throw new Error(errorData.message || 'فشل جلب الطلبات.');
       }
       const result = await response.json();
-      setRequests(result.data);
+      // Filter requests by the current client's ID
+      const clientRequests = result.data.filter((req: any) => req.client_id === CLIENT_ID);
+      setRequests(clientRequests);
     } catch (err: any) {
       setError(err.message);
       toast.error(err.message || 'حدث خطأ أثناء جلب طلباتك.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [CLIENT_ID]);
 
   useEffect(() => {
     fetchRequests();
@@ -67,7 +78,7 @@ const MyRequestsPage = () => {
     }));
   };
 
-  const myRequests = useMemo(() => requests.filter(req => req.client_id === CLIENT_ID), [requests]);
+  const myRequests = useMemo(() => requests.filter(req => req.client_id === CLIENT_ID), [requests, CLIENT_ID]);
 
   const pendingRequests = useMemo(() => mapRequestsToCardProps(myRequests.filter(req => req.status === 'pending')), [myRequests]);
   const acceptedServices = useMemo(() => mapRequestsToCardProps(myRequests.filter(req => req.status === 'accepted')), [myRequests]); // Assuming 'offered services' are accepted requests

@@ -56,6 +56,11 @@ export const userService = {
     return undefined;
   },
 
+  // New method to get user by email including password for authentication
+  async getUserByEmailWithPassword(email: string): Promise<User | undefined> {
+    return users.find(u => u.email === email);
+  },
+
   async createUser(user: Omit<User, 'id' | 'created_at' | 'updated_at'>): Promise<User> {
     const newUser: User = {
       id: nextUserId++,

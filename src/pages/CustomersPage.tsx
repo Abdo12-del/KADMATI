@@ -6,6 +6,7 @@ import CustomerCard from '@/components/CustomerCard';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 interface UserData {
   id: number;
@@ -26,12 +27,21 @@ interface CustomerCardPropsData {
 }
 
 const CustomersPage = () => {
+  const { user } = useAuth(); // Get current user from auth context
+  const PROVIDER_ID = user?.id; // Use actual provider ID
+
   const [users, setUsers] = useState<UserData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchUsers = useCallback(async () => {
+    if (!PROVIDER_ID) {
+      setLoading(false);
+      setError('Provider ID not available. Please log in as a provider.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -48,7 +58,7 @@ const CustomersPage = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [PROVIDER_ID]);
 
   useEffect(() => {
     fetchUsers();
@@ -56,7 +66,7 @@ const CustomersPage = () => {
 
   const filteredCustomers = useMemo(() => {
     return users
-      .filter(user => user.role === 'seeker')
+      .filter(user => user.role === 'seeker') // Only show seekers as customers
       .filter(customer =>
         customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         customer.email.toLowerCase().includes(searchTerm.toLowerCase())

@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Home, Briefcase, Package, MessageSquare, Calendar, Users, Star, BarChart, Settings, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 interface SidebarProps {
   className?: string;
@@ -10,6 +11,7 @@ interface SidebarProps {
 
 const Sidebar = ({ className }: SidebarProps) => {
   const location = useLocation();
+  const { user } = useAuth(); // Get user from auth context
 
   const navItems = [
     { icon: Home, label: 'نظرة عامة', href: '/dashboard' },
@@ -27,7 +29,9 @@ const Sidebar = ({ className }: SidebarProps) => {
   return (
     <div className={cn("flex flex-col h-full bg-brand-card-bg text-brand-text-dark border-l border-border p-6 shadow-soft-lg", className)}>
       <div className="mb-10 text-center">
-        <h2 className="text-3xl font-bold font-cairo text-brand-primary">مقدم الخدمة</h2>
+        <h2 className="text-3xl font-bold font-cairo text-brand-primary">
+          {user?.name || 'مقدم الخدمة'} {/* Display user's name or default */}
+        </h2>
       </div>
       <nav className="flex-grow space-y-3">
         {navItems.map((item) => {

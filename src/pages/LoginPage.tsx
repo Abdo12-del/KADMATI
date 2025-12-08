@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -9,13 +9,22 @@ import { Label } from '@/components/ui/label';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 const LoginPage = () => {
-  const handleSubmit = (e: React.FormEvent) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const { login } = useAuth();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Placeholder for actual login logic
-    toast.success('تم تسجيل الدخول بنجاح (وظيفة وهمية)!');
-    console.log('Login form submitted');
+    try {
+      await login(email, password);
+      // Redirection is handled within the login function in useAuth
+    } catch (error) {
+      // toast.error is already handled in useAuth, but can add more specific handling here if needed
+      console.error('Login failed in component:', error);
+    }
   };
 
   return (
@@ -30,11 +39,27 @@ const LoginPage = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <Label htmlFor="email" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">البريد الإلكتروني</Label>
-                <Input id="email" type="email" placeholder="ادخل بريدك الإلكتروني" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="ادخل بريدك الإلكتروني"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
+                />
               </div>
               <div>
                 <Label htmlFor="password" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">كلمة المرور</Label>
-                <Input id="password" type="password" placeholder="ادخل كلمة المرور" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus://ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="ادخل كلمة المرور"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
+                />
               </div>
               <Button type="submit" className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white py-3 rounded-xl shadow-soft font-ibm-plex-arabic text-lg">
                 تسجيل الدخول
