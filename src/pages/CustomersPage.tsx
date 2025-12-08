@@ -13,6 +13,7 @@ interface Customer {
   // totalOrders: number; // Will be aggregated on backend or in frontend
   // lastOrderDate: string; // Will be aggregated on backend or in frontend
   createdAt: string;
+  role: 'seeker' | 'provider'; // Added role property
 }
 
 const fetchCustomers = async (): Promise<Customer[]> => {

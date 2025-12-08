@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { BarChart, LineChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Bar, Line } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
 
-interface Order { id: string; providerId: string; status: string; price: number; createdAt: string; }
+interface Order { id: string; providerId: string; status: string; price: number; createdAt: string; serviceId: string; } // Added serviceId
 interface Service { id: string; providerId: string; title: string; rating: number; reviewsCount: number; }
 
 const fetchProviderOrders = async (providerId: string): Promise<Order[]> => {

@@ -17,6 +17,7 @@ interface Service {
   imageUrl?: string;
   reviewsCount: number;
   providerId: string; // Assuming a providerId is available
+  category: string; // Added category property
 }
 
 const fetchServices = async (): Promise<Service[]> => {

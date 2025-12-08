@@ -20,6 +20,7 @@ interface Service {
   imageUrl?: string;
   reviewsCount: number;
   providerId: string;
+  location?: string; // Added location property
 }
 
 interface UserProfile {

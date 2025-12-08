@@ -12,10 +12,12 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 
 interface Message {
   id: string;
-  senderId: string; // Changed from 'sender' to 'senderId' to match backend
+  senderId: string;
   text: string;
-  timestamp: string; // Changed from 'time' to 'timestamp'
+  timestamp: string;
   read: boolean;
+  sender?: 'customer' | 'provider'; // Added for frontend display logic
+  time?: string; // Added for frontend display logic
 }
 
 interface ConversationListItem {

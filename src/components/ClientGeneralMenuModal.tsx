@@ -43,6 +43,7 @@ interface UserProfile {
   phone?: string;
   avatarUrl?: string;
   bio?: string;
+  role: 'seeker' | 'provider'; // Added role property
 }
 
 interface Service {
@@ -60,8 +61,8 @@ interface ProviderProfile {
   id: string;
   name: string;
   avatarUrl?: string;
-  // rating: number; // Will be aggregated
-  // serviceCount: number; // Will be aggregated
+  rating: number; // Added rating property
+  serviceCount: number; // Added serviceCount property
 }
 
 interface Rating {
@@ -159,7 +160,7 @@ const fetchClientRatings = async (clientId: string): Promise<Rating[]> => {
     const serviceResponse = await fetch(`http://localhost:3000/api/services/${rating.serviceId}`);
     const service: Service = serviceResponse.ok ? await serviceResponse.json() : { id: rating.serviceId, title: 'Unknown Service', providerId: '', description: '', category: '', price: 0, deliveryTime: 0, rating: 0, reviewsCount: 0 };
     const providerResponse = await fetch(`http://localhost:3000/api/users/${service.providerId}`);
-    const provider: UserProfile = providerResponse.ok ? await providerResponse.json() : { id: service.providerId, name: 'Unknown Provider', email: '' };
+    const provider: UserProfile = providerResponse.ok ? await providerResponse.json() : { id: service.providerId, name: 'Unknown Provider', email: '', role: 'provider' }; // Added role
     return {
       ...rating,
       serviceTitle: service.title,
