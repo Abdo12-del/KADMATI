@@ -10,14 +10,24 @@ import { cn } from '@/lib/utils';
 import ChatWindow from '@/components/ChatWindow'; // استيراد مكون ChatWindow
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 
-interface Message {
+// الواجهة الأصلية للرسالة كما تأتي من الواجهة الخلفية
+interface BackendMessage {
   id: string;
   senderId: string;
   text: string;
   timestamp: string;
   read: boolean;
-  sender?: 'customer' | 'provider'; // Added for frontend display logic
-  time?: string; // Added for frontend display logic
+}
+
+// الواجهة للرسالة كما يتوقعها مكون ChatWindow
+interface ChatWindowMessage {
+  id: string;
+  senderId: string;
+  text: string;
+  timestamp: string;
+  read: boolean;
+  sender: 'customer' | 'provider';
+  time: string;
 }
 
 interface ConversationListItem {
@@ -41,7 +51,7 @@ const fetchConversations = async (userId: string): Promise<ConversationListItem[
   return response.json();
 };
 
-const fetchMessages = async (conversationId: string): Promise<Message[]> => {
+const fetchMessages = async (conversationId: string): Promise<BackendMessage[]> => {
   const response = await fetch(`http://localhost:3000/api/messages/conversation/${conversationId}`);
   if (!response.ok) {
     throw new Error('Failed to fetch messages');
@@ -74,7 +84,7 @@ export const MessageCenterModal = ({ currentUserId }: MessageCenterModalProps) =
   });
 
   // Fetch messages for selected conversation
-  const { data: messages = [], isLoading: isLoadingMessages, error: messagesError } = useQuery<Message[], Error>({
+  const { data: messages = [], isLoading: isLoadingMessages, error: messagesError } = useQuery<BackendMessage[], Error>({
     queryKey: ['messages', selectedConversationId],
     queryFn: () => fetchMessages(selectedConversationId!),
     enabled: !!selectedConversationId, // Only fetch when a conversation is selected
@@ -115,7 +125,7 @@ export const MessageCenterModal = ({ currentUserId }: MessageCenterModalProps) =
           ...msg,
           sender: msg.senderId === currentUserId ? 'provider' : 'customer', // Map senderId to 'provider'/'customer' for ChatWindow
           time: new Date(msg.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
-        })),
+        })) as ChatWindowMessage[], // Explicitly cast to ChatWindowMessage[]
       };
     }
     return null;
