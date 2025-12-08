@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+// import Header from '@/components/Header'; // Removed
+// import Footer from '@/components/Footer'; // Removed
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -17,7 +17,7 @@ const NotFound = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-brand-background">
-      <Header />
+      {/* <Header /> */} {/* Removed */}
       <main className="flex-grow flex items-center justify-center">
         <Card className="text-center p-8 bg-brand-card-bg rounded-2xl shadow-soft">
           <CardHeader className="p-0 pb-4">
@@ -33,7 +33,7 @@ const NotFound = () => {
           </CardContent>
         </Card>
       </main>
-      <Footer />
+      {/* <Footer /> */} {/* Removed */}
     </div>
   );
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import DashboardLayout from '@/components/DashboardLayout';
+// import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
@@ -37,7 +37,7 @@ const SupportCenterPage = () => {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">مركز المساعدة والدعم</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -90,7 +90,7 @@ const SupportCenterPage = () => {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import ClientHomeHeader from '@/components/ClientHomeHeader';
-import Footer from '@/components/Footer';
+// import ClientHomeHeader from '@/components/ClientHomeHeader'; // Removed
+// import Footer from '@/components/Footer'; // Removed
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NotificationCard } from '@/components/notifications/NotificationCard.tsx';
 import { Input } from '@/components/ui/input';
@@ -248,73 +248,63 @@ const NotificationsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-brand-background">
-        <ClientHomeHeader />
-        <main className="flex-grow container mx-auto px-8 py-10 text-center text-brand-text-dark font-ibm-plex-arabic">
-          جاري تحميل الإشعارات...
-        </main>
-        <Footer />
+      <div className="text-center py-10 text-brand-text-dark font-ibm-plex-arabic">
+        جاري تحميل الإشعارات...
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex flex-col bg-brand-background">
-        <ClientHomeHeader />
-        <main className="flex-grow container mx-auto px-8 py-10 text-center text-brand-danger font-ibm-plex-arabic">
-          خطأ: {error}
-        </main>
-        <Footer />
+      <div className="text-center py-10 text-brand-danger font-ibm-plex-arabic">
+        خطأ: {error}
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-brand-background">
-      <ClientHomeHeader />
-      <main className="flex-grow container mx-auto px-8 py-10">
-        <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">الإشعارات</h1>
+    <>
+      <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">الإشعارات</h1>
 
-        <div className="mb-8 relative max-w-lg">
-          <Input
-            placeholder="بحث في الإشعارات..."
-            className="w-full pr-10 rounded-xl shadow-soft bg-brand-card-bg border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-brand-text-muted" />
-        </div>
+      <div className="mb-8 relative max-w-lg">
+        <Input
+          placeholder="بحث في الإشعارات..."
+          className="w-full pr-10 rounded-xl shadow-soft bg-brand-card-bg border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-brand-text-muted" />
+      </div>
 
-        <Tabs defaultValue="all" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 bg-brand-background rounded-xl shadow-soft p-2">
-            <TabsTrigger value="all" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">الكل</TabsTrigger>
-            <TabsTrigger value="order" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">الطلبات</TabsTrigger>
-            <TabsTrigger value="message" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">الرسائل</TabsTrigger>
-            <TabsTrigger value="rating" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">التقييمات</TabsTrigger>
-            <TabsTrigger value="system" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">النظام</TabsTrigger>
-          </TabsList>
+      <Tabs defaultValue="all" className="w-full">
+        <TabsList className="grid w-full grid-cols-5 bg-brand-background rounded-xl shadow-soft p-2">
+          <TabsTrigger value="all" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">الكل</TabsTrigger>
+          <TabsTrigger value="order" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">الطلبات</TabsTrigger>
+          <TabsTrigger value="message" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">الرسائل</TabsTrigger>
+          <TabsTrigger value="rating" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">التقييمات</TabsTrigger>
+          <TabsTrigger value="system" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">النظام</TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="all" className="mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {filterNotificationsByType('all').length > 0 ? (
-                filterNotificationsByType('all').map(notif => (
-                  <NotificationCard
-                    key={notif.id}
-                    notification={notif}
-                    onMarkAsRead={handleMarkAsRead}
-                    onDelete={handleDelete}
-                  />
-                ))
-              ) : (
-                <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد إشعارات.</p>
-              )}
-            </div>
-          </TabsContent>
-          <TabsContent value="order" className="mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {filterNotificationsByType('order').length > 0 ? (
-                filterNotificationsByType('order').map(notif => (
+        <TabsContent value="all" className="mt-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {filterNotificationsByType('all').length > 0 ? (
+              filterNotificationsByType('all').map(notif => (
+                <NotificationCard
+                  key={notif.id}
+                  notification={notif}
+                  onMarkAsRead={handleMarkAsRead}
+                  onDelete={handleDelete}
+                />
+              ))
+            ) : (
+              <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد إشعارات.</p>
+            )}
+          </div>
+        </TabsContent>
+        <TabsContent value="order" className="mt-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {filterNotificationsByType('order').length > 0 ? (
+              filterNotificationsByType('order').map(notif => (
                   <NotificationCard
                     key={notif.id}
                     notification={notif}
@@ -376,9 +366,7 @@ const NotificationsPage = () => {
             </div>
           </TabsContent>
         </Tabs>
-      </main>
-      <Footer />
-    </div>
+    </>
   );
 };
 

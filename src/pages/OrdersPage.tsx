@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import DashboardLayout from '@/components/DashboardLayout';
+// import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import OrderCard from '@/components/OrderCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
@@ -118,22 +118,18 @@ const OrdersPage = () => {
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-10 text-brand-text-dark font-ibm-plex-arabic">جاري تحميل الطلبات...</div>
-      </DashboardLayout>
+      <div className="text-center py-10 text-brand-text-dark font-ibm-plex-arabic">جاري تحميل الطلبات...</div>
     );
   }
 
   if (error) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-10 text-brand-danger font-ibm-plex-arabic">خطأ: {error}</div>
-      </DashboardLayout>
+      <div className="text-center py-10 text-brand-danger font-ibm-plex-arabic">خطأ: {error}</div>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>
       <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">الطلبات</h1>
 
       <Tabs defaultValue="pending" className="w-full">
@@ -192,7 +188,7 @@ const OrdersPage = () => {
           </div>
         </TabsContent>
       </Tabs>
-    </DashboardLayout>
+    </>
   );
 };
 

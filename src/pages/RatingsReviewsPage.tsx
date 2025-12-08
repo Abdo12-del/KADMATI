@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import DashboardLayout from '@/components/DashboardLayout';
+// import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Star } from 'lucide-react';
@@ -135,22 +135,18 @@ const RatingsReviewsPage = () => {
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-10 text-brand-text-dark font-ibm-plex-arabic">جاري تحميل التقييمات...</div>
-      </DashboardLayout>
+      <div className="text-center py-10 text-brand-text-dark font-ibm-plex-arabic">جاري تحميل التقييمات...</div>
     );
   }
 
   if (error) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-10 text-brand-danger font-ibm-plex-arabic">خطأ: {error}</div>
-      </DashboardLayout>
+      <div className="text-center py-10 text-brand-danger font-ibm-plex-arabic">خطأ: {error}</div>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>
       <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">التقييمات والمراجعات</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -178,7 +174,7 @@ const RatingsReviewsPage = () => {
           <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد تقييمات أو مراجعات حتى الآن.</p>
         )}
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

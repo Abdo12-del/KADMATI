@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import DashboardLayout from '@/components/DashboardLayout';
+// import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import CustomerCard from '@/components/CustomerCard';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
@@ -83,22 +83,18 @@ const CustomersPage = () => {
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-10 text-brand-text-dark font-ibm-plex-arabic">جاري تحميل العملاء...</div>
-      </DashboardLayout>
+      <div className="text-center py-10 text-brand-text-dark font-ibm-plex-arabic">جاري تحميل العملاء...</div>
     );
   }
 
   if (error) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-10 text-brand-danger font-ibm-plex-arabic">خطأ: {error}</div>
-      </DashboardLayout>
+      <div className="text-center py-10 text-brand-danger font-ibm-plex-arabic">خطأ: {error}</div>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>
       <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">العملاء</h1>
 
       <div className="mb-8 relative max-w-sm">
@@ -120,7 +116,7 @@ const CustomersPage = () => {
           <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا يوجد عملاء مطابقون.</p>
         )}
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

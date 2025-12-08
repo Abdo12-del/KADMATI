@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom"; // Added Outlet
 import Index from "./pages/Index"; // Landing Page
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
@@ -38,6 +38,9 @@ import MyRequestsPage from "./pages/MyRequestsPage";
 import ProfilePage from "./pages/ProfilePage";
 import NotificationsPage from "./pages/NotificationsPage";
 import NotFound from "./pages/NotFound";
+import Header from "./components/Header"; // Re-import Header for unprotected routes
+import Footer from "./components/Footer"; // Re-import Footer for unprotected routes
+
 
 const queryClient = new QueryClient();
 
@@ -49,9 +52,13 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider> {/* Wrap the entire application with AuthProvider */}
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
+            {/* Unprotected routes with Header and Footer */}
+            <Route element={<LayoutWithHeaderFooter />}>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route path="*" element={<NotFound />} /> {/* Catch-all for unprotected */}
+            </Route>
             
             {/* Client Home Protected Routes */}
             <Route element={<ProtectedRoute allowedRoles={['seeker']} layout="client-home" />}>
@@ -59,11 +66,10 @@ const App = () => (
               <Route path="/client-home/services/:id" element={<ClientServiceDetailsPage />} />
               <Route path="/client-home/create-request" element={<ClientCreateRequestPage />} />
               <Route path="/client-home/order-service/:id" element={<ClientOrderServicePage />} />
-              {/* Client-specific profile/settings if different from provider */}
-              <Route path="/client-profile" element={<ProfilePage />} /> {/* Example: Client's own profile */}
-              <Route path="/client-settings" element={<SettingsPage />} /> {/* Example: Client's own settings */}
-              <Route path="/client-notifications" element={<NotificationsPage />} /> {/* Example: Client's own notifications */}
-              <Route path="/client-requests" element={<MyRequestsPage />} /> {/* Client's requests */}
+              <Route path="/client-profile" element={<ProfilePage />} />
+              <Route path="/client-settings" element={<SettingsPage />} />
+              <Route path="/client-notifications" element={<NotificationsPage />} />
+              <Route path="/client-requests" element={<MyRequestsPage />} />
             </Route>
 
             {/* Service Provider Dashboard Protected Routes */}
@@ -80,23 +86,35 @@ const App = () => (
               <Route path="/dashboard/reports" element={<ReportsPage />} />
               <Route path="/dashboard/settings" element={<SettingsPage />} />
               <Route path="/dashboard/support" element={<SupportCenterPage />} />
-              {/* Provider-specific profile/notifications if different from client */}
-              <Route path="/provider-profile" element={<ProfilePage />} /> {/* Example: Provider's own profile */}
-              <Route path="/provider-notifications" element={<NotificationsPage />} /> {/* Example: Provider's own notifications */}
+              <Route path="/provider-profile" element={<ProfilePage />} />
+              <Route path="/provider-notifications" element={<NotificationsPage />} />
             </Route>
 
             {/* Generic/Unprotected Routes that might use Auth Context for conditional rendering */}
-            <Route path="/profile" element={<ProfilePage />} /> {/* Can be generic, or redirect based on role */}
-            <Route path="/notifications" element={<NotificationsPage />} /> {/* Can be generic, or redirect based on role */}
-            <Route path="/requests" element={<MyRequestsPage />} /> {/* Can be generic, or redirect based on role */}
+            {/* These routes will now use the LayoutWithHeaderFooter if accessed directly */}
+            {/* If they are accessed via a ProtectedRoute, the ProtectedRoute's layout will apply */}
+            {/* <Route path="/profile" element={<ProfilePage />} /> */}
+            {/* <Route path="/notifications" element={<NotificationsPage />} /> */}
+            {/* <Route path="/requests" element={<MyRequestsPage />} */}
             
-            {/* Catch-all route */}
-            <Route path="*" element={<NotFound />} />
+            {/* Catch-all route for any other unmatched routes, now handled by the LayoutWithHeaderFooter */}
+            {/* <Route path="*" element={<NotFound />} /> */}
           </Routes>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
+);
+
+// A simple layout component for routes that need a Header and Footer but are not protected
+const LayoutWithHeaderFooter = () => (
+  <div className="min-h-screen flex flex-col bg-brand-background">
+    <Header />
+    <main className="flex-grow container mx-auto px-8 py-10">
+      <Outlet />
+    </main>
+    <Footer />
+  </div>
 );
 
 export default App;

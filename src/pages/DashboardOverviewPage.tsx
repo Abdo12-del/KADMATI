@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import DashboardLayout from '@/components/DashboardLayout';
+// import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -178,22 +178,18 @@ const DashboardOverviewPage = () => {
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-10 text-brand-text-dark font-ibm-plex-arabic">جاري تحميل لوحة التحكم...</div>
-      </DashboardLayout>
+      <div className="text-center py-10 text-brand-text-dark font-ibm-plex-arabic">جاري تحميل لوحة التحكم...</div>
     );
   }
 
   if (error) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-10 text-brand-danger font-ibm-plex-arabic">خطأ: {error}</div>
-      </DashboardLayout>
+      <div className="text-center py-10 text-brand-danger font-ibm-plex-arabic">خطأ: {error}</div>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>
       <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">نظرة عامة على لوحة التحكم</h1>
 
       {/* Overview Analytics Cards */}
@@ -366,7 +362,7 @@ const DashboardOverviewPage = () => {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

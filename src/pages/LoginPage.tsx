@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from 'react';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+// import Header from '@/components/Header'; // Removed
+// import Footer from '@/components/Footer'; // Removed
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,7 +29,7 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-brand-background">
-      <Header />
+      {/* <Header /> */} {/* Removed */}
       <main className="flex-grow container mx-auto px-8 py-10 flex items-center justify-center">
         <Card className="bg-brand-card-bg p-8 rounded-2xl shadow-soft w-full max-w-md text-right">
           <CardHeader className="p-0 pb-6">
@@ -74,7 +74,7 @@ const LoginPage = () => {
           </CardContent>
         </Card>
       </main>
-      <Footer />
+      {/* <Footer /> */} {/* Removed */}
     </div>
   );
 };

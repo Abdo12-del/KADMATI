@@ -1,5 +1,7 @@
+"use client";
+
 import React from 'react';
-import DashboardLayout from '@/components/DashboardLayout';
+// import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BarChart, LineChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Bar, Line } from 'recharts';
@@ -16,7 +18,7 @@ const data = [
 
 const ReportsPage = () => {
   return (
-    <DashboardLayout>
+    <>
       <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">التقارير</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
@@ -115,7 +117,7 @@ const ReportsPage = () => {
           </ul>
         </CardContent>
       </Card>
-    </DashboardLayout>
+    </>
   );
 };
 

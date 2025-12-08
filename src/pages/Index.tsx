@@ -1,6 +1,6 @@
 import React from 'react';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+// import Header from '@/components/Header'; // Removed
+// import Footer from '@/components/Footer'; // Removed
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
@@ -9,7 +9,7 @@ import { Search } from 'lucide-react';
 const Index = () => {
   return (
     <div className="min-h-screen flex flex-col bg-brand-background">
-      <Header />
+      {/* <Header /> */} {/* Removed */}
       <main className="flex-grow container mx-auto px-8 py-10">
         <section className="text-center py-20 bg-gradient-to-br from-brand-primary to-brand-primary-light text-white rounded-2xl shadow-soft-lg">
           <h1 className="text-5xl font-cairo mb-4">منصة الخدمات المتكاملة</h1>
@@ -81,7 +81,7 @@ const Index = () => {
           </div>
         </section>
       </main>
-      <Footer />
+      {/* <Footer /> */} {/* Removed */}
     </div>
   );
 };

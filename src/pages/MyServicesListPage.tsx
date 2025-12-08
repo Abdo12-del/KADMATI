@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import DashboardLayout from '@/components/DashboardLayout';
+// import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import ServiceCard from '@/components/ServiceCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -82,22 +82,18 @@ const MyServicesListPage = () => {
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-10 text-brand-text-dark font-ibm-plex-arabic">جاري تحميل الخدمات...</div>
-      </DashboardLayout>
+      <div className="text-center py-10 text-brand-text-dark font-ibm-plex-arabic">جاري تحميل الخدمات...</div>
     );
   }
 
   if (error) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-10 text-brand-danger font-ibm-plex-arabic">خطأ: {error}</div>
-      </DashboardLayout>
+      <div className="text-center py-10 text-brand-danger font-ibm-plex-arabic">خطأ: {error}</div>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 rtl:space-x-reverse">
         <h1 className="text-4xl font-cairo text-brand-text-dark">خدماتي</h1>
         <Link to="/dashboard/services/add">
@@ -154,7 +150,7 @@ const MyServicesListPage = () => {
           <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد خدمات مطابقة.</p>
         )}
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

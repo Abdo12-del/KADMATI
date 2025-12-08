@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react'; // Import useEffect, useCallback
-import DashboardLayout from '@/components/DashboardLayout';
+// import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -95,70 +95,64 @@ const EditServicePage = () => {
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-10 text-brand-text-dark font-ibm-plex-arabic">جاري تحميل تفاصيل الخدمة...</div>
-      </DashboardLayout>
+      <div className="text-center py-10 text-brand-text-dark font-ibm-plex-arabic">جاري تحميل تفاصيل الخدمة...</div>
     );
   }
 
   if (error) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-10 text-brand-danger font-ibm-plex-arabic">خطأ: {error}</div>
-      </DashboardLayout>
+      <div className="text-center py-10 text-brand-danger font-ibm-plex-arabic">خطأ: {error}</div>
     );
   }
 
   return (
-    <DashboardLayout>
-      <Card className="bg-brand-card-bg p-8 rounded-2xl shadow-soft w-full max-w-2xl mx-auto text-right">
-        <CardHeader className="p-0 pb-6">
-          <CardTitle className="text-3xl font-cairo text-center text-brand-text-dark">تعديل الخدمة</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <Label htmlFor="service-title" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">عنوان الخدمة</Label>
-              <Input id="service-title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
-            </div>
-            <div>
-              <Label htmlFor="service-description" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">وصف الخدمة</Label>
-              <Textarea id="service-description" value={description} onChange={(e) => setDescription(e.target.value)} rows={5} required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
-            </div>
-            <div>
-              <Label htmlFor="service-category" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">الفئة</Label>
-              <Select value={category} onValueChange={setCategory} required>
-                <SelectTrigger id="service-category" className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right">
-                  <SelectValue placeholder="اختر فئة الخدمة" />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl shadow-soft bg-brand-card-bg font-ibm-plex-arabic text-right">
-                  <SelectItem value="design">تصميم</SelectItem>
-                  <SelectItem value="development">تطوير</SelectItem>
-                  <SelectItem value="writing">كتابة ومحتوى</SelectItem>
-                  <SelectItem value="marketing">تسويق</SelectItem>
-                  <SelectItem value="consulting">استشارات</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="service-price" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">السعر ($)</Label>
-              <Input id="service-price" type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} required min="0" className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
-            </div>
-            <div>
-              <Label htmlFor="delivery-time" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">وقت التسليم (أيام)</Label>
-              <Input id="delivery-time" type="number" value={deliveryTime} onChange={(e) => setDeliveryTime(Number(e.target.value))} required min="1" className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
-            </div>
-            <div>
-              <Label htmlFor="service-image" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">رابط صورة الخدمة (اختياري)</Label>
-              <Input id="service-image" type="text" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="مثال: https://example.com/image.jpg" className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
-            </div>
-            <Button type="submit" className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white py-3 rounded-xl shadow-soft font-ibm-plex-arabic text-lg">
-              حفظ التعديلات
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </DashboardLayout>
+    <Card className="bg-brand-card-bg p-8 rounded-2xl shadow-soft w-full max-w-2xl mx-auto text-right">
+      <CardHeader className="p-0 pb-6">
+        <CardTitle className="text-3xl font-cairo text-center text-brand-text-dark">تعديل الخدمة</CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <Label htmlFor="service-title" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">عنوان الخدمة</Label>
+            <Input id="service-title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+          </div>
+          <div>
+            <Label htmlFor="service-description" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">وصف الخدمة</Label>
+            <Textarea id="service-description" value={description} onChange={(e) => setDescription(e.target.value)} rows={5} required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+          </div>
+          <div>
+            <Label htmlFor="service-category" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">الفئة</Label>
+            <Select value={category} onValueChange={setCategory} required>
+              <SelectTrigger id="service-category" className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right">
+                <SelectValue placeholder="اختر فئة الخدمة" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl shadow-soft bg-brand-card-bg font-ibm-plex-arabic text-right">
+                <SelectItem value="design">تصميم</SelectItem>
+                <SelectItem value="development">تطوير</SelectItem>
+                <SelectItem value="writing">كتابة ومحتوى</SelectItem>
+                <SelectItem value="marketing">تسويق</SelectItem>
+                <SelectItem value="consulting">استشارات</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="service-price" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">السعر ($)</Label>
+            <Input id="service-price" type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} required min="0" className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+          </div>
+          <div>
+            <Label htmlFor="delivery-time" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">وقت التسليم (أيام)</Label>
+            <Input id="delivery-time" type="number" value={deliveryTime} onChange={(e) => setDeliveryTime(Number(e.target.value))} required min="1" className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+          </div>
+          <div>
+            <Label htmlFor="service-image" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">رابط صورة الخدمة (اختياري)</Label>
+            <Input id="service-image" type="text" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="مثال: https://example.com/image.jpg" className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+          </div>
+          <Button type="submit" className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white py-3 rounded-xl shadow-soft font-ibm-plex-arabic text-lg">
+            حفظ التعديلات
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
 

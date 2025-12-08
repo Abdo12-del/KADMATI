@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import DashboardLayout from '@/components/DashboardLayout';
+// import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,7 +34,7 @@ const CalendarPage = () => {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">التقويم وتوفر الخدمة</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -89,7 +89,7 @@ const CalendarPage = () => {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

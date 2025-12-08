@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import ClientHomeHeader from '@/components/ClientHomeHeader';
-import Footer from '@/components/Footer';
+// import ClientHomeHeader from '@/components/ClientHomeHeader'; // Removed
+// import Footer from '@/components/Footer'; // Removed
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useParams, Link } from 'react-router-dom'; // Import Link
@@ -181,306 +181,290 @@ const ClientServiceDetailsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-brand-background">
-        <ClientHomeHeader />
-        <main className="flex-grow container mx-auto px-8 py-10 text-center text-brand-text-dark font-ibm-plex-arabic">
-          جاري تحميل تفاصيل الخدمة...
-        </main>
-        <Footer />
+      <div className="text-center text-brand-text-dark font-ibm-plex-arabic">
+        جاري تحميل تفاصيل الخدمة...
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex flex-col bg-brand-background">
-        <ClientHomeHeader />
-        <main className="flex-grow container mx-auto px-8 py-10 text-center text-brand-danger font-ibm-plex-arabic">
-          خطأ: {error}
-        </main>
-        <Footer />
+      <div className="text-center text-brand-danger font-ibm-plex-arabic">
+        خطأ: {error}
       </div>
     );
   }
 
   if (!service || !provider) {
     return (
-      <div className="min-h-screen flex flex-col bg-brand-background">
-        <ClientHomeHeader />
-        <main className="flex-grow container mx-auto px-8 py-10 text-center text-brand-text-dark font-ibm-plex-arabic">
-          الخدمة غير موجودة.
-        </main>
-        <Footer />
+      <div className="text-center text-brand-text-dark font-ibm-plex-arabic">
+        الخدمة غير موجودة.
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-brand-background">
-      <ClientHomeHeader />
-      <main className="flex-grow container mx-auto px-8 py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content Area */}
-          <div className="lg:col-span-2">
-            <Card className="bg-brand-card-bg mb-8 rounded-2xl shadow-soft p-6">
-              <CardContent className="p-0">
-                {/* Service Image/Carousel */}
-                <img src={service.image_url || '/placeholder.svg'} alt={service.title} className="w-full h-96 object-cover rounded-xl mb-6" />
-                
-                {/* Service Title */}
-                <h1 className="text-4xl font-cairo text-brand-text-dark mb-4 text-right">{service.title}</h1>
-                
-                {/* Quick Info Icons */}
-                <div className="flex flex-wrap justify-end items-center gap-x-6 gap-y-2 mb-6 text-brand-text-dark font-ibm-plex-arabic text-right">
-                  <div className="flex flex-row-reverse items-center">
-                    <span className="font-semibold ml-2">المدة:</span>
-                    <Clock className="h-5 w-5 text-brand-primary" />
-                    <span className="font-ibm-plex-arabic">{service.delivery_time || 'غير محدد'} أيام</span>
-                  </div>
-                  <div className="flex flex-row-reverse items-center">
-                    <span className="font-semibold ml-2">الموقع:</span>
-                    <MapPin className="h-5 w-5 text-brand-primary" />
-                    <span className="font-ibm-plex-arabic">{service.location || 'غير محدد'}</span>
-                  </div>
-                  <div className="flex flex-row-reverse items-center">
-                    <span className="font-semibold ml-2">المستوى:</span>
-                    <LayoutList className="h-5 w-5 text-brand-primary" />
-                    <span className="font-ibm-plex-arabic">{service.service_level || 'غير محدد'}</span>
-                  </div>
+    <>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Content Area */}
+        <div className="lg:col-span-2">
+          <Card className="bg-brand-card-bg mb-8 rounded-2xl shadow-soft p-6">
+            <CardContent className="p-0">
+              {/* Service Image/Carousel */}
+              <img src={service.image_url || '/placeholder.svg'} alt={service.title} className="w-full h-96 object-cover rounded-xl mb-6" />
+              
+              {/* Service Title */}
+              <h1 className="text-4xl font-cairo text-brand-text-dark mb-4 text-right">{service.title}</h1>
+              
+              {/* Quick Info Icons */}
+              <div className="flex flex-wrap justify-end items-center gap-x-6 gap-y-2 mb-6 text-brand-text-dark font-ibm-plex-arabic text-right">
+                <div className="flex flex-row-reverse items-center">
+                  <span className="font-semibold ml-2">المدة:</span>
+                  <Clock className="h-5 w-5 text-brand-primary" />
+                  <span className="font-ibm-plex-arabic">{service.delivery_time || 'غير محدد'} أيام</span>
                 </div>
-
-                <Separator className="my-6 bg-border" />
-
-                {/* Service Description */}
-                <h2 className="text-2xl font-cairo text-brand-text-dark mb-4 text-right">وصف الخدمة</h2>
-                <p className="text-brand-text-dark text-lg mb-6 font-ibm-plex-arabic text-right leading-relaxed">
-                  {service.description}
-                </p>
-
-                {/* Service Features/Bullets */}
-                <h3 className="text-xl font-cairo text-brand-text-dark mb-3 text-right">ما ستحصل عليه:</h3>
-                <ul className="list-disc list-inside text-brand-text-dark space-y-2 font-ibm-plex-arabic text-right pr-5">
-                  {serviceFeatures.map((feature, index) => ( // Using placeholder features
-                    <li key={index}>{feature}</li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* Service Provider Info */}
-            <Card className="bg-brand-card-bg rounded-2xl shadow-soft p-6 mb-8">
-              <CardHeader className="p-0 pb-4 text-right">
-                <CardTitle className="font-cairo text-brand-text-dark text-2xl">مقدم الخدمة</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0 flex flex-row-reverse items-center justify-between">
-                <div className="flex flex-row-reverse items-center space-x-4 rtl:space-x-reverse">
-                  <Avatar className="h-16 w-16">
-                    <AvatarImage src={provider.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${provider.name.split(' ').map(n => n[0]).join('')}`} alt={provider.name} />
-                    <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{provider.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                  </Avatar>
-                  <div className="text-right">
-                    <p className="font-cairo text-xl text-brand-text-dark font-semibold">{provider.name}</p>
-                    <div className="flex items-center justify-end text-sm text-brand-text-muted font-ibm-plex-arabic">
-                      <span className="ml-1">({service.rating || 0})</span>
-                      {renderStars(service.rating || 0)}
-                    </div>
-                    <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">
-                      {service.reviews_count || 0} خدمة مكتملة
-                    </p>
-                  </div>
+                <div className="flex flex-row-reverse items-center">
+                  <span className="font-semibold ml-2">الموقع:</span>
+                  <MapPin className="h-5 w-5 text-brand-primary" />
+                  <span className="font-ibm-plex-arabic">{service.location || 'غير محدد'}</span>
                 </div>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic py-2 px-4">
-                      عرض الملف الشخصي
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[600px] rounded-2xl shadow-soft bg-brand-card-bg p-6 text-right">
-                    <DialogHeader className="pb-4">
-                      <DialogTitle className="text-3xl font-cairo text-brand-text-dark text-center">ملف مقدم الخدمة</DialogTitle>
-                    </DialogHeader>
-                    <div className="flex flex-col items-center mb-6">
-                      <Avatar className="h-24 w-24 mb-4">
-                        <AvatarImage src={provider.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${provider.name.split(' ').map(n => n[0]).join('')}`} alt={provider.name} />
-                        <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{provider.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                      </Avatar>
-                      <h3 className="text-2xl font-cairo text-brand-text-dark">{provider.name}</h3>
-                      <div className="flex items-center mt-2">
-                        {renderStars(service.rating || 0)}
-                        <span className="mr-2 text-brand-text-muted font-ibm-plex-arabic">({service.reviews_count || 0} تقييم)</span>
-                      </div>
-                      <p className="text-brand-text-muted font-ibm-plex-arabic mt-1">{service.reviews_count || 0} خدمة مكتملة</p>
-                    </div>
-                    <Separator className="my-4 bg-border" />
-                    <div className="space-y-4">
-                      <p className="text-brand-text-dark font-ibm-plex-arabic leading-relaxed">{provider.bio || 'لا يوجد وصف.'}</p>
-                      <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">البريد الإلكتروني: {provider.email}</p>
-                      <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">الهاتف: {provider.phone || 'غير متوفر'}</p>
-                    </div>
-                    <div className="mt-6 text-center">
-                      <Button onClick={handleContactProvider} className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
-                        <MessageSquare className="ml-2 h-5 w-5" />
-                        إرسال رسالة
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </CardContent>
-            </Card>
+                <div className="flex flex-row-reverse items-center">
+                  <span className="font-semibold ml-2">المستوى:</span>
+                  <LayoutList className="h-5 w-5 text-brand-primary" />
+                  <span className="font-ibm-plex-arabic">{service.service_level || 'غير محدد'}</span>
+                </div>
+              </div>
 
-            {/* Ratings and Reviews */}
-            <Card className="bg-brand-card-bg rounded-2xl shadow-soft p-6">
-              <CardHeader className="p-0 pb-4 text-right">
-                <CardTitle className="font-cairo text-brand-text-dark text-2xl">التقييمات والمراجعات</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="flex items-center justify-end mb-4">
-                  <span className="text-4xl font-cairo text-brand-primary font-bold ml-3">{service.rating || 0}</span>
-                  <div className="flex flex-col items-end">
+              <Separator className="my-6 bg-border" />
+
+              {/* Service Description */}
+              <h2 className="text-2xl font-cairo text-brand-text-dark mb-4 text-right">وصف الخدمة</h2>
+              <p className="text-brand-text-dark text-lg mb-6 font-ibm-plex-arabic text-right leading-relaxed">
+                {service.description}
+              </p>
+
+              {/* Service Features/Bullets */}
+              <h3 className="text-xl font-cairo text-brand-text-dark mb-3 text-right">ما ستحصل عليه:</h3>
+              <ul className="list-disc list-inside text-brand-text-dark space-y-2 font-ibm-plex-arabic text-right pr-5">
+                {serviceFeatures.map((feature, index) => ( // Using placeholder features
+                  <li key={index}>{feature}</li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Service Provider Info */}
+          <Card className="bg-brand-card-bg rounded-2xl shadow-soft p-6 mb-8">
+            <CardHeader className="p-0 pb-4 text-right">
+              <CardTitle className="font-cairo text-brand-text-dark text-2xl">مقدم الخدمة</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 flex flex-row-reverse items-center justify-between">
+              <div className="flex flex-row-reverse items-center space-x-4 rtl:space-x-reverse">
+                <Avatar className="h-16 w-16">
+                  <AvatarImage src={provider.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${provider.name.split(' ').map(n => n[0]).join('')}`} alt={provider.name} />
+                  <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{provider.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                </Avatar>
+                <div className="text-right">
+                  <p className="font-cairo text-xl text-brand-text-dark font-semibold">{provider.name}</p>
+                  <div className="flex items-center justify-end text-sm text-brand-text-muted font-ibm-plex-arabic">
+                    <span className="ml-1">({service.rating || 0})</span>
                     {renderStars(service.rating || 0)}
-                    <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">بناءً على {mappedReviews.length} مراجعة</p>
                   </div>
+                  <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">
+                    {service.reviews_count || 0} خدمة مكتملة
+                  </p>
                 </div>
-                <div className="space-y-4">
-                  {mappedReviews.slice(0, 2).map(review => ( // Show first 2 reviews
-                    <div key={review.id} className="border-b border-border pb-4 last:border-b-0 text-right">
-                      <div className="flex flex-row-reverse items-center justify-end mb-2">
-                        <Avatar className="h-10 w-10 ml-3">
-                          <AvatarImage src={review.customerAvatar} alt={review.customerName} />
-                          <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{review.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col items-end">
-                          <span className="font-semibold text-brand-text-dark font-ibm-plex-arabic">{review.customerName}</span>
-                          {renderStars(review.rating)}
-                        </div>
-                      </div>
-                      <p className="text-brand-text-dark font-ibm-plex-arabic leading-relaxed">{review.comment}</p>
-                      <p className="text-xs text-brand-text-muted mt-2 font-ibm-plex-arabic">بتاريخ: {review.date}</p>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic py-2 px-4">
+                    عرض الملف الشخصي
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[600px] rounded-2xl shadow-soft bg-brand-card-bg p-6 text-right">
+                  <DialogHeader className="pb-4">
+                    <DialogTitle className="text-3xl font-cairo text-brand-text-dark text-center">ملف مقدم الخدمة</DialogTitle>
+                  </DialogHeader>
+                  <div className="flex flex-col items-center mb-6">
+                    <Avatar className="h-24 w-24 mb-4">
+                      <AvatarImage src={provider.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${provider.name.split(' ').map(n => n[0]).join('')}`} alt={provider.name} />
+                      <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{provider.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    </Avatar>
+                    <h3 className="text-2xl font-cairo text-brand-text-dark">{provider.name}</h3>
+                    <div className="flex items-center mt-2">
+                      {renderStars(service.rating || 0)}
+                      <span className="mr-2 text-brand-text-muted font-ibm-plex-arabic">({service.reviews_count || 0} تقييم)</span>
                     </div>
-                  ))}
-                </div>
-                {mappedReviews.length > 2 && (
+                    <p className="text-brand-text-muted font-ibm-plex-arabic mt-1">{service.reviews_count || 0} خدمة مكتملة</p>
+                  </div>
+                  <Separator className="my-4 bg-border" />
+                  <div className="space-y-4">
+                    <p className="text-brand-text-dark font-ibm-plex-arabic leading-relaxed">{provider.bio || 'لا يوجد وصف.'}</p>
+                    <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">البريد الإلكتروني: {provider.email}</p>
+                    <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">الهاتف: {provider.phone || 'غير متوفر'}</p>
+                  </div>
                   <div className="mt-6 text-center">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic py-2 px-4">
-                          قراءة كل المراجعات ({mappedReviews.length})
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[700px] h-[80vh] flex flex-col rounded-2xl shadow-soft bg-brand-card-bg p-6 text-right">
-                        <DialogHeader className="pb-4">
-                          <DialogTitle className="text-3xl font-cairo text-brand-text-dark text-center">جميع المراجعات</DialogTitle>
-                        </DialogHeader>
-                        <ScrollArea className="flex-grow pr-4">
-                          <div className="space-y-6">
-                            {mappedReviews.map(review => (
-                              <div key={review.id} className="border-b border-border pb-4 last:border-b-0">
-                                <div className="flex flex-row-reverse items-center justify-end mb-2">
-                                  <Avatar className="h-10 w-10 ml-3">
-                                    <AvatarImage src={review.customerAvatar} alt={review.customerName} />
-                                    <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{review.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                                  </Avatar>
-                                  <div className="flex flex-col items-end">
-                                    <span className="font-semibold text-brand-text-dark font-ibm-plex-arabic">{review.customerName}</span>
-                                    {renderStars(review.rating)}
-                                  </div>
-                                </div>
-                                <p className="text-brand-text-dark font-ibm-plex-arabic leading-relaxed">{review.comment}</p>
-                                <p className="text-xs text-brand-text-muted mt-2 font-ibm-plex-arabic">بتاريخ: {review.date}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </ScrollArea>
-                      </DialogContent>
-                    </Dialog>
+                    <Button onClick={handleContactProvider} className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
+                      <MessageSquare className="ml-2 h-5 w-5" />
+                      إرسال رسالة
+                    </Button>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                </DialogContent>
+              </Dialog>
+            </CardContent>
+          </Card>
 
-          {/* Sidebar for Action (Pricing & Buttons) */}
-          <div className="lg:col-span-1">
-            <Card className="bg-brand-card-bg rounded-2xl shadow-soft p-6 text-right sticky top-24">
-              <CardHeader className="p-0 pb-4">
-                <CardTitle className="font-cairo text-brand-text-dark text-2xl">اطلب هذه الخدمة</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6 p-0">
-                <div className="flex justify-between items-center text-xl font-bold text-brand-text-dark font-cairo">
-                  <span>السعر الأساسي:</span>
-                  <span className="text-brand-primary">${service.price}</span>
+          {/* Ratings and Reviews */}
+          <Card className="bg-brand-card-bg rounded-2xl shadow-soft p-6">
+            <CardHeader className="p-0 pb-4 text-right">
+              <CardTitle className="font-cairo text-brand-text-dark text-2xl">التقييمات والمراجعات</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="flex items-center justify-end mb-4">
+                <span className="text-4xl font-cairo text-brand-primary font-bold ml-3">{service.rating || 0}</span>
+                <div className="flex flex-col items-end">
+                  {renderStars(service.rating || 0)}
+                  <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">بناءً على {mappedReviews.length} مراجعة</p>
                 </div>
-                
-                {/* Placeholder for service options */}
-                {/* {service.options && service.options.length > 0 && (
-                  <div className="space-y-3">
-                    <h3 className="text-lg font-cairo text-brand-text-dark">خيارات إضافية:</h3>
-                    {service.options.map(option => (
-                      <div key={option.id} className="flex justify-between items-center text-brand-text-dark font-ibm-plex-arabic">
-                        <span>{option.name}</span>
-                        <span>+${option.price}</span>
+              </div>
+              <div className="space-y-4">
+                {mappedReviews.slice(0, 2).map(review => ( // Show first 2 reviews
+                  <div key={review.id} className="border-b border-border pb-4 last:border-b-0 text-right">
+                    <div className="flex flex-row-reverse items-center justify-end mb-2">
+                      <Avatar className="h-10 w-10 ml-3">
+                        <AvatarImage src={review.customerAvatar} alt={review.customerName} />
+                        <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{review.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col items-end">
+                        <span className="font-semibold text-brand-text-dark font-ibm-plex-arabic">{review.customerName}</span>
+                        {renderStars(review.rating)}
                       </div>
-                    ))}
+                    </div>
+                    <p className="text-brand-text-dark font-ibm-plex-arabic leading-relaxed">{review.comment}</p>
+                    <p className="text-xs text-brand-text-muted mt-2 font-ibm-plex-arabic">بتاريخ: {review.date}</p>
                   </div>
-                )} */}
-
-                <Link to={`/client-home/order-service/${service.id}`}> {/* Updated link */}
-                  <Button className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white py-3 rounded-xl shadow-soft font-ibm-plex-arabic text-lg">
-                    اطلب الخدمة الآن
-                  </Button>
-                </Link>
-                <Button onClick={handleContactProvider} variant="outline" className="w-full border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
-                  <MessageSquare className="ml-2 h-5 w-5" />
-                  تواصل مع مقدم الخدمة
-                </Button>
-
-                <Separator className="my-6 bg-border" />
-
-                {/* Interactive Buttons */}
-                <div className="flex justify-around gap-4">
-                  <Button variant="outline" size="icon" onClick={handleShare} className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-full shadow-soft">
-                    <Share2 className="h-5 w-5" />
-                    <span className="sr-only">مشاركة</span>
-                  </Button>
-                  <Button variant="outline" size="icon" onClick={handleAddToFavorites} className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-full shadow-soft">
-                    <Heart className="h-5 w-5" />
-                    <span className="sr-only">إضافة للمفضلة</span>
-                  </Button>
+                ))}
+              </div>
+              {mappedReviews.length > 2 && (
+                <div className="mt-6 text-center">
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button variant="outline" size="icon" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-full shadow-soft">
-                        <HelpCircle className="h-5 w-5" />
-                        <span className="sr-only">الأسئلة الشائعة</span>
+                      <Button variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic py-2 px-4">
+                        قراءة كل المراجعات ({mappedReviews.length})
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[600px] rounded-2xl shadow-soft bg-brand-card-bg p-6 text-right">
+                    <DialogContent className="sm:max-w-[700px] h-[80vh] flex flex-col rounded-2xl shadow-soft bg-brand-card-bg p-6 text-right">
                       <DialogHeader className="pb-4">
-                        <DialogTitle className="text-3xl font-cairo text-brand-text-dark text-center">الأسئلة الشائعة</DialogTitle>
+                        <DialogTitle className="text-3xl font-cairo text-brand-text-dark text-center">جميع المراجعات</DialogTitle>
                       </DialogHeader>
-                      <ScrollArea className="h-[60vh] pr-4">
-                        <Accordion type="single" collapsible className="w-full">
-                          {serviceFaqs.map((faq, index) => ( // Using placeholder FAQs
-                            <AccordionItem key={index} value={`item-${index}`} className="border-b border-border last:border-b-0">
-                              <AccordionTrigger className="font-cairo text-brand-text-dark text-lg text-right hover:no-underline hover:text-brand-primary py-4">
-                                {faq.question}
-                              </AccordionTrigger>
-                              <AccordionContent className="text-brand-text-muted font-ibm-plex-arabic text-right pb-4">
-                                {faq.answer}
-                              </AccordionContent>
-                            </AccordionItem>
+                      <ScrollArea className="flex-grow pr-4">
+                        <div className="space-y-6">
+                          {mappedReviews.map(review => (
+                            <div key={review.id} className="border-b border-border pb-4 last:border-b-0">
+                              <div className="flex flex-row-reverse items-center justify-end mb-2">
+                                <Avatar className="h-10 w-10 ml-3">
+                                  <AvatarImage src={review.customerAvatar} alt={review.customerName} />
+                                  <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{review.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex flex-col items-end">
+                                  <span className="font-semibold text-brand-text-dark font-ibm-plex-arabic">{review.customerName}</span>
+                                  {renderStars(review.rating)}
+                                </div>
+                              </div>
+                              <p className="text-brand-text-dark font-ibm-plex-arabic leading-relaxed">{review.comment}</p>
+                              <p className="text-xs text-brand-text-muted mt-2 font-ibm-plex-arabic">بتاريخ: {review.date}</p>
+                            </div>
                           ))}
-                        </Accordion>
+                        </div>
                       </ScrollArea>
                     </DialogContent>
                   </Dialog>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
-      </main>
-      <Footer />
-    </div>
+
+        {/* Sidebar for Action (Pricing & Buttons) */}
+        <div className="lg:col-span-1">
+          <Card className="bg-brand-card-bg rounded-2xl shadow-soft p-6 text-right sticky top-24">
+            <CardHeader className="p-0 pb-4">
+              <CardTitle className="font-cairo text-brand-text-dark text-2xl">اطلب هذه الخدمة</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6 p-0">
+              <div className="flex justify-between items-center text-xl font-bold text-brand-text-dark font-cairo">
+                <span>السعر الأساسي:</span>
+                <span className="text-brand-primary">${service.price}</span>
+              </div>
+              
+              {/* Placeholder for service options */}
+              {/* {service.options && service.options.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-lg font-cairo text-brand-text-dark">خيارات إضافية:</h3>
+                  {service.options.map(option => (
+                    <div key={option.id} className="flex justify-between items-center text-brand-text-dark font-ibm-plex-arabic">
+                      <span>{option.name}</span>
+                      <span>+${option.price}</span>
+                    </div>
+                  ))}
+                </div>
+              )} */}
+
+              <Link to={`/client-home/order-service/${service.id}`}> {/* Updated link */}
+                <Button className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white py-3 rounded-xl shadow-soft font-ibm-plex-arabic text-lg">
+                  اطلب الخدمة الآن
+                </Button>
+              </Link>
+              <Button onClick={handleContactProvider} variant="outline" className="w-full border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
+                <MessageSquare className="ml-2 h-5 w-5" />
+                تواصل مع مقدم الخدمة
+              </Button>
+
+              <Separator className="my-6 bg-border" />
+
+              {/* Interactive Buttons */}
+              <div className="flex justify-around gap-4">
+                <Button variant="outline" size="icon" onClick={handleShare} className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-full shadow-soft">
+                  <Share2 className="h-5 w-5" />
+                  <span className="sr-only">مشاركة</span>
+                </Button>
+                <Button variant="outline" size="icon" onClick={handleAddToFavorites} className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-full shadow-soft">
+                  <Heart className="h-5 w-5" />
+                  <span className="sr-only">إضافة للمفضلة</span>
+                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="icon" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-full shadow-soft">
+                      <HelpCircle className="h-5 w-5" />
+                      <span className="sr-only">الأسئلة الشائعة</span>
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[600px] rounded-2xl shadow-soft bg-brand-card-bg p-6 text-right">
+                    <DialogHeader className="pb-4">
+                      <DialogTitle className="text-3xl font-cairo text-brand-text-dark text-center">الأسئلة الشائعة</DialogTitle>
+                    </DialogHeader>
+                    <ScrollArea className="h-[60vh] pr-4">
+                      <Accordion type="single" collapsible className="w-full">
+                        {serviceFaqs.map((faq, index) => ( // Using placeholder FAQs
+                          <AccordionItem key={index} value={`item-${index}`} className="border-b border-border last:border-b-0">
+                            <AccordionTrigger className="font-cairo text-brand-text-dark text-lg text-right hover:no-underline hover:text-brand-primary py-4">
+                              {faq.question}
+                            </AccordionTrigger>
+                            <AccordionContent className="text-brand-text-muted font-ibm-plex-arabic text-right pb-4">
+                              {faq.answer}
+                            </AccordionContent>
+                          </AccordionItem>
+                        ))}
+                      </Accordion>
+                    </ScrollArea>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </>
   );
 };
 

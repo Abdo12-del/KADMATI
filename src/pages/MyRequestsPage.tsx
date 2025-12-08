@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+// import Header from '@/components/Header'; // Removed
+// import Footer from '@/components/Footer'; // Removed
 import RequestCard from '@/components/RequestCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
@@ -86,52 +86,42 @@ const MyRequestsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-brand-background">
-        <Header />
-        <main className="flex-grow container mx-auto px-8 py-10 text-center text-brand-text-dark font-ibm-plex-arabic">
-          جاري تحميل طلباتك...
-        </main>
-        <Footer />
+      <div className="text-center py-10 text-brand-text-dark font-ibm-plex-arabic">
+        جاري تحميل طلباتك...
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex flex-col bg-brand-background">
-        <Header />
-        <main className="flex-grow container mx-auto px-8 py-10 text-center text-brand-danger font-ibm-plex-arabic">
-          خطأ: {error}
-        </main>
-        <Footer />
+      <div className="text-center py-10 text-brand-danger font-ibm-plex-arabic">
+        خطأ: {error}
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-brand-background">
-      <Header />
-      <main className="flex-grow container mx-auto px-8 py-10">
-        <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">طلباتي وخدماتي</h1>
+    <>
+      <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">طلباتي وخدماتي</h1>
 
-        <Tabs defaultValue="my-requests" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-brand-background rounded-xl shadow-soft p-2">
-            <TabsTrigger value="my-requests" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">طلباتي</TabsTrigger>
-            <TabsTrigger value="my-services" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">خدماتي المقدمة</TabsTrigger>
-            <TabsTrigger value="history" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">السجل</TabsTrigger>
-          </TabsList>
-          <TabsContent value="my-requests" className="mt-6">
-            <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">الطلبات الحالية</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {pendingRequests.length > 0 ? (
-                pendingRequests.map(request => (
-                  <RequestCard key={request.id} request={request} />
-                ))
-              ) : (
-                <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد طلبات حالية.</p>
-              )}
-            </div>
-          </TabsContent>
+      <Tabs defaultValue="my-requests" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 bg-brand-background rounded-xl shadow-soft p-2">
+          <TabsTrigger value="my-requests" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">طلباتي</TabsTrigger>
+          <TabsTrigger value="my-services" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">خدماتي المقدمة</TabsTrigger>
+          <TabsTrigger value="history" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">السجل</TabsTrigger>
+        </TabsList>
+        <TabsContent value="my-requests" className="mt-6">
+          <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">الطلبات الحالية</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {pendingRequests.length > 0 ? (
+              pendingRequests.map(request => (
+                <RequestCard key={request.id} request={request} />
+              ))
+            ) : (
+              <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد طلبات حالية.</p>
+            )}
+          </div>
+        </TabsContent>
           <TabsContent value="my-services" className="mt-6">
             <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">خدماتي المقدمة</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -157,9 +147,7 @@ const MyRequestsPage = () => {
             </div>
           </TabsContent>
         </Tabs>
-      </main>
-      <Footer />
-    </div>
+    </>
   );
 };
 
