@@ -5,11 +5,12 @@ export const errorHandler = (err: any, req: Request, res: Response, next: NextFu
 
   const statusCode = err.statusCode || 500;
   const message = err.message || 'An unexpected error occurred.';
+  const errors = err.errors || null; // Ensure validation errors are included
 
   res.status(statusCode).json({
     success: false,
     message,
-    errors: err.errors || null,
+    errors, // Now explicitly includes the errors array
   });
 };
 
