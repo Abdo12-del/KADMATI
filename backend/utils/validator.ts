@@ -1,38 +1,83 @@
 export const validateUser = (data: any, isUpdate: boolean = false) => {
   const errors: string[] = [];
 
-  if (!isUpdate && !data.name) {
-    errors.push('Name is required.');
-  }
-  if (!isUpdate && !data.email) {
-    errors.push('Email is required.');
-  } else if (data.email && !/\S+@\S+\.\S+/.test(data.email)) {
-    errors.push('Email is invalid.');
-  }
-  if (!isUpdate && !data.password) {
-    errors.push('Password is required.');
-  } else if (data.password && data.password.length < 6) {
-    errors.push('Password must be at least 6 characters long.');
-  }
-  if (!isUpdate && !data.role) {
-    errors.push('Role is required.');
-  } else if (data.role && !['seeker', 'provider'].includes(data.role)) {
-    errors.push('Invalid role. Must be "seeker" or "provider".');
+  // Name validation
+  if (!isUpdate || (isUpdate && data.name !== undefined)) {
+    if (!data.name) {
+      errors.push('Name is required.');
+    } else if (typeof data.name !== 'string' || data.name.trim().length === 0) {
+      errors.push('Name must be a non-empty string.');
+    }
   }
 
-  // For provider-specific fields, we'll allow them to pass through for now
-  // In a real application, these might be validated separately or added to the User model
-  // if (data.role === 'provider') {
-  //   if (!isUpdate && !data.provider_type) {
-  //     errors.push('Provider type is required for providers.');
-  //   }
-  //   if (!isUpdate && !data.id_number) {
-  //     errors.push('ID number is required for providers.');
-  //   }
-  //   if (!isUpdate && !data.address) {
-  //     errors.push('Address is required for providers.');
-  //   }
-  // }
+  // Email validation
+  if (!isUpdate || (isUpdate && data.email !== undefined)) {
+    if (!data.email) {
+      errors.push('Email is required.');
+    } else if (typeof data.email !== 'string' || !/\S+@\S+\.\S+/.test(data.email)) {
+      errors.push('Email is invalid.');
+    }
+  }
+
+  // Password validation
+  if (!isUpdate || (isUpdate && data.password !== undefined)) {
+    if (!data.password) {
+      errors.push('Password is required.');
+    } else if (typeof data.password !== 'string' || data.password.length < 6) {
+      errors.push('Password must be at least 6 characters long.');
+    }
+  }
+
+  // Role validation
+  if (!isUpdate || (isUpdate && data.role !== undefined)) {
+    if (!data.role) {
+      errors.push('Role is required.');
+    } else if (typeof data.role !== 'string' || !['seeker', 'provider'].includes(data.role)) {
+      errors.push('Invalid role. Must be "seeker" or "provider".');
+    }
+  }
+
+  // Phone validation
+  if (!isUpdate || (isUpdate && data.phone !== undefined)) {
+    if (!data.phone) {
+      errors.push('Phone number is required.');
+    } else if (typeof data.phone !== 'string' || data.phone.trim().length === 0) {
+      errors.push('Phone number must be a non-empty string.');
+    }
+  }
+
+  // Provider-specific fields validation
+  // If creating, use data.role. If updating, assume it's a provider if these fields are present.
+  const effectiveRole = data.role || (isUpdate && (data.provider_type !== undefined || data.id_number !== undefined || data.address !== undefined) ? 'provider' : null);
+
+  if (effectiveRole === 'provider') {
+    // provider_type
+    if (!isUpdate || (isUpdate && data.provider_type !== undefined)) {
+      if (!data.provider_type) {
+        errors.push('Provider type is required for providers.');
+      } else if (typeof data.provider_type !== 'string' || data.provider_type.trim().length === 0) {
+        errors.push('Provider type must be a non-empty string.');
+      }
+    }
+
+    // id_number
+    if (!isUpdate || (isUpdate && data.id_number !== undefined)) {
+      if (!data.id_number) {
+        errors.push('ID number is required for providers.');
+      } else if (typeof data.id_number !== 'string' || data.id_number.trim().length === 0) {
+        errors.push('ID number must be a non-empty string.');
+      }
+    }
+
+    // address
+    if (!isUpdate || (isUpdate && data.address !== undefined)) {
+      if (!data.address) {
+        errors.push('Address is required for providers.');
+      } else if (typeof data.address !== 'string' || data.address.trim().length === 0) {
+        errors.push('Address must be a non-empty string.');
+      }
+    }
+  }
 
   return errors;
 };

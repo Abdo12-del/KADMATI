@@ -34,13 +34,14 @@ router.get('/:id', async (req, res, next) => {
 // Create a new user
 router.post('/', async (req, res, next) => {
   try {
-    console.log('Received signup request body:', req.body); // Added for debugging
+    console.log("REQ BODY:", req.body); // Log full request body
     const validationErrors = validateUser(req.body);
-    console.log('Validation errors from validateUser:', validationErrors); // Added for debugging
+    console.log("VALIDATION ERRORS:", validationErrors); // Log full validation output
 
     if (validationErrors.length > 0) {
-      console.error('Validation failed for user creation with errors:', validationErrors); // Updated log
-      throw new ApiError('Validation failed', 400, validationErrors);
+      console.error('Validation failed for user creation with errors:', validationErrors);
+      // Return specific validation errors directly in the response
+      return errorResponse(res, 'Validation failed', 400, validationErrors);
     }
 
     const { name, email, password, role, phone, bio, avatar_url } = req.body;
@@ -50,8 +51,7 @@ router.post('/', async (req, res, next) => {
       throw new ApiError('User with this email already exists', 409);
     }
 
-    // Safeguard in case validateUser somehow misses an empty password
-    if (!password) {
+    if (!password) { // This check is redundant if validateUser is robust, but kept as a safeguard
       throw new ApiError('Password is required', 400, ['Password is required.']);
     }
 
@@ -81,13 +81,14 @@ router.put('/:id', async (req, res, next) => {
     const { id } = req.params;
     const updates = req.body;
 
-    console.log('Received user update request body:', req.body); // Added for debugging
+    console.log('Received user update request body:', req.body);
     const validationErrors = validateUser(updates, true);
-    console.log('Validation errors from validateUser (update):', validationErrors); // Added for debugging
+    console.log('Validation errors from validateUser (update):', validationErrors);
 
     if (validationErrors.length > 0) {
-      console.error('Validation failed for user update with errors:', validationErrors); // Updated log
-      throw new ApiError('Validation failed', 400, validationErrors);
+      console.error('Validation failed for user update with errors:', validationErrors);
+      // Return specific validation errors directly in the response
+      return errorResponse(res, 'Validation failed', 400, validationErrors);
     }
 
     if (updates.password) {
