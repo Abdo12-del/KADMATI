@@ -1,5 +1,5 @@
 import Knex from 'knex';
-import knexConfig from './knexfile.js'; // تم التحديث لاستيراد ملف .js
+import knexConfig from './knexfile.cjs'; // تم التحديث لاستيراد ملف .cjs
 import { env } from '../config/env';
 
 const knex = Knex(knexConfig[env.NODE_ENV]);
