@@ -1,81 +1,145 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MessageSquare, Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import ChatWindow from '@/components/ChatWindow'; // استيراد مكون ChatWindow
+import ChatWindow from '@/components/ChatWindow';
+import { toast } from 'sonner';
 
-interface Message {
-  id: string;
-  sender: 'customer' | 'provider';
+interface MessageData {
+  id: number;
+  sender_id: number;
+  receiver_id: number;
+  conversation_id: string;
   text: string;
-  time: string;
-  read: boolean; // إضافة حالة القراءة للرسائل
+  read?: boolean;
+  created_at?: string;
+}
+
+interface UserData {
+  id: number;
+  name: string;
+  avatar_url?: string;
 }
 
 interface Conversation {
   id: string;
   customerName: string;
   avatarUrl: string;
-  messages: Message[];
+  messages: {
+    id: string;
+    sender: 'customer' | 'provider';
+    text: string;
+    time: string;
+  }[];
   unreadCount: number;
   lastMessageTime: string;
 }
 
-// بيانات وهمية للمحادثات
-const dummyConversations: Conversation[] = [
-  {
-    id: 'conv1',
-    customerName: 'أحمد محمد',
-    avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=AM',
-    messages: [
-      { id: 'msg1', sender: 'customer', text: 'مرحباً، هل أنت متاح لمشروع تصميم شعار جديد؟', time: '10:00 ص', read: true },
-      { id: 'msg2', sender: 'provider', text: 'أهلاً بك! نعم، أنا متاح. ما هي تفاصيل المشروع؟', time: '10:05 ص', read: true },
-      { id: 'msg3', sender: 'customer', text: 'أحتاج شعارًا لشركة تقنية ناشئة. أريد شيئًا حديثًا وبسيطًا.', time: '10:15 ص', read: false },
-      { id: 'msg4', sender: 'provider', text: 'بالتأكيد، يمكننا مناقشة الأفكار. هل لديك أي أمثلة تفضلها؟', time: '10:20 ص', read: false },
-    ],
-    unreadCount: 1,
-    lastMessageTime: '10:20 ص',
-  },
-  {
-    id: 'conv2',
-    customerName: 'سارة علي',
-    avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=SA',
-    messages: [
-      { id: 'msg5', sender: 'customer', text: 'شكراً جزيلاً على الخدمة الممتازة، أنا راضية تماماً عن النتيجة!', time: '03:00 م', read: true },
-      { id: 'msg6', sender: 'provider', text: 'يسعدني جداً سماع ذلك! هدفنا هو رضاكم.', time: '03:05 م', read: true },
-    ],
-    unreadCount: 0,
-    lastMessageTime: '03:05 م',
-  },
-  {
-    id: 'conv3',
-    customerName: 'خالد فهد',
-    avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=KF',
-    messages: [
-      { id: 'msg7', sender: 'customer', text: 'مرحباً، هل يمكننا تعديل موعد تسليم المشروع إلى الأسبوع القادم؟', time: '09:00 ص', read: true },
-      { id: 'msg8', sender: 'provider', text: 'دعني أتحقق من جدول أعمالي وسأرد عليك قريباً.', time: '09:10 ص', read: true },
-      { id: 'msg9', sender: 'customer', text: 'تمام، في انتظار ردك.', time: '09:15 ص', read: false },
-    ],
-    unreadCount: 1,
-    lastMessageTime: '09:15 ص',
-  },
-];
-
 interface MessageCenterModalProps {
-  initialUnreadCount?: number;
   currentUserId?: 'provider' | 'customer'; // لتحديد من هو المستخدم الحالي
 }
 
-export const MessageCenterModal = ({ initialUnreadCount = 0, currentUserId = 'provider' }: MessageCenterModalProps) => {
+export const MessageCenterModal = ({ currentUserId = 'provider' }: MessageCenterModalProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [conversations, setConversations] = useState<Conversation[]>(dummyConversations);
+  const [allMessages, setAllMessages] = useState<MessageData[]>([]);
+  const [allUsers, setAllUsers] = useState<UserData[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const CURRENT_USER_BACKEND_ID = currentUserId === 'provider' ? 1 : 2; // Map frontend role to backend user ID
+
+  const fetchMessagesAndUsers = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [messagesResponse, usersResponse] = await Promise.all([
+        fetch('http://localhost:3000/api/messages'),
+        fetch('http://localhost:3000/api/users'),
+      ]);
+
+      if (!messagesResponse.ok) {
+        const errorData = await messagesResponse.json();
+        throw new Error(errorData.message || 'فشل جلب الرسائل.');
+      }
+      if (!usersResponse.ok) {
+        const errorData = await usersResponse.json();
+        throw new Error(errorData.message || 'فشل جلب المستخدمين.');
+      }
+
+      const messagesResult = await messagesResponse.json();
+      const usersResult = await usersResponse.json();
+
+      setAllMessages(messagesResult.data);
+      setAllUsers(usersResult.data);
+    } catch (err: any) {
+      setError(err.message);
+      toast.error(err.message || 'حدث خطأ أثناء جلب البيانات.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchMessagesAndUsers();
+    }
+  }, [isOpen, fetchMessagesAndUsers]);
+
+  const conversations = useMemo(() => {
+    const convMap = new Map<string, Conversation>();
+
+    allMessages.forEach(msg => {
+      // Only include messages relevant to the current user
+      if (msg.sender_id !== CURRENT_USER_BACKEND_ID && msg.receiver_id !== CURRENT_USER_BACKEND_ID) {
+        return;
+      }
+
+      const otherPartyId = msg.sender_id === CURRENT_USER_BACKEND_ID ? msg.receiver_id : msg.sender_id;
+      const otherParty = allUsers.find(u => u.id === otherPartyId);
+
+      if (!otherParty) return;
+
+      const customerName = otherParty.name;
+      const avatarUrl = otherParty.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${customerName.split(' ').map(n => n[0]).join('')}`;
+
+      if (!convMap.has(msg.conversation_id)) {
+        convMap.set(msg.conversation_id, {
+          id: msg.conversation_id,
+          customerName,
+          avatarUrl,
+          messages: [],
+          unreadCount: 0,
+          lastMessageTime: '',
+        });
+      }
+
+      const conv = convMap.get(msg.conversation_id)!;
+      conv.messages.push({
+        id: msg.id.toString(),
+        sender: msg.sender_id === CURRENT_USER_BACKEND_ID ? currentUserId : (currentUserId === 'provider' ? 'customer' : 'provider'),
+        text: msg.text,
+        time: msg.created_at ? new Date(msg.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '',
+      });
+      if (!msg.read && msg.sender_id !== CURRENT_USER_BACKEND_ID) {
+        conv.unreadCount++;
+      }
+      conv.lastMessageTime = msg.created_at ? new Date(msg.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '';
+    });
+
+    // Sort messages within each conversation by time
+    convMap.forEach(conv => {
+      conv.messages.sort((a, b) => new Date(`2000/01/01 ${a.time}`).getTime() - new Date(`2000/01/01 ${b.time}`).getTime());
+    });
+
+    return Array.from(convMap.values());
+  }, [allMessages, allUsers, currentUserId, CURRENT_USER_BACKEND_ID]);
 
   const totalUnreadCount = useMemo(() => {
     return conversations.reduce((sum, conv) => sum + conv.unreadCount, 0);
@@ -98,26 +162,75 @@ export const MessageCenterModal = ({ initialUnreadCount = 0, currentUserId = 'pr
     return conversations.find(conv => conv.id === selectedConversationId);
   }, [conversations, selectedConversationId]);
 
-  const handleSelectConversation = (id: string) => {
+  const handleSelectConversation = async (id: string) => {
     setSelectedConversationId(id);
-    // Mark messages as read for the selected conversation
-    setConversations(prevConversations =>
-      prevConversations.map(conv =>
-        conv.id === id
-          ? {
-              ...conv,
-              unreadCount: 0,
-              messages: conv.messages.map(msg => ({ ...msg, read: true })),
-            }
-          : conv
-      )
+    // Mark messages as read for the selected conversation in the backend
+    const messagesToMarkAsRead = allMessages.filter(msg =>
+      msg.conversation_id === id && !msg.read && msg.receiver_id === CURRENT_USER_BACKEND_ID
     );
+
+    for (const msg of messagesToMarkAsRead) {
+      try {
+        await fetch(`http://localhost:3000/api/messages/${msg.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ read: true }),
+        });
+      } catch (err) {
+        console.error('Failed to mark message as read:', err);
+        toast.error('فشل تحديث حالة قراءة الرسالة.');
+      }
+    }
+    // Re-fetch messages to update frontend state
+    fetchMessagesAndUsers();
   };
 
   const handleCloseModal = () => {
     setIsOpen(false);
     setSelectedConversationId(null); // Reset selected conversation when closing
   };
+
+  if (loading) {
+    return (
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button variant="ghost" size="icon" className="relative text-brand-text-dark hover:bg-brand-background rounded-full">
+            <MessageSquare className="h-5 w-5" />
+            {totalUnreadCount > 0 && (
+              <span className="absolute top-0 right-0 h-4 w-4 rounded-full bg-brand-danger flex items-center justify-center text-xs text-white font-ibm-plex-arabic">
+                {totalUnreadCount}
+              </span>
+            )}
+            <span className="sr-only">الرسائل</span>
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[900px] h-[90vh] flex flex-col rounded-2xl shadow-soft bg-brand-card-bg p-6 overflow-hidden">
+          <div className="flex items-center justify-center h-full text-brand-text-dark font-ibm-plex-arabic">جاري تحميل الرسائل...</div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (error) {
+    return (
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button variant="ghost" size="icon" className="relative text-brand-text-dark hover:bg-brand-background rounded-full">
+            <MessageSquare className="h-5 w-5" />
+            {totalUnreadCount > 0 && (
+              <span className="absolute top-0 right-0 h-4 w-4 rounded-full bg-brand-danger flex items-center justify-center text-xs text-white font-ibm-plex-arabic">
+                {totalUnreadCount}
+              </span>
+            )}
+            <span className="sr-only">الرسائل</span>
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[900px] h-[90vh] flex flex-col rounded-2xl shadow-soft bg-brand-card-bg p-6 overflow-hidden">
+          <div className="flex items-center justify-center h-full text-brand-danger font-ibm-plex-arabic">خطأ: {error}</div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>

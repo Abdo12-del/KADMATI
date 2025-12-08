@@ -1,22 +1,101 @@
-import React from 'react';
+"use client";
+
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import RequestCard from '@/components/RequestCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
+
+interface RequestData {
+  id: number;
+  client_id: number;
+  title: string;
+  description: string;
+  status?: 'pending' | 'accepted' | 'completed' | 'cancelled';
+  created_at?: string;
+}
+
+interface RequestCardPropsData {
+  id: string;
+  title: string;
+  description: string;
+  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled';
+}
 
 const MyRequestsPage = () => {
-  // Placeholder for requests
-  const pendingRequests = [
-    { id: 'req1', title: 'طلب تصميم موقع شخصي', description: 'أحتاج إلى تصميم موقع ويب شخصي لعرض أعمالي الفنية.', status: 'Pending' as const },
-    { id: 'req2', title: 'طلب كتابة مقال تسويقي', description: 'مقال تسويقي عن فوائد استخدام الطاقة المتجددة في المنازل.', status: 'Pending' as const },
-  ];
-  const completedRequests = [
-    { id: 'req3', title: 'تصميم شعار لشركة ناشئة', description: 'شعار احترافي لشركة تقنية جديدة.', status: 'Completed' as const },
-  ];
-  const offeredServices = [
-    { id: 'offer1', title: 'خدمة تصميم واجهات المستخدم', description: 'تصميم واجهات مستخدم جذابة وسهلة الاستخدام لتطبيقات الويب.', status: 'Accepted' as const },
-    { id: 'offer2', title: 'خدمة تطوير تطبيقات الجوال', description: 'تطوير تطبيقات جوال أصلية لنظامي iOS و Android.', status: 'Pending' as const },
-  ];
+  const CLIENT_ID = 2; // Hardcoded client ID for Laila Seeker
+  const [requests, setRequests] = useState<RequestData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchRequests = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('http://localhost:3000/api/requests');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'فشل جلب الطلبات.');
+      }
+      const result = await response.json();
+      setRequests(result.data);
+    } catch (err: any) {
+      setError(err.message);
+      toast.error(err.message || 'حدث خطأ أثناء جلب طلباتك.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
+
+  const mapRequestsToCardProps = (reqs: RequestData[]): RequestCardPropsData[] => {
+    const statusMap = {
+      'pending': 'Pending',
+      'accepted': 'Accepted',
+      'completed': 'Completed',
+      'cancelled': 'Cancelled',
+    };
+    return reqs.map(req => ({
+      id: req.id.toString(),
+      title: req.title,
+      description: req.description,
+      status: statusMap[req.status || 'pending'] as RequestCardPropsData['status'],
+    }));
+  };
+
+  const myRequests = useMemo(() => requests.filter(req => req.client_id === CLIENT_ID), [requests]);
+
+  const pendingRequests = useMemo(() => mapRequestsToCardProps(myRequests.filter(req => req.status === 'pending')), [myRequests]);
+  const acceptedServices = useMemo(() => mapRequestsToCardProps(myRequests.filter(req => req.status === 'accepted')), [myRequests]); // Assuming 'offered services' are accepted requests
+  const completedRequests = useMemo(() => mapRequestsToCardProps(myRequests.filter(req => req.status === 'completed')), [myRequests]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-brand-background">
+        <Header />
+        <main className="flex-grow container mx-auto px-8 py-10 text-center text-brand-text-dark font-ibm-plex-arabic">
+          جاري تحميل طلباتك...
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col bg-brand-background">
+        <Header />
+        <main className="flex-grow container mx-auto px-8 py-10 text-center text-brand-danger font-ibm-plex-arabic">
+          خطأ: {error}
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-brand-background">
@@ -45,9 +124,8 @@ const MyRequestsPage = () => {
           <TabsContent value="my-services" className="mt-6">
             <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">خدماتي المقدمة</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {offeredServices.length > 0 ? (
-                offeredServices.map(service => (
-                  // Reusing RequestCard for simplicity, ideally a ServiceCard for provider
+              {acceptedServices.length > 0 ? (
+                acceptedServices.map(service => (
                   <RequestCard key={service.id} request={service} />
                 ))
               ) : (

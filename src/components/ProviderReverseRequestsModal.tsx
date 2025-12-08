@@ -1,14 +1,32 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, ListFilter } from 'lucide-react';
 import ProviderRequestCard from '@/components/ProviderRequestCard';
+import { toast } from 'sonner';
 
-interface Request {
+interface RequestData {
+  id: number;
+  client_id: number;
+  title: string;
+  description: string;
+  location?: string;
+  due_date?: string;
+  additional_options?: string;
+  category?: string;
+  created_at?: string;
+}
+
+interface UserData {
+  id: number;
+  name: string;
+}
+
+interface ProviderRequestCardPropsData {
   id: string;
   title: string;
   description: string;
@@ -17,70 +35,110 @@ interface Request {
   dueDate?: string;
   additionalOptions?: string;
   clientName: string;
-  category: string; // For filtering
 }
 
-const dummyRequests: Request[] = [
-  {
-    id: 'req1',
-    title: 'صيانة شاملة للحديقة المنزلية',
-    description: 'أحتاج إلى شخص متخصص لصيانة الحديقة، بما في ذلك تقليم الأشجار، زراعة الزهور، وتنظيف الممرات. يفضل أن يكون لديه خبرة في تنسيق الحدائق.',
-    location: 'الرياض، حي النرجس',
-    dateAdded: '2023-11-05',
-    dueDate: 'خلال أسبوعين',
-    additionalOptions: 'توفير الأدوات والمعدات اللازمة.',
-    clientName: 'ليلى ناصر',
-    category: 'صيانة',
-  },
-  {
-    id: 'req2',
-    title: 'تصميم شعار لمتجر إلكتروني',
-    description: 'أبحث عن مصمم جرافيك لإنشاء شعار عصري وجذاب لمتجري الإلكتروني الجديد المتخصص في بيع المنتجات اليدوية. أرغب في تصميم يعكس الإبداع والأصالة.',
-    location: 'جدة',
-    dateAdded: '2023-11-04',
-    dueDate: 'خلال 5 أيام',
-    additionalOptions: 'تسليم الملفات المصدرية ودليل استخدام الشعار.',
-    clientName: 'أحمد محمد',
-    category: 'تصميم',
-  },
-  {
-    id: 'req3',
-    title: 'دروس تقوية في اللغة الإنجليزية',
-    description: 'أحتاج مدرسًا خصوصيًا لتقديم دروس تقوية في اللغة الإنجليزية لابني في المرحلة الثانوية. التركيز على القواعد والمحادثة.',
-    location: 'الدمام',
-    dateAdded: '2023-11-03',
-    dueDate: 'مرتين في الأسبوع',
-    additionalOptions: 'يفضل أن يكون لديه خبرة في المناهج السعودية.',
-    clientName: 'سارة علي',
-    category: 'تعليم',
-  },
-  {
-    id: 'req4',
-    title: 'تركيب كاميرات مراقبة للمنزل',
-    description: 'أرغب في تركيب نظام كاميرات مراقبة متكامل للمنزل مع إمكانية الوصول عن بعد. يشمل التركيب والبرمجة.',
-    location: 'الرياض، حي الياسمين',
-    dateAdded: '2023-11-02',
-    dueDate: 'في أقرب وقت ممكن',
-    additionalOptions: 'ضمان على التركيب والمعدات.',
-    clientName: 'خالد فهد',
-    category: 'صيانة',
-  },
-];
-
 export const ProviderReverseRequestsModal = () => {
+  const [requests, setRequests] = useState<RequestData[]>([]);
+  const [users, setUsers] = useState<UserData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterLocation, setFilterLocation] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const categories = ['صيانة', 'تصميم', 'تعليم', 'تقنية', 'نقل', 'جمال'];
-  const locations = ['الرياض', 'جدة', 'الدمام', 'مكة المكرمة', 'الخبر'];
+  const categories = ['design', 'development', 'writing', 'marketing', 'consulting']; // Match backend categories
+  const locations = ['الرياض', 'جدة', 'الدمام', 'مكة المكرمة', 'الخبر']; // Example locations
 
-  const filteredRequests = dummyRequests.filter(request => {
-    const matchesSearch = request.title.includes(searchTerm) || request.description.includes(searchTerm);
-    const matchesCategory = filterCategory === 'all' || request.category === filterCategory;
-    const matchesLocation = filterLocation === 'all' || (request.location && request.location.includes(filterLocation));
-    return matchesSearch && matchesCategory && matchesLocation;
-  });
+  const fetchAllData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [requestsResponse, usersResponse] = await Promise.all([
+        fetch('http://localhost:3000/api/requests'),
+        fetch('http://localhost:3000/api/users'),
+      ]);
+
+      if (!requestsResponse.ok) {
+        const errorData = await requestsResponse.json();
+        throw new Error(errorData.message || 'فشل جلب الطلبات.');
+      }
+      if (!usersResponse.ok) {
+        const errorData = await usersResponse.json();
+        throw new Error(errorData.message || 'فشل جلب المستخدمين.');
+      }
+
+      const requestsResult = await requestsResponse.json();
+      const usersResult = await usersResponse.json();
+
+      setRequests(requestsResult.data);
+      setUsers(usersResult.data);
+    } catch (err: any) {
+      setError(err.message);
+      toast.error(err.message || 'حدث خطأ أثناء جلب الطلبات العكسية.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
+
+  const filteredRequests = useMemo(() => {
+    return requests
+      .filter(request => {
+        const matchesSearch = request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              request.description.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesCategory = filterCategory === 'all' || request.category === filterCategory;
+        const matchesLocation = filterLocation === 'all' || (request.location && request.location.includes(filterLocation));
+        return matchesSearch && matchesCategory && matchesLocation;
+      })
+      .map(request => {
+        const client = users.find(user => user.id === request.client_id);
+        return {
+          id: request.id.toString(),
+          title: request.title,
+          description: request.description,
+          location: request.location,
+          dateAdded: request.created_at ? new Date(request.created_at).toLocaleDateString('ar-EG') : 'غير محدد',
+          dueDate: request.due_date,
+          additionalOptions: request.additional_options,
+          clientName: client?.name || 'عميل غير معروف',
+        };
+      });
+  }, [requests, users, searchTerm, filterCategory, filterLocation]);
+
+  if (loading) {
+    return (
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="ghost" size="icon" className="relative text-brand-text-dark hover:bg-brand-background rounded-full">
+            <ListFilter className="h-5 w-5" />
+            <span className="sr-only">الطلبات العكسية</span>
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[900px] max-h-[90vh] flex flex-col rounded-2xl shadow-soft bg-brand-card-bg p-6 overflow-hidden">
+          <div className="flex items-center justify-center h-full text-brand-text-dark font-ibm-plex-arabic">جاري تحميل الطلبات...</div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (error) {
+    return (
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="ghost" size="icon" className="relative text-brand-text-dark hover:bg-brand-background rounded-full">
+            <ListFilter className="h-5 w-5" />
+            <span className="sr-only">الطلبات العكسية</span>
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[900px] max-h-[90vh] flex flex-col rounded-2xl shadow-soft bg-brand-card-bg p-6 overflow-hidden">
+          <div className="flex items-center justify-center h-full text-brand-danger font-ibm-plex-arabic">خطأ: {error}</div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog>

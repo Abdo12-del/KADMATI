@@ -1,27 +1,119 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ClientOrderCard from '@/components/ClientOrderCard';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
+import { toast } from 'sonner';
+
+interface RequestData {
+  id: number;
+  client_id: number;
+  title: string;
+  description: string;
+  status?: 'pending' | 'accepted' | 'completed' | 'cancelled';
+  created_at?: string;
+}
+
+interface UserData {
+  id: number;
+  name: string;
+  role: 'seeker' | 'provider';
+}
+
+interface ClientOrderCardPropsData {
+  id: string;
+  serviceTitle: string;
+  providerName: string; // Placeholder as request model doesn't directly link to provider
+  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled';
+  date: string;
+  price: number; // Placeholder as request model doesn't have price
+}
 
 const ClientOrdersModal = () => {
-  // Placeholder for client orders
-  const pendingOrders = [
-    { id: 'ord1', serviceTitle: 'تنظيف منزلي عميق', providerName: 'شركة النظافة السريعة', status: 'Pending' as const, date: '2023-11-01', price: 250 },
-    { id: 'ord2', serviceTitle: 'تصميم داخلي لغرفة معيشة', providerName: 'مهندس الديكور أحمد', status: 'Pending' as const, date: '2023-10-29', price: 1200 },
-  ];
-  const activeOrders = [
-    { id: 'ord3', serviceTitle: 'صيانة مكيفات', providerName: 'فني الصيانة ماهر', status: 'Accepted' as const, date: '2023-10-28', price: 300 },
-  ];
-  const completedOrders = [
-    { id: 'ord4', serviceTitle: 'تركيب كاميرات مراقبة', providerName: 'شركة الأمان', status: 'Completed' as const, date: '2023-10-20', price: 800 },
-  ];
-  const cancelledOrders = [
-    { id: 'ord5', serviceTitle: 'تصميم هوية بصرية', providerName: 'محمد سعيد', status: 'Cancelled' as const, date: '2023-10-10', price: 300 },
-  ];
+  const CLIENT_ID = 2; // Hardcoded client ID for Laila Seeker
+  const [requests, setRequests] = useState<RequestData[]>([]);
+  const [users, setUsers] = useState<UserData[]>([]); // To potentially get provider names
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchClientOrders = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [requestsResponse, usersResponse] = await Promise.all([
+        fetch('http://localhost:3000/api/requests'),
+        fetch('http://localhost:3000/api/users'),
+      ]);
+
+      if (!requestsResponse.ok) {
+        const errorData = await requestsResponse.json();
+        throw new Error(errorData.message || 'فشل جلب الطلبات.');
+      }
+      if (!usersResponse.ok) {
+        const errorData = await usersResponse.json();
+        throw new Error(errorData.message || 'فشل جلب المستخدمين.');
+      }
+
+      const requestsResult = await requestsResponse.json();
+      const usersResult = await usersResponse.json();
+
+      setRequests(requestsResult.data);
+      setUsers(usersResult.data);
+    } catch (err: any) {
+      setError(err.message);
+      toast.error(err.message || 'حدث خطأ أثناء جلب طلباتك.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchClientOrders();
+  }, [fetchClientOrders]);
+
+  const mapRequestsToClientOrderCards = (reqs: RequestData[]): ClientOrderCardPropsData[] => {
+    const statusMap = {
+      'pending': 'Pending',
+      'accepted': 'Accepted',
+      'completed': 'Completed',
+      'cancelled': 'Cancelled',
+    };
+    return reqs.map(req => {
+      // In a real app, requests would be linked to a provider_id or service_id to get providerName
+      // For now, we'll use a placeholder or try to infer from service if possible
+      const providerName = "مقدم خدمة افتراضي"; // Placeholder
+      return {
+        id: req.id.toString(),
+        serviceTitle: req.title,
+        providerName: providerName,
+        status: statusMap[req.status || 'pending'] as ClientOrderCardPropsData['status'],
+        date: req.created_at ? new Date(req.created_at).toLocaleDateString('ar-EG') : 'غير محدد',
+        price: 150, // Placeholder: Backend request model does not have a price field
+      };
+    });
+  };
+
+  const clientRequests = useMemo(() => requests.filter(req => req.client_id === CLIENT_ID), [requests]);
+
+  const pendingOrders = useMemo(() => mapRequestsToClientOrderCards(clientRequests.filter(req => req.status === 'pending')), [clientRequests, users]);
+  const activeOrders = useMemo(() => mapRequestsToClientOrderCards(clientRequests.filter(req => req.status === 'accepted')), [clientRequests, users]);
+  const completedOrders = useMemo(() => mapRequestsToClientOrderCards(clientRequests.filter(req => req.status === 'completed')), [clientRequests, users]);
+  const cancelledOrders = useMemo(() => mapRequestsToClientOrderCards(clientRequests.filter(req => req.status === 'cancelled')), [clientRequests, users]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full text-brand-text-dark font-ibm-plex-arabic">جاري تحميل طلباتك...</div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-full text-brand-danger font-ibm-plex-arabic">خطأ: {error}</div>
+    );
+  }
 
   return (
     <Dialog>

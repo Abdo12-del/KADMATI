@@ -1,25 +1,134 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import ClientHomeHeader from '@/components/ClientHomeHeader';
 import Footer from '@/components/Footer';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { ClientHomeCategoryScroll } from '@/components/ClientHomeCategoryScroll';
-import ClientServiceCard from '@/components/ClientServiceCard'; // إعادة استخدام البطاقة الموجودة
-import { Button } from '@/components/ui/button'; // Import Button
-import { Link } from 'react-router-dom'; // Import Link
+import ClientServiceCard from '@/components/ClientServiceCard';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
+
+interface ServiceData {
+  id: number;
+  provider_id: number;
+  title: string;
+  description: string;
+  category: string;
+  price: number;
+  delivery_time?: number;
+  image_url?: string;
+  rating?: number;
+  reviews_count?: number;
+  location?: string;
+  service_level?: string;
+}
+
+interface UserData {
+  id: number;
+  name: string;
+}
+
+interface ClientServiceCardPropsData {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  providerName: string;
+  rating: number;
+  location: string;
+  imageUrl?: string;
+}
 
 const ClientHomePage = () => {
-  // بيانات وهمية للخدمات
-  const services = [
-    { id: 's1', title: 'تنظيف منزلي عميق', description: 'خدمة تنظيف شاملة للمنازل والشقق، تشمل جميع الغرف والمطابخ والحمامات.', price: 250, providerName: 'شركة النظافة السريعة', rating: 4.8, location: 'الرياض', imageUrl: '/placeholder.svg' },
-    { id: 's2', title: 'تصميم داخلي للمنازل', description: 'تصميمات داخلية عصرية ومبتكرة لجميع مساحات منزلك، بأسعار تنافسية.', price: 1200, providerName: 'مهندس الديكور أحمد', rating: 4.9, location: 'جدة', imageUrl: '/placeholder.svg' },
-    { id: 's3', title: 'صيانة مكيفات سبليت', description: 'صيانة دورية وإصلاح أعطال المكيفات، لضمان أداء مثالي وتبريد فعال.', price: 300, providerName: 'فني الصيانة ماهر', rating: 4.5, location: 'الدمام', imageUrl: '/placeholder.svg' },
-    { id: 's4', title: 'دروس خصوصية في الرياضيات', description: 'دروس تقوية لجميع المراحل الدراسية، مع التركيز على فهم المفاهيم وحل المسائل.', price: 100, providerName: 'الأستاذة سارة', rating: 5.0, location: 'الرياض', imageUrl: '/placeholder.svg' },
-    { id: 's5', title: 'تطوير موقع ويب شخصي', description: 'بناء وتطوير مواقع ويب مخصصة تلبي احتياجاتك وتطلعاتك، مع تصميم عصري ومتجاوب.', price: 500, providerName: 'شركة التقنية الحديثة', rating: 4.7, location: 'الخبر', imageUrl: '/placeholder.svg' },
-    { id: 's6', title: 'تصميم شعار احترافي', description: 'أقدم خدمة تصميم شعارات احترافية ومبتكرة لشركتك أو مشروعك. تصميم فريد يعكس هويتك.', price: 150, providerName: 'استوديو الإبداع', rating: 4.9, location: 'مكة المكرمة', imageUrl: '/placeholder.svg' },
-  ];
+  const [services, setServices] = useState<ServiceData[]>([]);
+  const [users, setUsers] = useState<UserData[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchAllData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [servicesResponse, usersResponse] = await Promise.all([
+        fetch('http://localhost:3000/api/services'),
+        fetch('http://localhost:3000/api/users'),
+      ]);
+
+      if (!servicesResponse.ok) {
+        const errorData = await servicesResponse.json();
+        throw new Error(errorData.message || 'فشل جلب الخدمات.');
+      }
+      if (!usersResponse.ok) {
+        const errorData = await usersResponse.json();
+        throw new Error(errorData.message || 'فشل جلب المستخدمين.');
+      }
+
+      const servicesResult = await servicesResponse.json();
+      const usersResult = await usersResponse.json();
+
+      setServices(servicesResult.data);
+      setUsers(usersResult.data);
+    } catch (err: any) {
+      setError(err.message);
+      toast.error(err.message || 'حدث خطأ أثناء جلب الخدمات.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
+
+  const mappedServices = useMemo(() => {
+    return services
+      .filter(service =>
+        service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (service.location && service.location.toLowerCase().includes(searchTerm.toLowerCase()))
+      )
+      .map(service => {
+        const provider = users.find(user => user.id === service.provider_id);
+        return {
+          id: service.id.toString(),
+          title: service.title,
+          description: service.description,
+          price: service.price,
+          providerName: provider?.name || 'مقدم خدمة غير معروف',
+          rating: service.rating || 0,
+          location: service.location || 'غير محدد',
+          imageUrl: service.image_url || '/placeholder.svg',
+        };
+      });
+  }, [services, users, searchTerm]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-brand-background">
+        <ClientHomeHeader />
+        <main className="flex-grow container mx-auto px-8 py-10 text-center text-brand-text-dark font-ibm-plex-arabic">
+          جاري تحميل الخدمات...
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col bg-brand-background">
+        <ClientHomeHeader />
+        <main className="flex-grow container mx-auto px-8 py-10 text-center text-brand-danger font-ibm-plex-arabic">
+          خطأ: {error}
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-brand-background">
@@ -32,6 +141,8 @@ const ClientHomePage = () => {
               type="text"
               placeholder="ابحث عن خدمات، مقدمي خدمات، أو طلبات..."
               className="w-full pr-12 pl-5 py-3 text-lg rounded-2xl shadow-soft bg-brand-card-bg border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
             <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-6 w-6 text-brand-text-muted" />
           </div>
@@ -56,8 +167,8 @@ const ClientHomePage = () => {
         <section>
           <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">الخدمات المتاحة</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.length > 0 ? (
-              services.map(service => (
+            {mappedServices.length > 0 ? (
+              mappedServices.map(service => (
                 <ClientServiceCard key={service.id} service={service} />
               ))
             ) : (

@@ -1,4 +1,6 @@
-import React from 'react';
+"use client";
+
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +8,40 @@ import { Link } from 'react-router-dom';
 import { Briefcase, Package, Star, Users, MessageSquare, DollarSign, TrendingUp, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { cn } from '@/lib/utils'; // تم إضافة هذا الاستيراد
+import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+
+interface RequestData {
+  id: number;
+  client_id: number;
+  title: string;
+  status?: 'pending' | 'accepted' | 'completed' | 'cancelled';
+  created_at?: string;
+}
+
+interface RatingData {
+  id: number;
+  service_id: number;
+  client_id: number;
+  rating: number;
+}
+
+interface MessageData {
+  id: number;
+  sender_id: number;
+  receiver_id: number;
+  conversation_id: string;
+  text: string;
+  read?: boolean;
+  created_at?: string;
+}
+
+interface UserData {
+  id: number;
+  name: string;
+  avatar_url?: string;
+  role: 'seeker' | 'provider';
+}
 
 const performanceData = [
   { name: 'يناير', sales: 4000, orders: 2400 },
@@ -24,17 +59,6 @@ const ordersBreakdownData = [
   { name: 'ملغاة', value: 10, color: 'var(--brand-danger)' },
 ];
 
-const recentTasks = [
-  { id: 't1', title: 'الرد على طلب خدمة تصميم شعار', status: 'Pending', dueDate: '2023-11-10' },
-  { id: 't2', title: 'مراجعة خدمة تطوير موقع ويب', status: 'Completed', dueDate: '2023-11-05' },
-  { id: 't3', title: 'إرسال عرض سعر لعميل جديد', status: 'Pending', dueDate: '2023-11-12' },
-];
-
-const customerMessages = [
-  { id: 'cm1', customerName: 'أحمد محمد', message: 'متى يمكن البدء بالمشروع؟', avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=AM' },
-  { id: 'cm2', customerName: 'سارة علي', message: 'شكراً على الخدمة الممتازة!', avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=SA' },
-];
-
 const recentActivity = [
   { id: 'a1', type: 'طلب جديد', description: 'طلب جديد لخدمة "تصميم شعار"', time: 'قبل 5 دقائق', icon: Package, iconColor: 'text-brand-primary' },
   { id: 'a2', type: 'خدمة مقبولة', description: 'تم قبول خدمتك "تطوير موقع ويب"', time: 'قبل ساعة', icon: Briefcase, iconColor: 'text-brand-success' },
@@ -42,6 +66,129 @@ const recentActivity = [
 ];
 
 const DashboardOverviewPage = () => {
+  const PROVIDER_ID = 1; // Hardcoded provider ID for Ahmed Provider
+  const [requests, setRequests] = useState<RequestData[]>([]);
+  const [ratings, setRatings] = useState<RatingData[]>([]);
+  const [messages, setMessages] = useState<MessageData[]>([]);
+  const [users, setUsers] = useState<UserData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchDashboardData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [requestsResponse, ratingsResponse, messagesResponse, usersResponse] = await Promise.all([
+        fetch('http://localhost:3000/api/requests'),
+        fetch('http://localhost:3000/api/ratings'),
+        fetch('http://localhost:3000/api/messages'),
+        fetch('http://localhost:3000/api/users'),
+      ]);
+
+      if (!requestsResponse.ok) throw new Error('فشل جلب الطلبات.');
+      if (!ratingsResponse.ok) throw new Error('فشل جلب التقييمات.');
+      if (!messagesResponse.ok) throw new Error('فشل جلب الرسائل.');
+      if (!usersResponse.ok) throw new Error('فشل جلب المستخدمين.');
+
+      const requestsResult = await requestsResponse.json();
+      const ratingsResult = await ratingsResponse.json();
+      const messagesResult = await messagesResponse.json();
+      const usersResult = await usersResponse.json();
+
+      setRequests(requestsResult.data);
+      setRatings(ratingsResult.data);
+      setMessages(messagesResult.data);
+      setUsers(usersResult.data);
+
+    } catch (err: any) {
+      setError(err.message);
+      toast.error(err.message || 'حدث خطأ أثناء جلب بيانات لوحة التحكم.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  // --- Analytics Calculations ---
+  const totalOrders = requests.length;
+  const activeOrders = requests.filter(req => req.status === 'pending' || req.status === 'accepted').length;
+  const completedOrders = requests.filter(req => req.status === 'completed').length;
+
+  const averageRating = useMemo(() => {
+    if (ratings.length === 0) return 0;
+    const totalRating = ratings.reduce((sum, r) => sum + r.rating, 0);
+    return (totalRating / ratings.length).toFixed(1);
+  }, [ratings]);
+
+  const newMessagesCount = useMemo(() => {
+    return messages.filter(msg => !msg.read && msg.receiver_id === PROVIDER_ID).length;
+  }, [messages, PROVIDER_ID]);
+
+  // Placeholder for earnings, as request model doesn't have price
+  const totalEarnings = useMemo(() => {
+    // In a real app, this would sum prices of completed services/requests
+    return (completedOrders * 150).toLocaleString('en-US', { style: 'currency', currency: 'USD' }); // Assuming avg $150 per completed order
+  }, [completedOrders]);
+
+  // --- Tasks List ---
+  const recentTasks = useMemo(() => {
+    return requests
+      .filter(req => req.status === 'pending' || req.status === 'accepted')
+      .slice(0, 3) // Show up to 3 recent tasks
+      .map(req => ({
+        id: req.id.toString(),
+        title: `الرد على طلب خدمة: ${req.title}`,
+        status: req.status === 'pending' ? 'Pending' : 'Accepted',
+        dueDate: req.created_at ? new Date(new Date(req.created_at).setDate(new Date(req.created_at).getDate() + 7)).toLocaleDateString('ar-EG') : 'غير محدد', // Due in 7 days from creation
+      }));
+  }, [requests]);
+
+  // --- Customer Messages ---
+  const customerMessages = useMemo(() => {
+    const conversationsMap = new Map<number, MessageData>(); // Map client_id to latest message
+    messages.forEach(msg => {
+      if (msg.receiver_id === PROVIDER_ID && msg.sender_id !== PROVIDER_ID) {
+        const existingMsg = conversationsMap.get(msg.sender_id);
+        if (!existingMsg || (msg.created_at && existingMsg.created_at && new Date(msg.created_at) > new Date(existingMsg.created_at))) {
+          conversationsMap.set(msg.sender_id, msg);
+        }
+      }
+    });
+
+    return Array.from(conversationsMap.values())
+      .sort((a, b) => (b.created_at ? new Date(b.created_at).getTime() : 0) - (a.created_at ? new Date(a.created_at).getTime() : 0))
+      .slice(0, 2) // Show up to 2 recent messages
+      .map(msg => {
+        const customer = users.find(u => u.id === msg.sender_id);
+        return {
+          id: msg.id.toString(),
+          customerName: customer?.name || 'عميل غير معروف',
+          message: msg.text,
+          avatarUrl: customer?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${customer?.name.split(' ').map(n => n[0]).join('') || 'UN'}`,
+        };
+      });
+  }, [messages, users, PROVIDER_ID]);
+
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="text-center py-10 text-brand-text-dark font-ibm-plex-arabic">جاري تحميل لوحة التحكم...</div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="text-center py-10 text-brand-danger font-ibm-plex-arabic">خطأ: {error}</div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">نظرة عامة على لوحة التحكم</h1>
@@ -54,7 +201,7 @@ const DashboardOverviewPage = () => {
             <Package className="h-6 w-6 text-brand-primary" />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-3xl font-cairo text-brand-text-dark font-bold">125</div>
+            <div className="text-3xl font-cairo text-brand-text-dark font-bold">{totalOrders}</div>
             <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">+10% عن الشهر الماضي</p>
           </CardContent>
         </Card>
@@ -64,7 +211,7 @@ const DashboardOverviewPage = () => {
             <Clock className="h-6 w-6 text-brand-warning" />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-3xl font-cairo text-brand-text-dark font-bold">12</div>
+            <div className="text-3xl font-cairo text-brand-text-dark font-bold">{activeOrders}</div>
             <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">3 طلبات جديدة</p>
           </CardContent>
         </Card>
@@ -74,7 +221,7 @@ const DashboardOverviewPage = () => {
             <DollarSign className="h-6 w-6 text-brand-success" />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-3xl font-cairo text-brand-text-dark font-bold">$15,230</div>
+            <div className="text-3xl font-cairo text-brand-text-dark font-bold">{totalEarnings}</div>
             <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">+5% هذا الشهر</p>
           </CardContent>
         </Card>
@@ -84,8 +231,8 @@ const DashboardOverviewPage = () => {
             <Star className="h-6 w-6 text-yellow-500" />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-3xl font-cairo text-brand-text-dark font-bold">4.8</div>
-            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">من 250 تقييم</p>
+            <div className="text-3xl font-cairo text-brand-text-dark font-bold">{averageRating}</div>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">من {ratings.length} تقييم</p>
           </CardContent>
         </Card>
         <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 text-right">
@@ -94,7 +241,7 @@ const DashboardOverviewPage = () => {
             <MessageSquare className="h-6 w-6 text-brand-info" />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-3xl font-cairo text-brand-text-dark font-bold">5</div>
+            <div className="text-3xl font-cairo text-brand-text-dark font-bold">{newMessagesCount}</div>
             <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">في انتظار الرد</p>
           </CardContent>
         </Card>
@@ -147,24 +294,28 @@ const DashboardOverviewPage = () => {
           </CardHeader>
           <CardContent className="p-0">
             <ul className="space-y-4">
-              {recentTasks.map(task => (
-                <li key={task.id} className="flex flex-row-reverse items-center justify-between border-b border-border pb-3 last:border-b-0 last:pb-0">
-                  <div className="flex flex-row-reverse items-center">
-                    {task.status === 'Completed' ? (
-                      <CheckCircle className="h-5 w-5 text-brand-success ml-3" />
-                    ) : (
-                      <Clock className="h-5 w-5 text-brand-warning ml-3" />
-                    )}
-                    <div>
-                      <p className="font-cairo text-brand-text-dark font-semibold">{task.title}</p>
-                      <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">تاريخ الاستحقاق: {task.dueDate}</p>
+              {recentTasks.length > 0 ? (
+                recentTasks.map(task => (
+                  <li key={task.id} className="flex flex-row-reverse items-center justify-between border-b border-border pb-3 last:border-b-0 last:pb-0">
+                    <div className="flex flex-row-reverse items-center">
+                      {task.status === 'Completed' ? (
+                        <CheckCircle className="h-5 w-5 text-brand-success ml-3" />
+                      ) : (
+                        <Clock className="h-5 w-5 text-brand-warning ml-3" />
+                      )}
+                      <div>
+                        <p className="font-cairo text-brand-text-dark font-semibold">{task.title}</p>
+                        <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">تاريخ الاستحقاق: {task.dueDate}</p>
+                      </div>
                     </div>
-                  </div>
-                  <Button variant="ghost" size="sm" className="text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic">
-                    عرض
-                  </Button>
-                </li>
-              ))}
+                    <Button variant="ghost" size="sm" className="text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic">
+                      عرض
+                    </Button>
+                  </li>
+                ))
+              ) : (
+                <p className="text-brand-text-muted font-ibm-plex-arabic text-right">لا توجد مهام حاليًا.</p>
+              )}
             </ul>
           </CardContent>
         </Card>
@@ -179,21 +330,25 @@ const DashboardOverviewPage = () => {
           </CardHeader>
           <CardContent className="p-0">
             <ul className="space-y-4">
-              {customerMessages.map(msg => (
-                <li key={msg.id} className="flex flex-row-reverse items-center border-b border-border pb-3 last:border-b-0 last:pb-0">
-                  <Avatar className="h-10 w-10 ml-3">
-                    <AvatarImage src={msg.avatarUrl} alt={msg.customerName} />
-                    <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{msg.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-grow text-right">
-                    <p className="font-cairo text-brand-text-dark font-semibold">{msg.customerName}</p>
-                    <p className="text-sm text-brand-text-muted font-ibm-plex-arabic line-clamp-1">{msg.message}</p>
-                  </div>
-                  <Button variant="ghost" size="sm" className="text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic">
-                    رد
-                  </Button>
-                </li>
-              ))}
+              {customerMessages.length > 0 ? (
+                customerMessages.map(msg => (
+                  <li key={msg.id} className="flex flex-row-reverse items-center border-b border-border pb-3 last:border-b-0 last:pb-0">
+                    <Avatar className="h-10 w-10 ml-3">
+                      <AvatarImage src={msg.avatarUrl} alt={msg.customerName} />
+                      <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{msg.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-grow text-right">
+                      <p className="font-cairo text-brand-text-dark font-semibold">{msg.customerName}</p>
+                      <p className="text-sm text-brand-text-muted font-ibm-plex-arabic line-clamp-1">{msg.message}</p>
+                    </div>
+                    <Button variant="ghost" size="sm" className="text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic">
+                      رد
+                    </Button>
+                  </li>
+                ))
+              ) : (
+                <p className="text-brand-text-muted font-ibm-plex-arabic text-right">لا توجد رسائل عملاء جديدة.</p>
+              )}
             </ul>
           </CardContent>
         </Card>
