@@ -10,7 +10,8 @@ import ClientOrdersModal from '@/components/ClientOrdersModal';
 import { MessageCenterModal } from '@/components/MessageCenterModal'; // استيراد المكون الجديد
 
 const ClientHomeHeader = () => {
-  const unreadNotificationsCount = 3; // قيمة وهمية لعدد الإشعارات غير المقروءة
+  // The unread notifications count is now managed internally by NotificationsDropdown
+  // const unreadNotificationsCount = 3; // قيمة وهمية لعدد الإشعارات غير المقروءة
   // const unreadMessagesCount = 1; // قيمة وهمية لعدد الرسائل غير المقروءة (سيتم إدارتها بواسطة MessageCenterModal)
 
   return (
@@ -21,7 +22,7 @@ const ClientHomeHeader = () => {
         </Link>
         <div className="flex items-center space-x-4 rtl:space-x-reverse">
           <ThemeToggle />
-          <NotificationsDropdown unreadCount={unreadNotificationsCount} />
+          <NotificationsDropdown /> {/* Removed unreadCount prop */}
           <MessageCenterModal currentUserId="customer" /> {/* تحديد المستخدم الحالي كطالب خدمة */}
           <ClientOrdersModal /> {/* زر الطلبات يفتح نافذة منبثقة */}
           <ClientGeneralMenuModal /> {/* زر القائمة العامة يفتح نافذة منبثقة */}

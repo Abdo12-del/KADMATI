@@ -1,12 +1,12 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Package, MessageSquare, CreditCard, Settings, Info, CheckCircle, Trash2 } from 'lucide-react';
+import { Package, MessageSquare, CreditCard, Settings, Info, CheckCircle, Trash2, Star } from 'lucide-react'; // Import Star icon
 import { cn } from '@/lib/utils';
 
 interface Notification {
   id: string;
-  type: 'order' | 'message' | 'payment' | 'system' | 'general';
+  type: 'order' | 'message' | 'payment' | 'system' | 'general' | 'rating'; // Added 'rating' type
   title: string;
   description: string;
   time: string;
@@ -29,6 +29,8 @@ const getNotificationIcon = (type: Notification['type']) => {
       return <CreditCard className="h-6 w-6 text-brand-success" />;
     case 'system':
       return <Settings className="h-6 w-6 text-brand-text-muted" />;
+    case 'rating': // Added case for 'rating'
+      return <Star className="h-6 w-6 text-yellow-500" />;
     case 'general':
     default:
       return <Info className="h-6 w-6 text-brand-info" />;

@@ -27,7 +27,7 @@ interface UserData {
 }
 
 interface Conversation {
-  id: string;
+  id: string; // This is the conversation_id from backend
   customerName: string;
   avatarUrl: string;
   messages: {
@@ -38,6 +38,7 @@ interface Conversation {
   }[];
   unreadCount: number;
   lastMessageTime: string;
+  otherPartyBackendId: number; // Added to identify the other user in backend
 }
 
 interface MessageCenterModalProps {
@@ -117,6 +118,7 @@ export const MessageCenterModal = ({ currentUserId = 'provider' }: MessageCenter
           messages: [],
           unreadCount: 0,
           lastMessageTime: '',
+          otherPartyBackendId: otherPartyId, // Store other party's backend ID
         });
       }
 
@@ -154,7 +156,10 @@ export const MessageCenterModal = ({ currentUserId = 'provider' }: MessageCenter
       // Sort by unread first, then by last message time
       if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
       if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
-      return new Date(`2000/01/01 ${b.lastMessageTime}`).getTime() - new Date(`2000/01/01 ${a.lastMessageTime}`).getTime();
+      // Fallback to sorting by the latest message time if unread counts are the same
+      const timeA = a.messages.length > 0 ? new Date(a.messages[a.messages.length - 1].time).getTime() : 0;
+      const timeB = b.messages.length > 0 ? new Date(b.messages[b.messages.length - 1].time).getTime() : 0;
+      return timeB - timeA;
     });
   }, [conversations, searchTerm]);
 
@@ -216,13 +221,8 @@ export const MessageCenterModal = ({ currentUserId = 'provider' }: MessageCenter
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
           <Button variant="ghost" size="icon" className="relative text-brand-text-dark hover:bg-brand-background rounded-full">
-            <MessageSquare className="h-5 w-5" />
-            {totalUnreadCount > 0 && (
-              <span className="absolute top-0 right-0 h-4 w-4 rounded-full bg-brand-danger flex items-center justify-center text-xs text-white font-ibm-plex-arabic">
-                {totalUnreadCount}
-              </span>
-            )}
-            <span className="sr-only">الرسائل</span>
+            <MessageSquare className="h-5 w-5 text-brand-danger" />
+            <span className="sr-only">الرسائل (خطأ)</span>
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[900px] h-[90vh] flex flex-col rounded-2xl shadow-soft bg-brand-card-bg p-6 overflow-hidden">
@@ -328,7 +328,12 @@ export const MessageCenterModal = ({ currentUserId = 'provider' }: MessageCenter
                   </Avatar>
                   <h3 className="font-cairo text-brand-text-dark text-xl flex-grow text-right">{selectedConversation.customerName}</h3>
                 </div>
-                <ChatWindow conversation={selectedConversation} currentUserId={currentUserId} />
+                <ChatWindow
+                  conversation={selectedConversation}
+                  currentUserId={currentUserId}
+                  currentBackendUserId={CURRENT_USER_BACKEND_ID}
+                  onMessageSent={fetchMessagesAndUsers} // Pass the re-fetch callback
+                />
               </>
             ) : (
               <div className="flex flex-col items-center justify-center h-full">

@@ -15,8 +15,8 @@ import { ProviderReverseRequestsModal } from '@/components/ProviderReverseReques
 import { MessageCenterModal } from '@/components/MessageCenterModal'; // استيراد المكون الجديد
 
 const Header = () => {
-  // Placeholder for unread notifications count
-  const unreadNotificationsCount = 3; 
+  // The unread notifications count is now managed internally by NotificationsDropdown
+  // const unreadNotificationsCount = 3; 
   // Placeholder for unread messages count (will be managed by MessageCenterModal internally)
   // const unreadMessagesCount = 2; 
 
@@ -55,7 +55,7 @@ const Header = () => {
           <ThemeToggle />
           
           {/* Notifications Dropdown */}
-          <NotificationsDropdown unreadCount={unreadNotificationsCount} />
+          <NotificationsDropdown /> {/* Removed unreadCount prop */}
 
           {/* Provider Reverse Requests Modal Trigger */}
           <ProviderReverseRequestsModal />

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Send, Paperclip } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner'; // Import toast for notifications
 
 interface Message {
   id: string;
@@ -15,18 +16,21 @@ interface Message {
 }
 
 interface Conversation {
-  id: string;
+  id: string; // This is the conversation_id from backend
   customerName: string;
   avatarUrl: string;
   messages: Message[];
+  otherPartyBackendId: number; // New prop to identify the other user in backend
 }
 
 interface ChatWindowProps {
   conversation: Conversation;
   currentUserId: 'provider' | 'customer'; // لتحديد من هو المستخدم الحالي
+  currentBackendUserId: number; // New prop for the current user's backend ID
+  onMessageSent: () => void; // Callback to notify parent about new message
 }
 
-const ChatWindow = ({ conversation, currentUserId }: ChatWindowProps) => {
+const ChatWindow = ({ conversation, currentUserId, currentBackendUserId, onMessageSent }: ChatWindowProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [messageInput, setMessageInput] = useState('');
   const [currentMessages, setCurrentMessages] = useState<Message[]>(conversation.messages);
@@ -40,33 +44,55 @@ const ChatWindow = ({ conversation, currentUserId }: ChatWindowProps) => {
     scrollToBottom();
   }, [conversation]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (messageInput.trim()) {
-      const newMessage: Message = {
-        id: `msg${currentMessages.length + 1}-${Date.now()}`,
+      const newMessageText = messageInput.trim();
+      setMessageInput(''); // Clear input immediately
+
+      const tempMessage: Message = {
+        id: `temp-${Date.now()}`, // Temporary ID for optimistic UI update
         sender: currentUserId,
-        text: messageInput.trim(),
+        text: newMessageText,
         time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
       };
-      setCurrentMessages(prevMessages => [...prevMessages, newMessage]);
-      setMessageInput('');
-      // In a real app, you'd send this to a backend API
-      console.log("Sending message:", newMessage);
-      setTimeout(scrollToBottom, 100); // Scroll after render
+      setCurrentMessages(prevMessages => [...prevMessages, tempMessage]);
+      setTimeout(scrollToBottom, 100); // Scroll after optimistic update
+
+      try {
+        const response = await fetch('http://localhost:3000/api/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            sender_id: currentBackendUserId,
+            receiver_id: conversation.otherPartyBackendId,
+            conversation_id: conversation.id,
+            text: newMessageText,
+            read: false, // Sender's message is initially unread by receiver
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'فشل إرسال الرسالة.');
+        }
+
+        // If successful, the parent component will re-fetch and update the actual messages
+        onMessageSent();
+        toast.success('تم إرسال الرسالة.');
+
+      } catch (error: any) {
+        toast.error(error.message || 'حدث خطأ أثناء إرسال الرسالة.');
+        console.error('Error sending message:', error);
+        // Revert optimistic update if sending fails (optional, but good for UX)
+        setCurrentMessages(prevMessages => prevMessages.filter(msg => msg.id !== tempMessage.id));
+      }
     }
   };
 
   return (
     <div className="flex flex-col h-full bg-brand-card-bg rounded-2xl">
-      {/* Chat Header - Managed by parent MessageCenterModal for consistency */}
-      {/* <div className="border-b border-border pb-4 flex flex-row-reverse items-center px-6 pt-0">
-        <Avatar className="h-12 w-12 ml-3">
-          <AvatarImage src={conversation.avatarUrl} alt={conversation.customerName} />
-          <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{conversation.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-        </Avatar>
-        <h3 className="font-cairo text-brand-text-dark text-xl">{conversation.customerName}</h3>
-      </div> */}
-
       {/* Messages Area */}
       <div className="flex-grow overflow-y-auto p-4 space-y-4">
         {currentMessages.map(msg => (
