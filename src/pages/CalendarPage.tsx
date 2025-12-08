@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+// import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,8 +12,12 @@ const CalendarPage = () => {
   const [date, setDate] = React.useState<Date | undefined>(new Date());
   const [availability, setAvailability] = React.useState<string>('available');
 
-  // Removed dummy events data
-  const events: { id: string; date: Date; title: string; time: string; }[] = [];
+  // Placeholder for events/bookings
+  const events = [
+    { id: 'e1', date: new Date(2023, 10, 28), title: 'اجتماع مشروع تصميم', time: '10:00 ص' },
+    { id: 'e2', date: new Date(2023, 10, 28), title: 'تسليم خدمة تطوير', time: '02:00 م' },
+    { id: 'e3', date: new Date(2023, 10, 30), title: 'مكالمة عميل جديد', time: '11:00 ص' },
+  ];
 
   const getEventsForDate = (selectedDate: Date | undefined) => {
     if (!selectedDate) return [];
@@ -24,9 +29,8 @@ const CalendarPage = () => {
   const selectedDateEvents = getEventsForDate(date);
 
   const handleSaveAvailability = () => {
-    // Removed dummy toast message
+    toast.success(`تم حفظ حالة التوفر كـ "${availability}" (وظيفة وهمية)!`);
     console.log('Availability saved:', availability);
-    toast.success(`تم حفظ حالة التوفر كـ "${availability}"`);
   };
 
   return (

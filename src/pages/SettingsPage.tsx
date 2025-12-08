@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+// import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,21 +12,18 @@ import { toast } from 'sonner';
 
 const SettingsPage = () => {
   const handleSendMessage = () => {
-    // Removed dummy toast message
+    toast.success('تم إرسال رسالتك بنجاح (وظيفة وهمية)!');
     console.log('Contact message sent');
-    toast.success('تم إرسال رسالتك بنجاح!');
   };
 
   const handleDeleteAccount = () => {
-    // Removed dummy toast message
+    toast.error('تم طلب حذف الحساب (وظيفة وهمية)!');
     console.log('Account deletion requested');
-    toast.error('تم طلب حذف الحساب!');
   };
 
   const handleNotificationToggle = (id: string, checked: boolean) => {
-    // Removed dummy toast message
+    toast.info(`تم ${checked ? 'تفعيل' : 'تعطيل'} إشعارات ${id === 'email-notifications' ? 'البريد الإلكتروني' : 'الفورية'} (وظيفة وهمية)!`);
     console.log(`Notification ${id} toggled: ${checked}`);
-    toast.info(`تم ${checked ? 'تفعيل' : 'تعطيل'} إشعارات ${id === 'email-notifications' ? 'البريد الإلكتروني' : 'الفورية'}!`);
   };
 
   return (

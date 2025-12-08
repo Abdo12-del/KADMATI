@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+// import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -43,7 +44,21 @@ interface UserData {
   role: 'seeker' | 'provider';
 }
 
-// Removed dummy performanceData and ordersBreakdownData
+const performanceData = [
+  { name: 'يناير', sales: 4000, orders: 2400 },
+  { name: 'فبراير', sales: 3000, orders: 1398 },
+  { name: 'مارس', sales: 2000, orders: 9800 },
+  { name: 'أبريل', sales: 2780, orders: 3908 },
+  { name: 'مايو', sales: 1890, orders: 4800 },
+  { name: 'يونيو', sales: 2390, orders: 3800 },
+];
+
+const ordersBreakdownData = [
+  { name: 'معلقة', value: 15, color: 'var(--brand-warning)' },
+  { name: 'مقبولة', value: 30, color: 'var(--brand-primary)' },
+  { name: 'مكتملة', value: 55, color: 'var(--brand-success)' },
+  { name: 'ملغاة', value: 10, color: 'var(--brand-danger)' },
+];
 
 const DashboardOverviewPage = () => {
   const { user } = useAuth(); // Get current user from auth context
@@ -52,7 +67,7 @@ const DashboardOverviewPage = () => {
   const [requests, setRequests] = useState<RequestData[]>([]);
   const [ratings, setRatings] = useState<RatingData[]>([]);
   const [messages, setMessages] = useState<MessageData[]>([]);
-  const [allUsers, setAllUsers] = useState<UserData[]>([]);
+  const [allUsers, setAllUsers] = useState<UserData[]>([]); // Renamed to avoid conflict with 'user' from auth context
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -186,7 +201,7 @@ const DashboardOverviewPage = () => {
           </CardHeader>
           <CardContent className="p-0">
             <div className="text-3xl font-cairo text-brand-text-dark font-bold">{totalOrders}</div>
-            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">بيانات تقديرية</p>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">+10% عن الشهر الماضي</p>
           </CardContent>
         </Card>
         <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 text-right">
@@ -196,7 +211,7 @@ const DashboardOverviewPage = () => {
           </CardHeader>
           <CardContent className="p-0">
             <div className="text-3xl font-cairo text-brand-text-dark font-bold">{activeOrders}</div>
-            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">في انتظار المعالجة</p>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">3 طلبات جديدة</p>
           </CardContent>
         </Card>
         <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 text-right">
@@ -206,7 +221,7 @@ const DashboardOverviewPage = () => {
           </CardHeader>
           <CardContent className="p-0">
             <div className="text-3xl font-cairo text-brand-text-dark font-bold">{totalEarnings}</div>
-            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">تقديرية</p>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">+5% هذا الشهر</p>
           </CardContent>
         </Card>
         <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 text-right">
@@ -235,11 +250,11 @@ const DashboardOverviewPage = () => {
       <section className="mb-10">
         <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6">
           <CardHeader className="p-0 pb-4 text-right">
-            <CardTitle className="text-2xl font-cairo text-brand-text-dark">أداء المبيعات والطلبات (بيانات وهمية)</CardTitle>
+            <CardTitle className="text-2xl font-cairo text-brand-text-dark">أداء المبيعات والطلبات</CardTitle>
           </CardHeader>
           <CardContent className="h-[300px] p-0">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={[]} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}> {/* Removed dummy data */}
+              <LineChart data={performanceData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                 <XAxis dataKey="name" tick={{ fill: 'var(--brand-text-muted)', fontFamily: 'var(--font-ibm-plex-arabic)' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: 'var(--brand-text-muted)', fontFamily: 'var(--font-ibm-plex-arabic)' }} axisLine={false} tickLine={false} />
@@ -257,11 +272,11 @@ const DashboardOverviewPage = () => {
         {/* Orders Status Breakdown */}
         <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6">
           <CardHeader className="p-0 pb-4 text-right">
-            <CardTitle className="text-2xl font-cairo text-brand-text-dark">توزيع حالة الطلبات (بيانات وهمية)</CardTitle>
+            <CardTitle className="text-2xl font-cairo text-brand-text-dark">توزيع حالة الطلبات</CardTitle>
           </CardHeader>
           <CardContent className="h-[250px] p-0">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={[] /* Removed dummy data */ } layout="vertical">
+              <BarChart data={ordersBreakdownData} layout="vertical">
                 <XAxis type="number" hide />
                 <YAxis type="category" dataKey="name" tick={{ fill: 'var(--brand-text-dark)', fontFamily: 'var(--font-ibm-plex-arabic)' }} axisLine={false} tickLine={false} width={80} mirror />
                 <Tooltip contentStyle={{ backgroundColor: 'var(--brand-card-bg)', borderColor: 'var(--border)', borderRadius: '8px', boxShadow: 'var(--shadow-soft)' }} itemStyle={{ fontFamily: 'var(--font-ibm-plex-arabic)', color: 'var(--brand-text-dark)' }} labelStyle={{ fontFamily: 'var(--font-cairo)', color: 'var(--brand-primary)' }} />

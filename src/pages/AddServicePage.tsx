@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+// import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,9 +22,7 @@ const AddServicePage = () => {
   const [category, setCategory] = useState('');
   const [price, setPrice] = useState<number | ''>('');
   const [deliveryTime, setDeliveryTime] = useState<number | ''>('');
-  const [imageUrl, setImageUrl] = useState('');
-  const [location, setLocation] = useState(''); // Added state for location
-  const [serviceLevel, setServiceLevel] = useState(''); // Added state for service level
+  const [imageUrl, setImageUrl] = useState(''); // For simplicity, we'll use a text input for image URL
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,15 +38,15 @@ const AddServicePage = () => {
     }
 
     const newService = {
-      provider_id: PROVIDER_ID,
+      provider_id: PROVIDER_ID, // Use actual provider ID from context
       title,
       description,
       category,
       price: Number(price),
       delivery_time: Number(deliveryTime),
-      image_url: imageUrl || '/placeholder.svg',
-      location: location || 'غير محدد', // Use state for location
-      service_level: serviceLevel || 'غير محدد', // Use state for service level
+      image_url: imageUrl || '/placeholder.svg', // Use placeholder if no image URL is provided
+      location: 'الرياض', // Placeholder location
+      service_level: 'مستوى احترافي', // Placeholder service level
     };
 
     try {
@@ -154,28 +153,6 @@ const AddServicePage = () => {
               placeholder="مثال: https://example.com/image.jpg"
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
-              className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
-            />
-          </div>
-          <div>
-            <Label htmlFor="service-location" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">الموقع (اختياري)</Label>
-            <Input
-              id="service-location"
-              type="text"
-              placeholder="مثال: الرياض"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
-            />
-          </div>
-          <div>
-            <Label htmlFor="service-level" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">مستوى الخدمة (اختياري)</Label>
-            <Input
-              id="service-level"
-              type="text"
-              placeholder="مثال: مستوى احترافي"
-              value={serviceLevel}
-              onChange={(e) => setServiceLevel(e.target.value)}
               className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
             />
           </div>

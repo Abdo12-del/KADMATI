@@ -7,7 +7,6 @@ import ClientOrderCard from '@/components/ClientOrderCard';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
-import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 interface RequestData {
   id: number;
@@ -27,28 +26,20 @@ interface UserData {
 interface ClientOrderCardPropsData {
   id: string;
   serviceTitle: string;
-  providerName: string; 
+  providerName: string; // Placeholder as request model doesn't directly link to provider
   status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled';
   date: string;
-  price: number; 
+  price: number; // Placeholder as request model doesn't have price
 }
 
 const ClientOrdersModal = () => {
-  const { user } = useAuth(); // Get current user from auth context
-  const CLIENT_ID = user?.id; // Use actual client ID
-
+  const CLIENT_ID = 2; // Hardcoded client ID for Laila Seeker
   const [requests, setRequests] = useState<RequestData[]>([]);
   const [users, setUsers] = useState<UserData[]>([]); // To potentially get provider names
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchClientOrders = useCallback(async () => {
-    if (!CLIENT_ID) {
-      setLoading(false);
-      setError('Client ID not available. Please log in as a seeker.');
-      return;
-    }
-
     setLoading(true);
     setError(null);
     try {
@@ -77,7 +68,7 @@ const ClientOrdersModal = () => {
     } finally {
       setLoading(false);
     }
-  }, [CLIENT_ID]);
+  }, []);
 
   useEffect(() => {
     fetchClientOrders();
@@ -92,20 +83,20 @@ const ClientOrdersModal = () => {
     };
     return reqs.map(req => {
       // In a real app, requests would be linked to a provider_id or service_id to get providerName
-      // For now, we'll use a generic placeholder or try to infer from service if possible
-      const providerName = "مقدم خدمة غير معروف"; // Generic placeholder
+      // For now, we'll use a placeholder or try to infer from service if possible
+      const providerName = "مقدم خدمة افتراضي"; // Placeholder
       return {
         id: req.id.toString(),
         serviceTitle: req.title,
         providerName: providerName,
         status: statusMap[req.status || 'pending'] as ClientOrderCardPropsData['status'],
         date: req.created_at ? new Date(req.created_at).toLocaleDateString('ar-EG') : 'غير محدد',
-        price: 0, // Replaced placeholder with 0, as backend request model does not have a price field
+        price: 150, // Placeholder: Backend request model does not have a price field
       };
     });
   };
 
-  const clientRequests = useMemo(() => requests.filter(req => req.client_id === CLIENT_ID), [requests, CLIENT_ID]);
+  const clientRequests = useMemo(() => requests.filter(req => req.client_id === CLIENT_ID), [requests]);
 
   const pendingOrders = useMemo(() => mapRequestsToClientOrderCards(clientRequests.filter(req => req.status === 'pending')), [clientRequests, users]);
   const activeOrders = useMemo(() => mapRequestsToClientOrderCards(clientRequests.filter(req => req.status === 'accepted')), [clientRequests, users]);

@@ -23,9 +23,8 @@ interface ProviderRequestCardProps {
 
 const ProviderRequestCard = ({ request }: ProviderRequestCardProps) => {
   const handleContactClient = () => {
-    // Removed dummy toast message
+    toast.info(`سيتم فتح نافذة محادثة مع ${request.clientName} (وظيفة وهمية)!`);
     console.log('Contact client clicked for request:', request.id);
-    toast.info(`سيتم فتح نافذة محادثة مع ${request.clientName}!`);
   };
 
   return (
