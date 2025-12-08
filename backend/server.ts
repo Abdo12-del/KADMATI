@@ -1,11 +1,11 @@
 import express from 'express';
 import cors from 'cors';
 import { env } from './config/env';
-import knexConfig from './db/knexfile';
+import knexConfig from './db/knexfile.cjs'; // Updated to .cjs
 import knex from 'knex';
-import { errorHandler } from './utils/errorHandler'; // Import the error handler
-import usersRoutes from './api/users'; // Import user routes
-import servicesRoutes from './api/services'; // Import service routes
+import { errorHandler } from './utils/errorHandler';
+import usersRoutes from './api/users';
+import servicesRoutes from './api/services';
 
 // Initialize Knex
 const db = knex(knexConfig[env.NODE_ENV || 'development']);
@@ -14,7 +14,7 @@ const app = express();
 
 // Middleware
 app.use(cors());
-app.use(express.json()); // To parse JSON request bodies
+app.use(express.json());
 
 // Basic route for testing
 app.get('/', (req, res) => {
@@ -22,8 +22,8 @@ app.get('/', (req, res) => {
 });
 
 // API Routes
-app.use('/api/users', usersRoutes); // Use user routes
-app.use('/api/services', servicesRoutes); // Use service routes
+app.use('/api/users', usersRoutes);
+app.use('/api/services', servicesRoutes);
 
 // Global error handler middleware
 app.use(errorHandler);
