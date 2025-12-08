@@ -1,6 +1,3 @@
-// This file will contain validation logic for incoming request data.
-// For now, it's empty, but we'll add functions here as needed.
-
 export const validateUser = (data: any, isUpdate: boolean = false) => {
   const errors: string[] = [];
 
@@ -22,6 +19,20 @@ export const validateUser = (data: any, isUpdate: boolean = false) => {
   } else if (data.role && !['seeker', 'provider'].includes(data.role)) {
     errors.push('Invalid role. Must be "seeker" or "provider".');
   }
+
+  // For provider-specific fields, we'll allow them to pass through for now
+  // In a real application, these might be validated separately or added to the User model
+  // if (data.role === 'provider') {
+  //   if (!isUpdate && !data.provider_type) {
+  //     errors.push('Provider type is required for providers.');
+  //   }
+  //   if (!isUpdate && !data.id_number) {
+  //     errors.push('ID number is required for providers.');
+  //   }
+  //   if (!isUpdate && !data.address) {
+  //     errors.push('Address is required for providers.');
+  //   }
+  // }
 
   return errors;
 };
