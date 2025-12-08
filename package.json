@@ -10,9 +10,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "start:backend": "node --loader ts-node/esm backend/server.ts",
-    "migrate:latest": "knex --knexfile backend/db/knexfile.ts migrate:latest",
-    "migrate:rollback": "knex --knexfile backend/db/knexfile.ts migrate:rollback",
-    "seed:run": "knex --knexfile backend/db/knexfile.ts seed:run"
+    "migrate:latest": "knex migrate:latest",
+    "migrate:rollback": "knex migrate:rollback",
+    "seed:run": "knex seed:run"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
