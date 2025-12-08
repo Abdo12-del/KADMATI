@@ -5,6 +5,7 @@ import knexConfig from './db/knexfile';
 import knex from 'knex';
 import { errorHandler } from './utils/errorHandler'; // Import the error handler
 import usersRoutes from './api/users'; // Import user routes
+import servicesRoutes from './api/services'; // Import service routes
 
 // Initialize Knex
 const db = knex(knexConfig[env.NODE_ENV || 'development']);
@@ -22,6 +23,7 @@ app.get('/', (req, res) => {
 
 // API Routes
 app.use('/api/users', usersRoutes); // Use user routes
+app.use('/api/services', servicesRoutes); // Use service routes
 
 // Global error handler middleware
 app.use(errorHandler);
