@@ -26,7 +26,7 @@ import SupportCenterPage from "./pages/SupportCenterPage";
 import ClientHomePage from "./pages/ClientHomePage"; // استيراد الصفحة الرئيسية الجديدة
 import ClientServiceDetailsPage from "./pages/ClientServiceDetailsPage"; // استيراد صفحة تفاصيل خدمة العميل الجديدة
 import ClientCreateRequestPage from "./pages/ClientCreateRequestPage"; // استيراد صفحة إضافة طلب خدمة جديد
-import ClientOrderServicePage from "./pages/ClientOrderServicePage"; // استيراد صفحة طلب الخدمة الجديدة
+import ClientOrderServicePage from "./pages/ClientOrderServicePage"; // استيراد صفحة طلب الخدمة الجديد
 
 // Other existing routes
 import MyRequestsPage from "./pages/MyRequestsPage"; // General requests page
