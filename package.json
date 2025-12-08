@@ -9,7 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start:backend": "cross-env NODE_ENV=development node --loader ts-node/esm backend/server.ts"
+    "start:backend": "cross-env NODE_ENV=development ts-node backend/server.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
