@@ -26,6 +26,7 @@ interface BackendRequest {
   title: string;
   status?: 'pending' | 'accepted' | 'completed' | 'cancelled';
   created_at?: string;
+  updated_at?: string; // Added for seeker notifications
 }
 
 interface BackendRating {

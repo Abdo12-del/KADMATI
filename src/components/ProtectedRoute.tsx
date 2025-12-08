@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/use-auth';
 import DashboardLayout from '@/components/DashboardLayout'; // Assuming provider dashboard uses this
 import ClientHomeHeader from '@/components/ClientHomeHeader'; // Assuming client home uses this header
 import Footer from '@/components/Footer'; // Assuming all pages use this footer
+import { toast } from 'sonner'; // Import toast
 
 interface ProtectedRouteProps {
   allowedRoles?: ('seeker' | 'provider')[];

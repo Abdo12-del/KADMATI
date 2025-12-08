@@ -20,6 +20,7 @@ interface RequestData {
   additional_options?: string;
   category?: string;
   created_at?: string;
+  status?: 'pending' | 'accepted' | 'completed' | 'cancelled'; // Added status property
 }
 
 interface UserData {
