@@ -1,12 +1,12 @@
-import type { Knex } from 'knex';
-import path from 'path';
-import { env } from '../config/env';
+const path = require('path');
+const { env } = require('../config/env'); // Import env for production config
 
-const config: { [key: string]: Knex.Config } = {
+/** @type {import('knex').Knex.Config} */
+const config = {
   development: {
     client: 'sqlite3',
     connection: {
-      filename: path.resolve(__dirname, 'database.db'),
+      filename: path.resolve(__dirname, 'database.db'), // Ensure correct path to database.db
     },
     useNullAsDefault: true,
     migrations: {
@@ -20,7 +20,7 @@ const config: { [key: string]: Knex.Config } = {
   production: {
     client: 'sqlite3',
     connection: {
-      filename: path.resolve(__dirname, 'database.db'),
+      filename: path.resolve(__dirname, 'database.db'), // Ensure correct path to database.db
     },
     useNullAsDefault: true,
     migrations: {
@@ -30,4 +30,4 @@ const config: { [key: string]: Knex.Config } = {
   },
 };
 
-export default config;
+module.exports = config;
