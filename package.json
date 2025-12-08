@@ -9,7 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start:backend": "ts-node-esm backend/server.ts",
+    "start:backend": "node --loader ts-node/esm backend/server.ts",
     "migrate:latest": "knex --knexfile backend/db/knexfile.ts migrate:latest",
     "migrate:rollback": "knex --knexfile backend/db/knexfile.ts migrate:rollback"
   },
