@@ -6,95 +6,20 @@ import Footer from '@/components/Footer';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { ClientHomeCategoryScroll } from '@/components/ClientHomeCategoryScroll';
-import ClientServiceCard from '@/components/ClientServiceCard';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-
-interface Service {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  rating: number;
-  imageUrl?: string;
-  reviewsCount: number;
-  providerId: string;
-  location?: string; // Added location property
-}
-
-interface UserProfile {
-  id: string;
-  name: string;
-  avatarUrl?: string;
-}
-
-interface ClientServiceCardProps {
-  service: Service & { providerName: string }; // Combine service with providerName
-}
-
-const fetchAllServices = async (): Promise<Service[]> => {
-  const response = await fetch('http://localhost:3000/api/services');
-  if (!response.ok) {
-    throw new Error('Failed to fetch services');
-  }
-  return response.json();
-};
-
-const fetchUserProfile = async (userId: string): Promise<UserProfile> => {
-  const response = await fetch(`http://localhost:3000/api/users/${userId}`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch user profile');
-  }
-  return response.json();
-};
+import ClientServiceCard from '@/components/ClientServiceCard'; // إعادة استخدام البطاقة الموجودة
+import { Button } from '@/components/ui/button'; // Import Button
+import { Link } from 'react-router-dom'; // Import Link
 
 const ClientHomePage = () => {
-  const { data: services, isLoading, error } = useQuery<Service[], Error>({
-    queryKey: ['allServices'],
-    queryFn: fetchAllServices,
-  });
-
-  const [servicesWithProviderNames, setServicesWithProviderNames] = React.useState<ClientServiceCardProps['service'][]>([]);
-
-  React.useEffect(() => {
-    const getProviderNames = async () => {
-      if (services) {
-        const servicesWithNames = await Promise.all(
-          services.map(async (service) => {
-            const provider = await fetchUserProfile(service.providerId);
-            return {
-              ...service,
-              providerName: provider?.name || 'مقدم خدمة مجهول',
-              location: 'غير محدد', // Placeholder as location is not in service model
-            };
-          })
-        );
-        setServicesWithProviderNames(servicesWithNames);
-      }
-    };
-    getProviderNames();
-  }, [services]);
-
-  if (isLoading) return (
-    <div className="min-h-screen flex flex-col bg-brand-background">
-      <ClientHomeHeader />
-      <main className="flex-grow container mx-auto px-8 py-10 text-center text-brand-text-dark font-ibm-plex-arabic">
-        جاري تحميل الخدمات...
-      </main>
-      <Footer />
-    </div>
-  );
-
-  if (error) return (
-    <div className="min-h-screen flex flex-col bg-brand-background">
-      <ClientHomeHeader />
-      <main className="flex-grow container mx-auto px-8 py-10 text-center text-brand-danger font-ibm-plex-arabic">
-        خطأ في تحميل الخدمات: {error.message}
-      </main>
-      <Footer />
-    </div>
-  );
+  // بيانات وهمية للخدمات
+  const services = [
+    { id: 's1', title: 'تنظيف منزلي عميق', description: 'خدمة تنظيف شاملة للمنازل والشقق، تشمل جميع الغرف والمطابخ والحمامات.', price: 250, providerName: 'شركة النظافة السريعة', rating: 4.8, location: 'الرياض', imageUrl: '/placeholder.svg' },
+    { id: 's2', title: 'تصميم داخلي للمنازل', description: 'تصميمات داخلية عصرية ومبتكرة لجميع مساحات منزلك، بأسعار تنافسية.', price: 1200, providerName: 'مهندس الديكور أحمد', rating: 4.9, location: 'جدة', imageUrl: '/placeholder.svg' },
+    { id: 's3', title: 'صيانة مكيفات سبليت', description: 'صيانة دورية وإصلاح أعطال المكيفات، لضمان أداء مثالي وتبريد فعال.', price: 300, providerName: 'فني الصيانة ماهر', rating: 4.5, location: 'الدمام', imageUrl: '/placeholder.svg' },
+    { id: 's4', title: 'دروس خصوصية في الرياضيات', description: 'دروس تقوية لجميع المراحل الدراسية، مع التركيز على فهم المفاهيم وحل المسائل.', price: 100, providerName: 'الأستاذة سارة', rating: 5.0, location: 'الرياض', imageUrl: '/placeholder.svg' },
+    { id: 's5', title: 'تطوير موقع ويب شخصي', description: 'بناء وتطوير مواقع ويب مخصصة تلبي احتياجاتك وتطلعاتك، مع تصميم عصري ومتجاوب.', price: 500, providerName: 'شركة التقنية الحديثة', rating: 4.7, location: 'الخبر', imageUrl: '/placeholder.svg' },
+    { id: 's6', title: 'تصميم شعار احترافي', description: 'أقدم خدمة تصميم شعارات احترافية ومبتكرة لشركتك أو مشروعك. تصميم فريد يعكس هويتك.', price: 150, providerName: 'استوديو الإبداع', rating: 4.9, location: 'مكة المكرمة', imageUrl: '/placeholder.svg' },
+  ];
 
   return (
     <div className="min-h-screen flex flex-col bg-brand-background">
@@ -131,8 +56,8 @@ const ClientHomePage = () => {
         <section>
           <h2 className="text-2xl font-cairo text-brand-text-dark mb-6 text-right">الخدمات المتاحة</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {servicesWithProviderNames.length > 0 ? (
-              servicesWithProviderNames.map(service => (
+            {services.length > 0 ? (
+              services.map(service => (
                 <ClientServiceCard key={service.id} service={service} />
               ))
             ) : (

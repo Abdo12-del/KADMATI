@@ -24,7 +24,6 @@ const getIconComponent = (iconName: string) => {
   return icons[iconName] || LayoutList; // افتراضيًا LayoutList إذا لم يتم العثور على الأيقونة
 };
 
-// هذه الفئات يمكن جلبها من API لاحقًا إذا كانت ديناميكية
 const serviceCategories = [
   { id: 'cat1', name: 'نظافة', icon: 'Sparkles' },
   { id: 'cat2', name: 'صيانة', icon: 'Wrench' },

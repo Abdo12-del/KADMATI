@@ -6,10 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
 const DashboardPage = () => {
-  // No dummy data needed here, cards will show 0 or empty state
-  // Recent activities will be empty until fetched from API
-  const latestActivities = []; // Placeholder for fetched activities
-
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -23,8 +19,8 @@ const DashboardPage = () => {
               {/* Icon placeholder */}
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0</div> {/* Placeholder for actual count */}
-              <p className="text-xs text-muted-foreground">لديك 0 خدمات نشطة</p>
+              <div className="text-2xl font-bold">5</div>
+              <p className="text-xs text-muted-foreground">لديك 5 خدمات نشطة</p>
             </CardContent>
           </Card>
           <Card>
@@ -33,8 +29,8 @@ const DashboardPage = () => {
               {/* Icon placeholder */}
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0</div> {/* Placeholder for actual count */}
-              <p className="text-xs text-muted-foreground">0 طلب جديد في انتظار المراجعة</p>
+              <div className="text-2xl font-bold">2</div>
+              <p className="text-xs text-muted-foreground">2 طلب جديد في انتظار المراجعة</p>
             </CardContent>
           </Card>
           <Card>
@@ -43,7 +39,7 @@ const DashboardPage = () => {
               {/* Icon placeholder */}
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0.0</div> {/* Placeholder for actual rating */}
+              <div className="text-2xl font-bold">4.8</div>
               <p className="text-xs text-muted-foreground">متوسط تقييماتك</p>
             </CardContent>
           </Card>
@@ -74,16 +70,18 @@ const DashboardPage = () => {
           <h2 className="text-2xl font-bold mb-4 font-montserrat text-gray-800">آخر الأنشطة</h2>
           <div className="bg-white p-6 rounded-lg shadow-md">
             <ul className="space-y-4">
-              {latestActivities.length > 0 ? (
-                latestActivities.map((activity, index) => (
-                  <li key={index} className="border-b pb-2 last:border-b-0">
-                    <p className="font-semibold">{activity.title}</p>
-                    <p className="text-sm text-gray-600">{activity.description}</p>
-                  </li>
-                ))
-              ) : (
-                <li className="text-sm text-gray-600">لا توجد أنشطة حديثة.</li>
-              )}
+              <li className="border-b pb-2 last:border-b-0">
+                <p className="font-semibold">طلب جديد لخدمة "تصميم شعار"</p>
+                <p className="text-sm text-gray-600">من العميل: أحمد محمد - قبل 5 دقائق</p>
+              </li>
+              <li className="border-b pb-2 last:border-b-0">
+                <p className="font-semibold">تم قبول خدمتك "تطوير موقع ويب"</p>
+                <p className="text-sm text-gray-600">من العميل: سارة علي - قبل ساعة</p>
+              </li>
+              <li className="border-b pb-2 last:border-b-0">
+                <p className="font-semibold">تقييم جديد لخدمة "كتابة محتوى"</p>
+                <p className="text-sm text-gray-600">بواسطة: خالد فهد - 5 نجوم</p>
+              </li>
             </ul>
           </div>
         </section>

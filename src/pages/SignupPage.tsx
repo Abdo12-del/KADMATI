@@ -7,96 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Link } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
-
-interface NewUser {
-  name: string;
-  email: string;
-  phone: string;
-  password: string;
-  role: 'seeker' | 'provider';
-  providerType?: string;
-  idNumber?: string;
-  address?: string;
-}
-
-const createUser = async (userData: NewUser): Promise<Response> => {
-  const response = await fetch('http://localhost:3000/api/users', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(userData),
-  });
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to create user');
-  }
-  return response.json();
-};
 
 const SignupPage = () => {
-  const navigate = useNavigate();
   const [stage, setStage] = useState(1);
   const [role, setRole] = useState<'seeker' | 'provider' | null>(null);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [providerType, setProviderType] = useState('');
-  const [idNumber, setIdNumber] = useState('');
-  const [address, setAddress] = useState('');
-
-  const signupMutation = useMutation({
-    mutationFn: createUser,
-    onSuccess: () => {
-      toast.success('تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.');
-      navigate('/login');
-    },
-    onError: (error) => {
-      toast.error(`فشل في إنشاء الحساب: ${error.message}`);
-    },
-  });
 
   const handleRoleSelect = (selectedRole: 'seeker' | 'provider') => {
     setRole(selectedRole);
     setStage(2);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password !== confirmPassword) {
-      toast.error('كلمة المرور وتأكيد كلمة المرور غير متطابقين.');
-      return;
-    }
-
-    if (!name || !email || !phone || !password || !role) {
-      toast.error('الرجاء ملء جميع الحقول المطلوبة.');
-      return;
-    }
-
-    const userData: NewUser = {
-      name,
-      email,
-      phone,
-      password,
-      role,
-    };
-
-    if (role === 'provider') {
-      if (!providerType || !idNumber || !address) {
-        toast.error('الرجاء ملء جميع حقول مقدم الخدمة.');
-        return;
-      }
-      userData.providerType = providerType;
-      userData.idNumber = idNumber;
-      userData.address = address;
-    }
-
-    signupMutation.mutate(userData);
   };
 
   return (
@@ -129,33 +47,33 @@ const SignupPage = () => {
             )}
 
             {stage === 2 && role && (
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form className="space-y-6">
                 <div>
                   <Label htmlFor="name" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">الاسم الكامل</Label>
-                  <Input id="name" type="text" placeholder="ادخل اسمك الكامل" required value={name} onChange={(e) => setName(e.target.value)} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                  <Input id="name" type="text" placeholder="ادخل اسمك الكامل" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
                 </div>
                 <div>
                   <Label htmlFor="email" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">البريد الإلكتروني</Label>
-                  <Input id="email" type="email" placeholder="ادخل بريدك الإلكتروني" required value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                  <Input id="email" type="email" placeholder="ادخل بريدك الإلكتروني" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
                 </div>
                 <div>
                   <Label htmlFor="phone" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">رقم الهاتف</Label>
-                  <Input id="phone" type="tel" placeholder="ادخل رقم هاتفك" required value={phone} onChange={(e) => setPhone(e.target.value)} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                  <Input id="phone" type="tel" placeholder="ادخل رقم هاتفك" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
                 </div>
                 <div>
                   <Label htmlFor="password" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">كلمة المرور</Label>
-                  <Input id="password" type="password" placeholder="ادخل كلمة المرور" required value={password} onChange={(e) => setPassword(e.target.value)} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                  <Input id="password" type="password" placeholder="ادخل كلمة المرور" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
                 </div>
                 <div>
                   <Label htmlFor="confirm-password" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">تأكيد كلمة المرور</Label>
-                  <Input id="confirm-password" type="password" placeholder="أعد إدخال كلمة المرور" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                  <Input id="confirm-password" type="password" placeholder="أعد إدخال كلمة المرور" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
                 </div>
 
                 {role === 'provider' && (
                   <>
                     <div>
                       <Label htmlFor="provider-type" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">نوع العارض</Label>
-                      <Select value={providerType} onValueChange={setProviderType}>
+                      <Select>
                         <SelectTrigger id="provider-type" className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right">
                           <SelectValue placeholder="اختر نوع العارض" />
                         </SelectTrigger>
@@ -168,17 +86,17 @@ const SignupPage = () => {
                     </div>
                     <div>
                       <Label htmlFor="id-number" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">رقم البطاقة / السجل التجاري</Label>
-                      <Input id="id-number" type="text" placeholder="ادخل الرقم التعريفي" required value={idNumber} onChange={(e) => setIdNumber(e.target.value)} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                      <Input id="id-number" type="text" placeholder="ادخل الرقم التعريفي" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
                     </div>
                     <div>
                       <Label htmlFor="address" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">عنوان المكتب أو مكان العمل</Label>
-                      <Input id="address" type="text" placeholder="ادخل العنوان" required value={address} onChange={(e) => setAddress(e.target.value)} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                      <Input id="address" type="text" placeholder="ادخل العنوان" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
                     </div>
                   </>
                 )}
 
-                <Button type="submit" className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white py-3 text-lg rounded-xl shadow-soft font-ibm-plex-arabic" disabled={signupMutation.isPending}>
-                  {signupMutation.isPending ? 'جاري إنشاء الحساب...' : 'إنشاء حساب'}
+                <Button type="submit" className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white py-3 rounded-xl shadow-soft font-ibm-plex-arabic text-lg">
+                  إنشاء حساب
                 </Button>
                 <Button
                   type="button"

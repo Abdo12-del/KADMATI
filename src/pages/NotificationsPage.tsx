@@ -1,95 +1,41 @@
 import React, { useState } from 'react';
-import ClientHomeHeader from '@/components/ClientHomeHeader';
-import Footer from '@/components/Footer';
+import ClientHomeHeader from '@/components/ClientHomeHeader'; // تم التحديث هنا
+import Footer from '@/components/Footer'; // تم التحديث هنا
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NotificationCard } from '@/components/notifications/NotificationCard.tsx';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 
 interface Notification {
   id: string;
   type: 'order' | 'message' | 'payment' | 'system' | 'general';
   title: string;
   description: string;
-  createdAt: string;
+  time: string;
   read: boolean;
-  link?: string;
 }
 
-const fetchNotifications = async (userId: string): Promise<Notification[]> => {
-  const response = await fetch(`http://localhost:3000/api/notifications/user/${userId}`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch notifications');
-  }
-  return response.json();
-};
-
-const markNotificationAsRead = async (id: string) => {
-  const response = await fetch(`http://localhost:3000/api/notifications/read/${id}`, {
-    method: 'PUT',
-  });
-  if (!response.ok) {
-    throw new Error('Failed to mark notification as read');
-  }
-  return response.json();
-};
-
-const deleteNotification = async (id: string) => {
-  const response = await fetch(`http://localhost:3000/api/notifications/${id}`, {
-    method: 'DELETE',
-  });
-  if (!response.ok) {
-    throw new Error('Failed to delete notification');
-  }
-  return response.json();
-};
-
 const NotificationsPage = () => {
-  const queryClient = useQueryClient();
-  // Placeholder for current user ID - replace with actual auth context
-  const currentUserId = 'client456'; // Or 'provider123' depending on context
-
-  const { data: notifications = [], isLoading, error } = useQuery<Notification[], Error>({
-    queryKey: ['notifications', currentUserId],
-    queryFn: () => fetchNotifications(currentUserId),
-    enabled: !!currentUserId,
-    refetchInterval: 5000, // Poll for new notifications
-  });
+  const [notifications, setNotifications] = useState<Notification[]>([
+    { id: '1', type: 'order', title: 'طلب جديد لخدمة "تصميم شعار"', description: 'من العميل: أحمد محمد', time: 'قبل 5 دقائق', read: false },
+    { id: '2', type: 'message', title: 'رسالة جديدة من سارة علي', description: 'بخصوص مشروع تطوير الويب', time: 'قبل ساعة', read: false },
+    { id: '3', type: 'payment', title: 'تم استلام دفعة لخدمة "كتابة محتوى"', description: 'المبلغ: $100', time: 'قبل 3 ساعات', read: true },
+    { id: '4', type: 'system', title: 'تحديث جديد للمنصة', description: 'تحسينات في الأداء والأمان', time: 'أمس', read: true },
+    { id: '5', type: 'general', title: 'تذكير: لديك اجتماع غداً', description: 'اجتماع مشروع تصميم الساعة 10 صباحاً', time: 'أمس', read: false },
+    { id: '6', type: 'order', title: 'تم قبول طلبك لخدمة "صيانة مكيفات"', description: 'من مقدم الخدمة: فني الصيانة ماهر', time: 'منذ يومين', read: true },
+    { id: '7', type: 'message', title: 'رد على استفسارك', description: 'من فريق الدعم الفني', time: 'منذ يومين', read: true },
+  ]);
 
   const [searchTerm, setSearchTerm] = useState('');
 
-  const markAsReadMutation = useMutation({
-    mutationFn: markNotificationAsRead,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications', currentUserId] });
-      queryClient.invalidateQueries({ queryKey: ['unreadNotificationsCount', currentUserId] });
-      toast.success('تم تمييز الإشعار كمقروء.');
-    },
-    onError: (err) => {
-      toast.error(`فشل في تمييز الإشعار: ${err.message}`);
-    }
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteNotification,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications', currentUserId] });
-      queryClient.invalidateQueries({ queryKey: ['unreadNotificationsCount', currentUserId] });
-      toast.success('تم حذف الإشعار بنجاح.');
-    },
-    onError: (err) => {
-      toast.error(`فشل في حذف الإشعار: ${err.message}`);
-    }
-  });
-
   const handleMarkAsRead = (id: string) => {
-    markAsReadMutation.mutate(id);
+    setNotifications(prev =>
+      prev.map(notif => (notif.id === id ? { ...notif, read: true } : notif))
+    );
   };
 
   const handleDelete = (id: string) => {
-    deleteMutation.mutate(id);
+    setNotifications(prev => prev.filter(notif => notif.id !== id));
   };
 
   const filterNotifications = (type: 'all' | Notification['type']) => {
@@ -101,31 +47,11 @@ const NotificationsPage = () => {
 
     if (searchTerm) {
       filtered = filtered.filter(notif =>
-        notif.title.toLowerCase().includes(searchTerm.toLowerCase()) || notif.description.toLowerCase().includes(searchTerm.toLowerCase())
+        notif.title.includes(searchTerm) || notif.description.includes(searchTerm)
       );
     }
     return filtered;
   };
-
-  if (isLoading) return (
-    <div className="min-h-screen flex flex-col bg-brand-background">
-      <ClientHomeHeader />
-      <main className="flex-grow container mx-auto px-8 py-10 text-center text-brand-text-dark font-ibm-plex-arabic">
-        جاري تحميل الإشعارات...
-      </main>
-      <Footer />
-    </div>
-  );
-
-  if (error) return (
-    <div className="min-h-screen flex flex-col bg-brand-background">
-      <ClientHomeHeader />
-      <main className="flex-grow container mx-auto px-8 py-10 text-center text-brand-danger font-ibm-plex-arabic">
-        خطأ في تحميل الإشعارات: {error.message}
-      </main>
-      <Footer />
-    </div>
-  );
 
   return (
     <div className="min-h-screen flex flex-col bg-brand-background">
@@ -158,7 +84,7 @@ const NotificationsPage = () => {
                 filterNotifications('all').map(notif => (
                   <NotificationCard
                     key={notif.id}
-                    notification={{ ...notif, time: new Date(notif.createdAt).toLocaleDateString('ar-EG', { hour: '2-digit', minute: '2-digit' }) }}
+                    notification={notif}
                     onMarkAsRead={handleMarkAsRead}
                     onDelete={handleDelete}
                   />
@@ -174,7 +100,7 @@ const NotificationsPage = () => {
                 filterNotifications('order').map(notif => (
                   <NotificationCard
                     key={notif.id}
-                    notification={{ ...notif, time: new Date(notif.createdAt).toLocaleDateString('ar-EG', { hour: '2-digit', minute: '2-digit' }) }}
+                    notification={notif}
                     onMarkAsRead={handleMarkAsRead}
                     onDelete={handleDelete}
                   />
@@ -190,7 +116,7 @@ const NotificationsPage = () => {
                 filterNotifications('message').map(notif => (
                   <NotificationCard
                     key={notif.id}
-                    notification={{ ...notif, time: new Date(notif.createdAt).toLocaleDateString('ar-EG', { hour: '2-digit', minute: '2-digit' }) }}
+                    notification={notif}
                     onMarkAsRead={handleMarkAsRead}
                     onDelete={handleDelete}
                   />
@@ -206,7 +132,7 @@ const NotificationsPage = () => {
                 filterNotifications('payment').map(notif => (
                   <NotificationCard
                     key={notif.id}
-                    notification={{ ...notif, time: new Date(notif.createdAt).toLocaleDateString('ar-EG', { hour: '2-digit', minute: '2-digit' }) }}
+                    notification={notif}
                     onMarkAsRead={handleMarkAsRead}
                     onDelete={handleDelete}
                   />
@@ -222,7 +148,7 @@ const NotificationsPage = () => {
                 filterNotifications('system').map(notif => (
                   <NotificationCard
                     key={notif.id}
-                    notification={{ ...notif, time: new Date(notif.createdAt).toLocaleDateString('ar-EG', { hour: '2-digit', minute: '2-digit' }) }}
+                    notification={notif}
                     onMarkAsRead={handleMarkAsRead}
                     onDelete={handleDelete}
                   />

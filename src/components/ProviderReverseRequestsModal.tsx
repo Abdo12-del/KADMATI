@@ -7,115 +7,80 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, ListFilter } from 'lucide-react';
 import ProviderRequestCard from '@/components/ProviderRequestCard';
-import { useQuery } from '@tanstack/react-query';
 
 interface Request {
   id: string;
   title: string;
   description: string;
   location?: string;
-  dateAdded: string; // Assuming this comes from createdAt
+  dateAdded: string;
   dueDate?: string;
   additionalOptions?: string;
-  clientId: string; // To fetch client details
-  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled';
+  clientName: string;
+  category: string; // For filtering
 }
 
-interface UserProfile {
-  id: string;
-  name: string;
-}
-
-const fetchAllRequests = async (): Promise<Request[]> => {
-  const response = await fetch('http://localhost:3000/api/requests');
-  if (!response.ok) {
-    throw new Error('Failed to fetch requests');
-  }
-  const requests = await response.json();
-  // Format dateAdded from createdAt
-  return requests.map((req: any) => ({
-    ...req,
-    dateAdded: new Date(req.createdAt).toLocaleDateString('ar-EG'),
-  }));
-};
-
-const fetchUserProfile = async (userId: string): Promise<UserProfile> => {
-  const response = await fetch(`http://localhost:3000/api/users/${userId}`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch user profile');
-  }
-  return response.json();
-};
+const dummyRequests: Request[] = [
+  {
+    id: 'req1',
+    title: 'صيانة شاملة للحديقة المنزلية',
+    description: 'أحتاج إلى شخص متخصص لصيانة الحديقة، بما في ذلك تقليم الأشجار، زراعة الزهور، وتنظيف الممرات. يفضل أن يكون لديه خبرة في تنسيق الحدائق.',
+    location: 'الرياض، حي النرجس',
+    dateAdded: '2023-11-05',
+    dueDate: 'خلال أسبوعين',
+    additionalOptions: 'توفير الأدوات والمعدات اللازمة.',
+    clientName: 'ليلى ناصر',
+    category: 'صيانة',
+  },
+  {
+    id: 'req2',
+    title: 'تصميم شعار لمتجر إلكتروني',
+    description: 'أبحث عن مصمم جرافيك لإنشاء شعار عصري وجذاب لمتجري الإلكتروني الجديد المتخصص في بيع المنتجات اليدوية. أرغب في تصميم يعكس الإبداع والأصالة.',
+    location: 'جدة',
+    dateAdded: '2023-11-04',
+    dueDate: 'خلال 5 أيام',
+    additionalOptions: 'تسليم الملفات المصدرية ودليل استخدام الشعار.',
+    clientName: 'أحمد محمد',
+    category: 'تصميم',
+  },
+  {
+    id: 'req3',
+    title: 'دروس تقوية في اللغة الإنجليزية',
+    description: 'أحتاج مدرسًا خصوصيًا لتقديم دروس تقوية في اللغة الإنجليزية لابني في المرحلة الثانوية. التركيز على القواعد والمحادثة.',
+    location: 'الدمام',
+    dateAdded: '2023-11-03',
+    dueDate: 'مرتين في الأسبوع',
+    additionalOptions: 'يفضل أن يكون لديه خبرة في المناهج السعودية.',
+    clientName: 'سارة علي',
+    category: 'تعليم',
+  },
+  {
+    id: 'req4',
+    title: 'تركيب كاميرات مراقبة للمنزل',
+    description: 'أرغب في تركيب نظام كاميرات مراقبة متكامل للمنزل مع إمكانية الوصول عن بعد. يشمل التركيب والبرمجة.',
+    location: 'الرياض، حي الياسمين',
+    dateAdded: '2023-11-02',
+    dueDate: 'في أقرب وقت ممكن',
+    additionalOptions: 'ضمان على التركيب والمعدات.',
+    clientName: 'خالد فهد',
+    category: 'صيانة',
+  },
+];
 
 export const ProviderReverseRequestsModal = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategory, setFilterCategory] = useState('all'); // Category is not in request model, will filter by description for now
+  const [filterCategory, setFilterCategory] = useState('all');
   const [filterLocation, setFilterLocation] = useState('all');
 
-  const { data: requests, isLoading, error } = useQuery<Request[], Error>({
-    queryKey: ['allRequests'],
-    queryFn: fetchAllRequests,
-  });
+  const categories = ['صيانة', 'تصميم', 'تعليم', 'تقنية', 'نقل', 'جمال'];
+  const locations = ['الرياض', 'جدة', 'الدمام', 'مكة المكرمة', 'الخبر'];
 
-  const [requestsWithClientNames, setRequestsWithClientNames] = useState<(Request & { clientName: string })[]>([]);
-
-  React.useEffect(() => {
-    const getClientNames = async () => {
-      if (requests) {
-        const requestsWithNames = await Promise.all(
-          requests.map(async (request) => {
-            const client = await fetchUserProfile(request.clientId);
-            return {
-              ...request,
-              clientName: client?.name || 'مستخدم مجهول',
-            };
-          })
-        );
-        setRequestsWithClientNames(requestsWithNames);
-      }
-    };
-    getClientNames();
-  }, [requests]);
-
-  const categories = ['صيانة', 'تصميم', 'تعليم', 'تقنية', 'نقل', 'جمال']; // These are dummy categories for filter UI
-  const locations = ['الرياض', 'جدة', 'الدمام', 'مكة المكرمة', 'الخبر']; // These are dummy locations for filter UI
-
-  const filteredRequests = requestsWithClientNames.filter(request => {
-    const matchesSearch = request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          request.description.toLowerCase().includes(searchTerm.toLowerCase());
-    // Category filtering is currently based on description as no category field in request model
-    const matchesCategory = filterCategory === 'all' || request.description.toLowerCase().includes(filterCategory.toLowerCase());
-    const matchesLocation = filterLocation === 'all' || (request.location && request.location.toLowerCase().includes(filterLocation.toLowerCase()));
+  const filteredRequests = dummyRequests.filter(request => {
+    const matchesSearch = request.title.includes(searchTerm) || request.description.includes(searchTerm);
+    const matchesCategory = filterCategory === 'all' || request.category === filterCategory;
+    const matchesLocation = filterLocation === 'all' || (request.location && request.location.includes(filterLocation));
     return matchesSearch && matchesCategory && matchesLocation;
   });
-
-  if (isLoading) return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative text-brand-text-dark hover:bg-brand-background rounded-full">
-          <ListFilter className="h-5 w-5" />
-          <span className="sr-only">الطلبات العكسية</span>
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[900px] max-h-[90vh] flex flex-col rounded-2xl shadow-soft bg-brand-card-bg p-6 overflow-hidden">
-        <div className="text-center text-brand-text-dark font-ibm-plex-arabic">جاري تحميل الطلبات...</div>
-      </DialogContent>
-    </Dialog>
-  );
-
-  if (error) return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative text-brand-text-dark hover:bg-brand-background rounded-full">
-          <ListFilter className="h-5 w-5" />
-          <span className="sr-only">الطلبات العكسية</span>
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[900px] max-h-[90vh] flex flex-col rounded-2xl shadow-soft bg-brand-card-bg p-6 overflow-hidden">
-        <div className="text-center text-brand-danger font-ibm-plex-arabic">خطأ في تحميل الطلبات: {error.message}</div>
-      </DialogContent>
-    </Dialog>
-  );
 
   return (
     <Dialog>

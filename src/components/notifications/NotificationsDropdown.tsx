@@ -11,20 +11,18 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface Notification {
   id: string;
   type: 'order' | 'message' | 'payment' | 'system' | 'general';
   title: string;
   description: string;
-  createdAt: string; // Changed from 'time' to 'createdAt'
+  time: string;
   read: boolean;
-  link?: string;
 }
 
 interface NotificationsDropdownProps {
-  currentUserId: string; // Pass current user ID
+  unreadCount: number;
 }
 
 const getNotificationIcon = (type: Notification['type']) => {
@@ -43,71 +41,15 @@ const getNotificationIcon = (type: Notification['type']) => {
   }
 };
 
-const fetchNotifications = async (userId: string): Promise<Notification[]> => {
-  const response = await fetch(`http://localhost:3000/api/notifications/user/${userId}`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch notifications');
-  }
-  return response.json();
-};
-
-const fetchUnreadCount = async (userId: string): Promise<{ unreadCount: number }> => {
-  const response = await fetch(`http://localhost:3000/api/notifications/unread/${userId}`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch unread count');
-  }
-  return response.json();
-};
-
-const markNotificationAsRead = async (id: string) => {
-  const response = await fetch(`http://localhost:3000/api/notifications/read/${id}`, {
-    method: 'PUT',
-  });
-  if (!response.ok) {
-    throw new Error('Failed to mark notification as read');
-  }
-  return response.json();
-};
-
-export const NotificationsDropdown = ({ currentUserId }: NotificationsDropdownProps) => {
-  const queryClient = useQueryClient();
-
-  const { data: notifications = [], isLoading: isLoadingNotifications, error: notificationsError } = useQuery<Notification[], Error>({
-    queryKey: ['notifications', currentUserId],
-    queryFn: () => fetchNotifications(currentUserId),
-    enabled: !!currentUserId,
-    refetchInterval: 10000, // Poll for new notifications every 10 seconds
-  });
-
-  const { data: unreadCountData, isLoading: isLoadingUnreadCount, error: unreadCountError } = useQuery<{ unreadCount: number }, Error>({
-    queryKey: ['unreadNotificationsCount', currentUserId],
-    queryFn: () => fetchUnreadCount(currentUserId),
-    enabled: !!currentUserId,
-    refetchInterval: 5000, // Poll for unread count more frequently
-  });
-
-  const unreadCount = unreadCountData?.unreadCount || 0;
-
-  const markAsReadMutation = useMutation({
-    mutationFn: markNotificationAsRead,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications', currentUserId] });
-      queryClient.invalidateQueries({ queryKey: ['unreadNotificationsCount', currentUserId] });
-    },
-  });
-
-  const handleNotificationClick = (notification: Notification) => {
-    if (!notification.read) {
-      markAsReadMutation.mutate(notification.id);
-    }
-    // Optionally navigate to the link
-    if (notification.link) {
-      // window.location.href = notification.link; // Or use navigate from react-router-dom
-    }
-  };
-
-  if (notificationsError) console.error("Error fetching notifications:", notificationsError);
-  if (unreadCountError) console.error("Error fetching unread count:", unreadCountError);
+export const NotificationsDropdown = ({ unreadCount }: NotificationsDropdownProps) => {
+  // Placeholder data for recent notifications
+  const notifications: Notification[] = [
+    { id: '1', type: 'order', title: 'طلب جديد لخدمة "تصميم شعار"', description: 'من العميل: أحمد محمد', time: 'قبل 5 دقائق', read: false },
+    { id: '2', type: 'message', title: 'رسالة جديدة من سارة علي', description: 'بخصوص مشروع تطوير الويب', time: 'قبل ساعة', read: false },
+    { id: '3', type: 'payment', title: 'تم استلام دفعة لخدمة "كتابة محتوى"', description: 'المبلغ: $100', time: 'قبل 3 ساعات', read: true },
+    { id: '4', type: 'system', title: 'تحديث جديد للمنصة', description: 'تحسينات في الأداء والأمان', time: 'أمس', read: true },
+    { id: '5', type: 'general', title: 'تذكير: لديك اجتماع غداً', description: 'اجتماع مشروع تصميم الساعة 10 صباحاً', time: 'أمس', read: false },
+  ];
 
   return (
     <DropdownMenu dir="rtl">
@@ -133,9 +75,7 @@ export const NotificationsDropdown = ({ currentUserId }: NotificationsDropdownPr
         </div>
         <DropdownMenuSeparator className="bg-border" />
         <ScrollArea className="h-[300px]">
-          {isLoadingNotifications ? (
-            <p className="text-center text-brand-text-muted p-4 font-ibm-plex-arabic">جاري تحميل الإشعارات...</p>
-          ) : notifications.length > 0 ? (
+          {notifications.length > 0 ? (
             notifications.map((notification) => (
               <DropdownMenuItem
                 key={notification.id}
@@ -143,7 +83,6 @@ export const NotificationsDropdown = ({ currentUserId }: NotificationsDropdownPr
                   "flex items-center space-x-3 rtl:space-x-reverse p-3 rounded-lg cursor-pointer hover:bg-brand-background transition-colors duration-200 text-right",
                   !notification.read && "font-semibold bg-brand-primary-light/10"
                 )}
-                onClick={() => handleNotificationClick(notification)}
               >
                 <div className="flex-shrink-0">
                   {getNotificationIcon(notification.type)}
@@ -151,7 +90,7 @@ export const NotificationsDropdown = ({ currentUserId }: NotificationsDropdownPr
                 <div className="flex-grow">
                   <p className="text-sm text-brand-text-dark font-ibm-plex-arabic">{notification.title}</p>
                   <p className="text-xs text-brand-text-muted font-ibm-plex-arabic line-clamp-1">{notification.description}</p>
-                  <p className="text-xs text-brand-text-muted font-ibm-plex-arabic mt-1">{new Date(notification.createdAt).toLocaleDateString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</p>
+                  <p className="text-xs text-brand-text-muted font-ibm-plex-arabic mt-1">{notification.time}</p>
                 </div>
               </DropdownMenuItem>
             ))

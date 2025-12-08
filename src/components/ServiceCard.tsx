@@ -4,18 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Star } from 'lucide-react';
 
-interface Service {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  rating: number;
-  imageUrl?: string;
-  reviewsCount: number;
-}
-
 interface ServiceCardProps {
-  service: Service;
+  service: {
+    id: string;
+    title: string;
+    description: string;
+    price: number;
+    rating: number;
+    imageUrl?: string;
+  };
 }
 
 const ServiceCard = ({ service }: ServiceCardProps) => {
@@ -39,7 +36,7 @@ const ServiceCard = ({ service }: ServiceCardProps) => {
         <CardTitle className="text-lg font-cairo text-brand-text-dark">{service.title}</CardTitle>
         <div className="flex justify-end items-center text-sm text-brand-text-muted">
           {renderStars(service.rating)}
-          <span className="mr-1 font-ibm-plex-arabic">({service.reviewsCount})</span>
+          <span className="mr-1 font-ibm-plex-arabic">({service.rating})</span>
         </div>
       </CardHeader>
       <CardContent className="p-4 pt-0 space-y-3 text-right">

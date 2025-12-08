@@ -6,95 +6,42 @@ import { Link } from 'react-router-dom';
 import { Briefcase, Package, Star, Users, MessageSquare, DollarSign, TrendingUp, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { cn } from '@/lib/utils';
-import { useQuery } from '@tanstack/react-query';
+import { cn } from '@/lib/utils'; // تم إضافة هذا الاستيراد
 
-// Interfaces for fetched data
-interface Service { id: string; providerId: string; title: string; rating: number; reviewsCount: number; }
-interface Order { id: string; providerId: string; status: string; price: number; }
-interface Message { id: string; conversationId: string; senderId: string; text: string; read: boolean; timestamp: string; }
-interface Conversation { id: string; participant1Id: string; participant2Id: string; }
-interface User { id: string; name: string; avatarUrl?: string; role: string; }
+const performanceData = [
+  { name: 'يناير', sales: 4000, orders: 2400 },
+  { name: 'فبراير', sales: 3000, orders: 1398 },
+  { name: 'مارس', sales: 2000, orders: 9800 },
+  { name: 'أبريل', sales: 2780, orders: 3908 },
+  { name: 'مايو', sales: 1890, orders: 4800 },
+  { name: 'يونيو', sales: 2390, orders: 3800 },
+];
 
-// Fetching functions
-const fetchProviderServices = async (providerId: string): Promise<Service[]> => {
-  const response = await fetch(`http://localhost:3000/api/services/provider/${providerId}`);
-  if (!response.ok) throw new Error('Failed to fetch services');
-  return response.json();
-};
+const ordersBreakdownData = [
+  { name: 'معلقة', value: 15, color: 'var(--brand-warning)' },
+  { name: 'مقبولة', value: 30, color: 'var(--brand-primary)' },
+  { name: 'مكتملة', value: 55, color: 'var(--brand-success)' },
+  { name: 'ملغاة', value: 10, color: 'var(--brand-danger)' },
+];
 
-const fetchProviderOrders = async (providerId: string): Promise<Order[]> => {
-  const response = await fetch(`http://localhost:3000/api/orders/provider/${providerId}`);
-  if (!response.ok) throw new Error('Failed to fetch orders');
-  return response.json();
-};
+const recentTasks = [
+  { id: 't1', title: 'الرد على طلب خدمة تصميم شعار', status: 'Pending', dueDate: '2023-11-10' },
+  { id: 't2', title: 'مراجعة خدمة تطوير موقع ويب', status: 'Completed', dueDate: '2023-11-05' },
+  { id: 't3', title: 'إرسال عرض سعر لعميل جديد', status: 'Pending', dueDate: '2023-11-12' },
+];
 
-const fetchProviderConversations = async (userId: string): Promise<Conversation[]> => {
-  const response = await fetch(`http://localhost:3000/api/conversations/user/${userId}`);
-  if (!response.ok) throw new Error('Failed to fetch conversations');
-  return response.json();
-};
+const customerMessages = [
+  { id: 'cm1', customerName: 'أحمد محمد', message: 'متى يمكن البدء بالمشروع؟', avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=AM' },
+  { id: 'cm2', customerName: 'سارة علي', message: 'شكراً على الخدمة الممتازة!', avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=SA' },
+];
 
-const fetchUnreadMessagesCount = async (userId: string): Promise<{ unreadCount: number }> => {
-  const response = await fetch(`http://localhost:3000/api/messages/unread/${userId}`);
-  if (!response.ok) throw new Error('Failed to fetch unread messages count');
-  return response.json();
-};
-
-const fetchClients = async (): Promise<User[]> => {
-  const response = await fetch('http://localhost:3000/api/users');
-  if (!response.ok) throw new Error('Failed to fetch users');
-  const users: User[] = await response.json();
-  return users.filter(user => user.role === 'seeker');
-};
-
+const recentActivity = [
+  { id: 'a1', type: 'طلب جديد', description: 'طلب جديد لخدمة "تصميم شعار"', time: 'قبل 5 دقائق', icon: Package, iconColor: 'text-brand-primary' },
+  { id: 'a2', type: 'خدمة مقبولة', description: 'تم قبول خدمتك "تطوير موقع ويب"', time: 'قبل ساعة', icon: Briefcase, iconColor: 'text-brand-success' },
+  { id: 'a3', type: 'تقييم جديد', description: 'تقييم جديد لخدمة "كتابة محتوى" (5 نجوم)', time: 'قبل يوم', icon: Star, iconColor: 'text-yellow-500' },
+];
 
 const DashboardOverviewPage = () => {
-  // Placeholder for current provider ID - replace with actual auth context
-  const currentProviderId = 'provider123';
-
-  const { data: services = [], isLoading: isLoadingServices } = useQuery<Service[], Error>({
-    queryKey: ['providerServices', currentProviderId],
-    queryFn: () => fetchProviderServices(currentProviderId),
-    enabled: !!currentProviderId,
-  });
-
-  const { data: orders = [], isLoading: isLoadingOrders } = useQuery<Order[], Error>({
-    queryKey: ['providerOrders', currentProviderId],
-    queryFn: () => fetchProviderOrders(currentProviderId),
-    enabled: !!currentProviderId,
-  });
-
-  const { data: unreadMessagesData, isLoading: isLoadingUnreadMessages } = useQuery<{ unreadCount: number }, Error>({
-    queryKey: ['unreadMessagesCount', currentProviderId],
-    queryFn: () => fetchUnreadMessagesCount(currentProviderId),
-    enabled: !!currentProviderId,
-    refetchInterval: 5000,
-  });
-
-  const { data: clients = [], isLoading: isLoadingClients } = useQuery<User[], Error>({
-    queryKey: ['clients'],
-    queryFn: fetchClients,
-  });
-
-  const totalServices = services.length;
-  const totalOrders = orders.length;
-  const activeOrders = orders.filter(order => order.status === 'Pending' || order.status === 'Accepted').length;
-  const totalEarnings = orders.filter(order => order.status === 'Completed').reduce((sum, order) => sum + order.price, 0);
-  const averageRating = totalServices > 0
-    ? services.reduce((sum, service) => sum + service.rating, 0) / totalServices
-    : 0;
-  const totalReviews = services.reduce((sum, service) => sum + service.reviewsCount, 0);
-  const unreadMessages = unreadMessagesData?.unreadCount || 0;
-
-  // Placeholder for actual data fetching for charts and recent activity
-  // In a real app, these would be fetched from dedicated API endpoints
-  const performanceData = []; // Example: [{ name: 'يناير', sales: 4000, orders: 2400 }]
-  const ordersBreakdownData = []; // Example: [{ name: 'معلقة', value: 5, color: 'var(--brand-warning)' }]
-  const recentTasks = []; // Example: [{ id: 't1', title: 'إكمال تصميم شعار', dueDate: '2024-12-01', status: 'Pending' }]
-  const customerMessages = []; // Example: [{ id: 'm1', customerName: 'أحمد', avatarUrl: '', message: 'متى يمكننا البدء؟' }]
-  const recentActivity = []; // Example: [{ id: 'a1', description: 'تم قبول طلب جديد', time: 'منذ 5 دقائق', icon: CheckCircle, iconColor: 'text-brand-success' }]
-
   return (
     <DashboardLayout>
       <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">نظرة عامة على لوحة التحكم</h1>
@@ -107,8 +54,8 @@ const DashboardOverviewPage = () => {
             <Package className="h-6 w-6 text-brand-primary" />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-3xl font-cairo text-brand-text-dark font-bold">{totalOrders}</div>
-            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">+0% عن الشهر الماضي</p>
+            <div className="text-3xl font-cairo text-brand-text-dark font-bold">125</div>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">+10% عن الشهر الماضي</p>
           </CardContent>
         </Card>
         <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 text-right">
@@ -117,8 +64,8 @@ const DashboardOverviewPage = () => {
             <Clock className="h-6 w-6 text-brand-warning" />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-3xl font-cairo text-brand-text-dark font-bold">{activeOrders}</div>
-            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">0 طلب جديد</p>
+            <div className="text-3xl font-cairo text-brand-text-dark font-bold">12</div>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">3 طلبات جديدة</p>
           </CardContent>
         </Card>
         <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 text-right">
@@ -127,8 +74,8 @@ const DashboardOverviewPage = () => {
             <DollarSign className="h-6 w-6 text-brand-success" />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-3xl font-cairo text-brand-text-dark font-bold">${totalEarnings.toFixed(2)}</div>
-            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">+0% هذا الشهر</p>
+            <div className="text-3xl font-cairo text-brand-text-dark font-bold">$15,230</div>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">+5% هذا الشهر</p>
           </CardContent>
         </Card>
         <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 text-right">
@@ -137,8 +84,8 @@ const DashboardOverviewPage = () => {
             <Star className="h-6 w-6 text-yellow-500" />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-3xl font-cairo text-brand-text-dark font-bold">{averageRating.toFixed(1)}</div>
-            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">من {totalReviews} تقييم</p>
+            <div className="text-3xl font-cairo text-brand-text-dark font-bold">4.8</div>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">من 250 تقييم</p>
           </CardContent>
         </Card>
         <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 text-right">
@@ -147,7 +94,7 @@ const DashboardOverviewPage = () => {
             <MessageSquare className="h-6 w-6 text-brand-info" />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-3xl font-cairo text-brand-text-dark font-bold">{unreadMessages}</div>
+            <div className="text-3xl font-cairo text-brand-text-dark font-bold">5</div>
             <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">في انتظار الرد</p>
           </CardContent>
         </Card>
@@ -160,21 +107,17 @@ const DashboardOverviewPage = () => {
             <CardTitle className="text-2xl font-cairo text-brand-text-dark">أداء المبيعات والطلبات</CardTitle>
           </CardHeader>
           <CardContent className="h-[300px] p-0">
-            {performanceData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={performanceData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                  <XAxis dataKey="name" tick={{ fill: 'var(--brand-text-muted)', fontFamily: 'var(--font-ibm-plex-arabic)' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: 'var(--brand-text-muted)', fontFamily: 'var(--font-ibm-plex-arabic)' }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ backgroundColor: 'var(--brand-card-bg)', borderColor: 'var(--border)', borderRadius: '8px', boxShadow: 'var(--shadow-soft)' }} itemStyle={{ fontFamily: 'var(--font-ibm-plex-arabic)', color: 'var(--brand-text-dark)' }} labelStyle={{ fontFamily: 'var(--font-cairo)', color: 'var(--brand-primary)' }} />
-                  <Legend wrapperStyle={{ fontFamily: 'var(--font-ibm-plex-arabic)', direction: 'rtl', right: 0 }} />
-                  <Line type="monotone" dataKey="sales" stroke="var(--brand-primary)" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} name="المبيعات" />
-                  <Line type="monotone" dataKey="orders" stroke="var(--brand-warning)" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} name="الطلبات" />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-full text-brand-text-muted font-ibm-plex-arabic">لا توجد بيانات أداء لعرضها.</div>
-            )}
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={performanceData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                <XAxis dataKey="name" tick={{ fill: 'var(--brand-text-muted)', fontFamily: 'var(--font-ibm-plex-arabic)' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: 'var(--brand-text-muted)', fontFamily: 'var(--font-ibm-plex-arabic)' }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={{ backgroundColor: 'var(--brand-card-bg)', borderColor: 'var(--border)', borderRadius: '8px', boxShadow: 'var(--shadow-soft)' }} itemStyle={{ fontFamily: 'var(--font-ibm-plex-arabic)', color: 'var(--brand-text-dark)' }} labelStyle={{ fontFamily: 'var(--font-cairo)', color: 'var(--brand-primary)' }} />
+                <Legend wrapperStyle={{ fontFamily: 'var(--font-ibm-plex-arabic)', direction: 'rtl', right: 0 }} />
+                <Line type="monotone" dataKey="sales" stroke="var(--brand-primary)" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} name="المبيعات" />
+                <Line type="monotone" dataKey="orders" stroke="var(--brand-warning)" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} name="الطلبات" />
+              </LineChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </section>
@@ -186,18 +129,14 @@ const DashboardOverviewPage = () => {
             <CardTitle className="text-2xl font-cairo text-brand-text-dark">توزيع حالة الطلبات</CardTitle>
           </CardHeader>
           <CardContent className="h-[250px] p-0">
-            {ordersBreakdownData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={ordersBreakdownData} layout="vertical">
-                  <XAxis type="number" hide />
-                  <YAxis type="category" dataKey="name" tick={{ fill: 'var(--brand-text-dark)', fontFamily: 'var(--font-ibm-plex-arabic)' }} axisLine={false} tickLine={false} width={80} mirror />
-                  <Tooltip contentStyle={{ backgroundColor: 'var(--brand-card-bg)', borderColor: 'var(--border)', borderRadius: '8px', boxShadow: 'var(--shadow-soft)' }} itemStyle={{ fontFamily: 'var(--font-ibm-plex-arabic)', color: 'var(--brand-text-dark)' }} labelStyle={{ fontFamily: 'var(--font-cairo)', color: 'var(--brand-primary)' }} />
-                  <Bar dataKey="value" fill="var(--color)" radius={[0, 10, 10, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-full text-brand-text-muted font-ibm-plex-arabic">لا توجد بيانات لتوزيع الطلبات.</div>
-            )}
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={ordersBreakdownData} layout="vertical">
+                <XAxis type="number" hide />
+                <YAxis type="category" dataKey="name" tick={{ fill: 'var(--brand-text-dark)', fontFamily: 'var(--font-ibm-plex-arabic)' }} axisLine={false} tickLine={false} width={80} mirror />
+                <Tooltip contentStyle={{ backgroundColor: 'var(--brand-card-bg)', borderColor: 'var(--border)', borderRadius: '8px', boxShadow: 'var(--shadow-soft)' }} itemStyle={{ fontFamily: 'var(--font-ibm-plex-arabic)', color: 'var(--brand-text-dark)' }} labelStyle={{ fontFamily: 'var(--font-cairo)', color: 'var(--brand-primary)' }} />
+                <Bar dataKey="value" fill="var(--color)" radius={[0, 10, 10, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
 
@@ -208,28 +147,24 @@ const DashboardOverviewPage = () => {
           </CardHeader>
           <CardContent className="p-0">
             <ul className="space-y-4">
-              {recentTasks.length > 0 ? (
-                recentTasks.map(task => (
-                  <li key={task.id} className="flex flex-row-reverse items-center justify-between border-b border-border pb-3 last:border-b-0 last:pb-0">
-                    <div className="flex flex-row-reverse items-center">
-                      {task.status === 'Completed' ? (
-                        <CheckCircle className="h-5 w-5 text-brand-success ml-3" />
-                      ) : (
-                        <Clock className="h-5 w-5 text-brand-warning ml-3" />
-                      )}
-                      <div>
-                        <p className="font-cairo text-brand-text-dark font-semibold">{task.title}</p>
-                        <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">تاريخ الاستحقاق: {task.dueDate}</p>
-                      </div>
+              {recentTasks.map(task => (
+                <li key={task.id} className="flex flex-row-reverse items-center justify-between border-b border-border pb-3 last:border-b-0 last:pb-0">
+                  <div className="flex flex-row-reverse items-center">
+                    {task.status === 'Completed' ? (
+                      <CheckCircle className="h-5 w-5 text-brand-success ml-3" />
+                    ) : (
+                      <Clock className="h-5 w-5 text-brand-warning ml-3" />
+                    )}
+                    <div>
+                      <p className="font-cairo text-brand-text-dark font-semibold">{task.title}</p>
+                      <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">تاريخ الاستحقاق: {task.dueDate}</p>
                     </div>
-                    <Button variant="ghost" size="sm" className="text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic">
-                      عرض
-                    </Button>
-                  </li>
-                ))
-              ) : (
-                <li className="text-sm text-brand-text-muted font-ibm-plex-arabic text-right">لا توجد مهام حالية.</li>
-              )}
+                  </div>
+                  <Button variant="ghost" size="sm" className="text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic">
+                    عرض
+                  </Button>
+                </li>
+              ))}
             </ul>
           </CardContent>
         </Card>
@@ -244,25 +179,21 @@ const DashboardOverviewPage = () => {
           </CardHeader>
           <CardContent className="p-0">
             <ul className="space-y-4">
-              {customerMessages.length > 0 ? (
-                customerMessages.map(msg => (
-                  <li key={msg.id} className="flex flex-row-reverse items-center border-b border-border pb-3 last:border-b-0 last:pb-0">
-                    <Avatar className="h-10 w-10 ml-3">
-                      <AvatarImage src={msg.avatarUrl} alt={msg.customerName} />
-                      <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{msg.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-grow text-right">
-                      <p className="font-cairo text-brand-text-dark font-semibold">{msg.customerName}</p>
-                      <p className="text-sm text-brand-text-muted font-ibm-plex-arabic line-clamp-1">{msg.message}</p>
-                    </div>
-                    <Button variant="ghost" size="sm" className="text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic">
-                      رد
-                    </Button>
-                  </li>
-                ))
-              ) : (
-                <li className="text-sm text-brand-text-muted font-ibm-plex-arabic text-right">لا توجد رسائل عملاء جديدة.</li>
-              )}
+              {customerMessages.map(msg => (
+                <li key={msg.id} className="flex flex-row-reverse items-center border-b border-border pb-3 last:border-b-0 last:pb-0">
+                  <Avatar className="h-10 w-10 ml-3">
+                    <AvatarImage src={msg.avatarUrl} alt={msg.customerName} />
+                    <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{msg.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-grow text-right">
+                    <p className="font-cairo text-brand-text-dark font-semibold">{msg.customerName}</p>
+                    <p className="text-sm text-brand-text-muted font-ibm-plex-arabic line-clamp-1">{msg.message}</p>
+                  </div>
+                  <Button variant="ghost" size="sm" className="text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic">
+                    رد
+                  </Button>
+                </li>
+              ))}
             </ul>
           </CardContent>
         </Card>
@@ -274,22 +205,18 @@ const DashboardOverviewPage = () => {
           </CardHeader>
           <CardContent className="p-0">
             <ul className="space-y-4">
-              {recentActivity.length > 0 ? (
-                recentActivity.map(activity => {
-                  const IconComponent = activity.icon;
-                  return (
-                    <li key={activity.id} className="flex flex-row-reverse items-center border-b border-border pb-3 last:border-b-0 last:pb-0">
-                      <IconComponent className={cn("h-5 w-5 ml-3", activity.iconColor)} />
-                      <div className="flex-grow text-right">
-                        <p className="font-cairo text-brand-text-dark font-semibold">{activity.description}</p>
-                        <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">{activity.time}</p>
-                      </div>
-                    </li>
-                  );
-                })
-              ) : (
-                <li className="text-sm text-brand-text-muted font-ibm-plex-arabic text-right">لا توجد أنشطة حديثة.</li>
-              )}
+              {recentActivity.map(activity => {
+                const IconComponent = activity.icon;
+                return (
+                  <li key={activity.id} className="flex flex-row-reverse items-center border-b border-border pb-3 last:border-b-0 last:pb-0">
+                    <IconComponent className={cn("h-5 w-5 ml-3", activity.iconColor)} />
+                    <div className="flex-grow text-right">
+                      <p className="font-cairo text-brand-text-dark font-semibold">{activity.description}</p>
+                      <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">{activity.time}</p>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           </CardContent>
         </Card>

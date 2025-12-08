@@ -2,55 +2,22 @@ import React from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import OrderCard from '@/components/OrderCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useQuery } from '@tanstack/react-query';
-
-interface Order {
-  id: string;
-  serviceId: string;
-  clientId: string;
-  providerId: string;
-  price: number;
-  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled';
-  details?: string;
-  createdAt: string;
-  serviceTitle: string; // Joined from service table
-  customerName: string; // Joined from user table
-}
-
-const fetchProviderOrders = async (providerId: string): Promise<Order[]> => {
-  const response = await fetch(`http://localhost:3000/api/orders/provider/${providerId}`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch provider orders');
-  }
-  return response.json();
-};
 
 const OrdersPage = () => {
-  // Placeholder for current provider ID - replace with actual auth context
-  const currentProviderId = 'provider123';
-
-  const { data: orders, isLoading, error } = useQuery<Order[], Error>({
-    queryKey: ['providerOrders', currentProviderId],
-    queryFn: () => fetchProviderOrders(currentProviderId),
-    enabled: !!currentProviderId,
-    refetchInterval: 5000, // Poll for updates
-  });
-
-  const pendingOrders = orders?.filter(order => order.status === 'Pending') || [];
-  const acceptedOrders = orders?.filter(order => order.status === 'Accepted') || [];
-  const completedOrders = orders?.filter(order => order.status === 'Completed') || [];
-  const cancelledOrders = orders?.filter(order => order.status === 'Cancelled') || [];
-
-  if (isLoading) return (
-    <DashboardLayout>
-      <div className="text-center text-brand-text-dark font-ibm-plex-arabic">جاري تحميل الطلبات...</div>
-    </DashboardLayout>
-  );
-  if (error) return (
-    <DashboardLayout>
-      <div className="text-center text-brand-danger font-ibm-plex-arabic">خطأ في تحميل الطلبات: {error.message}</div>
-    </DashboardLayout>
-  );
+  // Placeholder for orders
+  const pendingOrders = [
+    { id: 'ord1', serviceTitle: 'تصميم شعار', customerName: 'أحمد محمد', status: 'Pending' as const, date: '2023-10-26', price: 150, description: 'طلب تصميم شعار لشركة ناشئة في مجال التقنية.' },
+    { id: 'ord2', serviceTitle: 'كتابة مقال', customerName: 'سارة علي', status: 'Pending' as const, date: '2023-10-25', price: 80, description: 'مقال تسويقي عن أحدث تقنيات الذكاء الاصطناعي.' },
+  ];
+  const acceptedOrders = [
+    { id: 'ord3', serviceTitle: 'تطوير موقع', customerName: 'خالد فهد', status: 'Accepted' as const, date: '2023-10-20', price: 500, description: 'تطوير موقع شخصي لعرض الأعمال الفنية.' },
+  ];
+  const completedOrders = [
+    { id: 'ord4', serviceTitle: 'استشارة تسويقية', customerName: 'ليلى ناصر', status: 'Completed' as const, date: '2023-10-15', price: 200, description: 'جلسة استشارية حول استراتيجيات التسويق الرقمي.' },
+  ];
+  const cancelledOrders = [
+    { id: 'ord5', serviceTitle: 'تصميم هوية بصرية', customerName: 'محمد سعيد', status: 'Cancelled' as const, date: '2023-10-10', price: 300, description: 'تم إلغاء الطلب بسبب تغيير في متطلبات العميل.' },
+  ];
 
   return (
     <DashboardLayout>
@@ -68,14 +35,7 @@ const OrdersPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {pendingOrders.length > 0 ? (
               pendingOrders.map(order => (
-                <OrderCard key={order.id} order={{
-                  id: order.id,
-                  serviceTitle: order.serviceTitle,
-                  customerName: order.customerName,
-                  status: order.status,
-                  date: new Date(order.createdAt).toLocaleDateString('ar-EG'),
-                  price: order.price,
-                }} />
+                <OrderCard key={order.id} order={order} />
               ))
             ) : (
               <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد طلبات معلقة.</p>
@@ -87,14 +47,7 @@ const OrdersPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {acceptedOrders.length > 0 ? (
               acceptedOrders.map(order => (
-                <OrderCard key={order.id} order={{
-                  id: order.id,
-                  serviceTitle: order.serviceTitle,
-                  customerName: order.customerName,
-                  status: order.status,
-                  date: new Date(order.createdAt).toLocaleDateString('ar-EG'),
-                  price: order.price,
-                }} />
+                <OrderCard key={order.id} order={order} />
               ))
             ) : (
               <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد طلبات مقبولة.</p>
@@ -106,14 +59,7 @@ const OrdersPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {completedOrders.length > 0 ? (
               completedOrders.map(order => (
-                <OrderCard key={order.id} order={{
-                  id: order.id,
-                  serviceTitle: order.serviceTitle,
-                  customerName: order.customerName,
-                  status: order.status,
-                  date: new Date(order.createdAt).toLocaleDateString('ar-EG'),
-                  price: order.price,
-                }} />
+                <OrderCard key={order.id} order={order} />
               ))
             ) : (
               <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد طلبات مكتملة.</p>
@@ -125,14 +71,7 @@ const OrdersPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {cancelledOrders.length > 0 ? (
               cancelledOrders.map(order => (
-                <OrderCard key={order.id} order={{
-                  id: order.id,
-                  serviceTitle: order.serviceTitle,
-                  customerName: order.customerName,
-                  status: order.status,
-                  date: new Date(order.createdAt).toLocaleDateString('ar-EG'),
-                  price: order.price,
-                }} />
+                <OrderCard key={order.id} order={order} />
               ))
             ) : (
               <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد طلبات ملغاة.</p>

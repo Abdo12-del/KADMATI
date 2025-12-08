@@ -10,72 +10,21 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-
-interface NewRequest {
-  clientId: string;
-  title: string;
-  description: string;
-  location?: string;
-  dueDate?: string;
-  additionalOptions?: string;
-}
-
-const createRequest = async (request: NewRequest): Promise<Response> => {
-  const response = await fetch('http://localhost:3000/api/requests', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(request),
-  });
-  if (!response.ok) {
-    throw new Error('Failed to create request');
-  }
-  return response.json();
-};
 
 const ClientCreateRequestPage = () => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [additionalOptions, setAdditionalOptions] = useState('');
 
-  const addRequestMutation = useMutation({
-    mutationFn: createRequest,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clientRequests'] }); // Invalidate client requests cache
-      queryClient.invalidateQueries({ queryKey: ['allRequests'] }); // Invalidate all requests for providers
-      toast.success('تم إرسال طلبك بنجاح! سيتم مراجعته من قبل مقدمي الخدمات.');
-      navigate('/client-home'); // Redirect to client home after submission
-    },
-    onError: (error) => {
-      toast.error(`فشل في إرسال الطلب: ${error.message}`);
-    },
-  });
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !description) {
-      toast.error('الرجاء ملء عنوان الطلب والوصف.');
-      return;
-    }
-
-    // Placeholder for current client ID - replace with actual auth context
-    const currentClientId = 'client456';
-
-    addRequestMutation.mutate({
-      clientId: currentClientId,
-      title,
-      description,
-      location: location || undefined,
-      dueDate: dueDate || undefined,
-      additionalOptions: additionalOptions || undefined,
-    });
+    // Here you would typically send this data to a backend API
+    console.log({ title, description, location, dueDate, additionalOptions });
+    toast.success('تم إرسال طلبك بنجاح! سيتم مراجعته من قبل مقدمي الخدمات.');
+    navigate('/client-home'); // Redirect to client home after submission
   };
 
   return (
@@ -145,8 +94,8 @@ const ClientCreateRequestPage = () => {
                   className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
                 />
               </div>
-              <Button type="submit" className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white py-3 rounded-xl shadow-soft font-ibm-plex-arabic text-lg" disabled={addRequestMutation.isPending}>
-                {addRequestMutation.isPending ? 'جاري الإرسال...' : 'إرسال الطلب'}
+              <Button type="submit" className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white py-3 rounded-xl shadow-soft font-ibm-plex-arabic text-lg">
+                إرسال الطلب
               </Button>
             </form>
           </CardContent>
