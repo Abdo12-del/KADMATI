@@ -36,6 +36,7 @@ router.post('/', async (req, res, next) => {
   try {
     const validationErrors = validateUser(req.body);
     if (validationErrors.length > 0) {
+      console.error('Validation failed for user creation:', validationErrors); // Added console.error here
       throw new ApiError('Validation failed', 400, validationErrors);
     }
 
@@ -74,6 +75,7 @@ router.put('/:id', async (req, res, next) => {
 
     const validationErrors = validateUser(updates, true);
     if (validationErrors.length > 0) {
+      console.error('Validation failed for user update:', validationErrors); // Added console.error here
       throw new ApiError('Validation failed', 400, validationErrors);
     }
 
