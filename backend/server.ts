@@ -1,8 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import { env } from './config/env';
-import knexConfig from './db/knexfile.cjs';
-import knex from 'knex';
 import { errorHandler } from './utils/errorHandler';
 import usersRoutes from './api/users';
 import servicesRoutes from './api/services';
@@ -19,20 +17,6 @@ process.on('uncaughtException', (error) => {
   // Application specific logging, throwing an error, or other logic here
   process.exit(1); // Exit with a failure code
 });
-
-// Initialize Knex
-console.log('NODE_ENV:', env.NODE_ENV);
-const currentKnexConfig = knexConfig[env.NODE_ENV || 'development'];
-console.log('Knex config for current environment:', currentKnexConfig);
-
-// Check if the configuration is valid before initializing Knex
-if (!currentKnexConfig) {
-  console.error('Error: Knex configuration not found for environment:', env.NODE_ENV || 'development');
-  process.exit(1);
-}
-
-const db = knex(currentKnexConfig);
-console.log('Knex DB initialized successfully.');
 
 const app = express();
 
@@ -51,9 +35,6 @@ app.use('/api/services', servicesRoutes);
 
 // Global error handler middleware
 app.use(errorHandler);
-
-// Export db instance for use in other modules
-export { db };
 
 // Start the server
 app.listen(env.PORT, () => {
