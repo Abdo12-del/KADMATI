@@ -41,6 +41,11 @@ interface BackendUser {
   name: string;
 }
 
+interface BackendService {
+  id: number;
+  title: string;
+}
+
 interface Notification {
   id: string;
   type: 'order' | 'message' | 'payment' | 'system' | 'general' | 'rating';
@@ -64,22 +69,25 @@ const NotificationsPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const [messagesResponse, requestsResponse, ratingsResponse, usersResponse] = await Promise.all([
+      const [messagesResponse, requestsResponse, ratingsResponse, usersResponse, servicesResponse] = await Promise.all([
         fetch('http://localhost:3000/api/messages'),
         fetch('http://localhost:3000/api/requests'),
         fetch('http://localhost:3000/api/ratings'),
         fetch('http://localhost:3000/api/users'),
+        fetch('http://localhost:3000/api/services'), // Fetch services
       ]);
 
       if (!messagesResponse.ok) throw new Error('فشل جلب الرسائل.');
       if (!requestsResponse.ok) throw new Error('فشل جلب الطلبات.');
       if (!ratingsResponse.ok) throw new Error('فشل جلب التقييمات.');
       if (!usersResponse.ok) throw new Error('فشل جلب المستخدمين.');
+      if (!servicesResponse.ok) throw new Error('فشل جلب الخدمات.'); // Check services response
 
       const messagesData: BackendMessage[] = (await messagesResponse.json()).data;
       const requestsData: BackendRequest[] = (await requestsResponse.json()).data;
       const ratingsData: BackendRating[] = (await ratingsResponse.json()).data;
       const usersData: BackendUser[] = (await usersResponse.json()).data;
+      const servicesData: BackendService[] = (await servicesResponse.json()).data; // Get services data
 
       const newNotifications: Notification[] = [];
 
@@ -101,7 +109,9 @@ const NotificationsPage = () => {
 
       // Process Requests (new requests relevant to CURRENT_USER_ID, assuming provider)
       requestsData.forEach(req => {
-        if (req.status === 'pending') { // Assuming provider gets notified of new pending requests
+        // Assuming provider gets notified of new pending requests
+        // In a real app, you'd check if the request is for a service offered by CURRENT_USER_ID
+        if (req.status === 'pending') { 
           const client = usersData.find(u => u.id === req.client_id);
           newNotifications.push({
             id: `req-${req.id}`,
@@ -118,12 +128,13 @@ const NotificationsPage = () => {
       // Process Ratings (new ratings for services provided by CURRENT_USER_ID)
       ratingsData.forEach(rating => {
         const client = usersData.find(u => u.id === rating.client_id);
+        const service = servicesData.find(s => s.id === rating.service_id); // Find the service
         // In a real app, you'd check if the service_id belongs to CURRENT_USER_ID
         newNotifications.push({
           id: `rating-${rating.id}`,
           type: 'rating',
           title: `تقييم جديد (${rating.rating} نجوم)`,
-          description: `من ${client?.name || 'عميل غير معروف'} على خدمة ما.`,
+          description: `من ${client?.name || 'عميل غير معروف'} على خدمة: ${service?.title || 'غير معروفة'}.`, // Use service title
           time: new Date(rating.created_at || '').toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
           read: false, // Assuming new ratings are unread by default
           link: '/dashboard/ratings', // Link to ratings page
