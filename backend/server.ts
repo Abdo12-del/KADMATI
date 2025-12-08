@@ -21,7 +21,18 @@ process.on('uncaughtException', (error) => {
 });
 
 // Initialize Knex
-const db = knex(knexConfig[env.NODE_ENV || 'development']);
+console.log('NODE_ENV:', env.NODE_ENV);
+const currentKnexConfig = knexConfig[env.NODE_ENV || 'development'];
+console.log('Knex config for current environment:', currentKnexConfig);
+
+// Check if the configuration is valid before initializing Knex
+if (!currentKnexConfig) {
+  console.error('Error: Knex configuration not found for environment:', env.NODE_ENV || 'development');
+  process.exit(1);
+}
+
+const db = knex(currentKnexConfig);
+console.log('Knex DB initialized successfully.');
 
 const app = express();
 
