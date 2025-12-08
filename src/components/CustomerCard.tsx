@@ -1,8 +1,11 @@
+"use client";
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { MessageSquare } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface CustomerCardProps {
   customer: {
@@ -16,6 +19,11 @@ interface CustomerCardProps {
 }
 
 const CustomerCard = ({ customer }: CustomerCardProps) => {
+  const handleSendMessage = () => {
+    toast.info(`سيتم فتح نافذة محادثة مع ${customer.name} (وظيفة وهمية)!`);
+    console.log('Send message clicked for customer:', customer.id);
+  };
+
   return (
     <Card className="bg-brand-card-bg rounded-xl shadow-soft hover:shadow-soft-lg transition-all duration-300">
       <CardHeader className="flex flex-row-reverse items-center space-x-4 rtl:space-x-reverse p-4 pb-2">
@@ -29,7 +37,7 @@ const CustomerCard = ({ customer }: CustomerCardProps) => {
         <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">البريد الإلكتروني: {customer.email}</p>
         <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">إجمالي الطلبات: <span className="font-semibold">{customer.totalOrders}</span></p>
         <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">آخر طلب: {customer.lastOrderDate}</p>
-        <Button className="w-full mt-4 bg-brand-primary hover:bg-brand-primary-dark text-white rounded-lg shadow-soft font-ibm-plex-arabic">
+        <Button onClick={handleSendMessage} className="w-full mt-4 bg-brand-primary hover:bg-brand-primary-dark text-white rounded-lg shadow-soft font-ibm-plex-arabic">
           <MessageSquare className="ml-2 h-4 w-4" />
           إرسال رسالة
         </Button>

@@ -1,12 +1,16 @@
+"use client";
+
 import React from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
 
 const CalendarPage = () => {
   const [date, setDate] = React.useState<Date | undefined>(new Date());
+  const [availability, setAvailability] = React.useState<string>('available');
 
   // Placeholder for events/bookings
   const events = [
@@ -23,6 +27,11 @@ const CalendarPage = () => {
   };
 
   const selectedDateEvents = getEventsForDate(date);
+
+  const handleSaveAvailability = () => {
+    toast.success(`تم حفظ حالة التوفر كـ "${availability}" (وظيفة وهمية)!`);
+    console.log('Availability saved:', availability);
+  };
 
   return (
     <DashboardLayout>
@@ -63,7 +72,7 @@ const CalendarPage = () => {
             )}
             <div className="mt-8 space-y-4">
               <h3 className="text-xl font-cairo text-brand-text-dark">تعديل التوفر</h3>
-              <Select>
+              <Select value={availability} onValueChange={setAvailability}>
                 <SelectTrigger className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right">
                   <SelectValue placeholder="اختر حالة التوفر" />
                 </SelectTrigger>
@@ -73,7 +82,7 @@ const CalendarPage = () => {
                   <SelectItem value="vacation">إجازة</SelectItem>
                 </SelectContent>
               </Select>
-              <Button className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
+              <Button onClick={handleSaveAvailability} className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
                 حفظ التوفر
               </Button>
             </div>

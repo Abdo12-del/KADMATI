@@ -91,6 +91,11 @@ const ChatWindow = ({ conversation, currentUserId, currentBackendUserId, onMessa
     }
   };
 
+  const handleAttachFile = () => {
+    toast.info('وظيفة إرفاق الملفات قيد التطوير (وظيفة وهمية)!');
+    console.log('Attach file clicked');
+  };
+
   return (
     <div className="flex flex-col h-full bg-brand-card-bg rounded-2xl">
       {/* Messages Area */}
@@ -119,7 +124,7 @@ const ChatWindow = ({ conversation, currentUserId, currentBackendUserId, onMessa
 
       {/* Message Input Area */}
       <div className="border-t border-border pt-4 flex flex-row-reverse items-center space-x-4 rtl:space-x-reverse px-4 pb-4 flex-shrink-0">
-        <Button variant="ghost" size="icon" className="text-brand-text-muted hover:text-brand-primary rounded-full">
+        <Button onClick={handleAttachFile} variant="ghost" size="icon" className="text-brand-text-muted hover:text-brand-primary rounded-full">
           <Paperclip className="h-5 w-5" />
           <span className="sr-only">إرفاق ملف</span>
         </Button>

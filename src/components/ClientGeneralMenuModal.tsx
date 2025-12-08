@@ -18,7 +18,7 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { Badge } from '@/components/ui/badge';
 import { Star, Edit, Trash2, Menu, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom'; // For internal links within the modal content
-// Removed ScrollArea import as we're using overflow-y-auto on a div
+import { toast } from 'sonner';
 
 // Helper for stars
 const renderStars = (rating: number) => {
@@ -104,6 +104,52 @@ const getStatusBadgeVariant = (status: string) => {
 };
 
 export const ClientGeneralMenuModal = () => {
+  const handleImageChange = () => {
+    toast.info('وظيفة تغيير الصورة قيد التطوير (وظيفة وهمية)!');
+    console.log('Change image clicked');
+  };
+
+  const handleProfileSave = () => {
+    toast.success('تم حفظ تعديلات الملف الشخصي بنجاح (وظيفة وهمية)!');
+    console.log('Profile saved');
+  };
+
+  const handleChangePassword = () => {
+    toast.success('تم تغيير كلمة المرور بنجاح (وظيفة وهمية)!');
+    console.log('Password changed');
+  };
+
+  const handleNotificationToggle = (id: string, checked: boolean) => {
+    toast.info(`تم ${checked ? 'تفعيل' : 'تعطيل'} إشعارات ${id === 'email-notifications' ? 'البريد الإلكتروني' : 'الفورية'} (وظيفة وهمية)!`);
+    console.log(`Notification ${id} toggled: ${checked}`);
+  };
+
+  const handleSaveLanguageSettings = () => {
+    toast.success('تم حفظ إعدادات اللغة بنجاح (وظيفة وهمية)!');
+    console.log('Language settings saved');
+  };
+
+  const handleAddPaymentMethod = () => {
+    toast.info('وظيفة إضافة طريقة دفع جديدة قيد التطوير (وظيفة وهمية)!');
+    console.log('Add payment method clicked');
+  };
+
+  const handleEditReview = (reviewId: string) => {
+    toast.info(`تعديل التقييم ${reviewId} (وظيفة وهمية)!`);
+    console.log('Edit review clicked for:', reviewId);
+  };
+
+  const handleDeleteReview = (reviewId: string) => {
+    toast.error(`حذف التقييم ${reviewId} (وظيفة وهمية)!`);
+    console.log('Delete review clicked for:', reviewId);
+  };
+
+  const handleSubmitSupportMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast.success('تم إرسال رسالتك إلى الدعم الفني بنجاح (وظيفة وهمية)!');
+    console.log('Support message sent from modal');
+  };
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -139,7 +185,7 @@ export const ClientGeneralMenuModal = () => {
                       <AvatarImage src={user.avatarUrl} alt={user.name} />
                       <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                     </Avatar>
-                    <Button variant="outline" size="sm" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-lg shadow-soft font-ibm-plex-arabic">تغيير الصورة</Button>
+                    <Button onClick={handleImageChange} variant="outline" size="sm" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-lg shadow-soft font-ibm-plex-arabic">تغيير الصورة</Button>
                   </div>
                   <div>
                     <Label htmlFor="profile-name" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">الاسم الكامل</Label>
@@ -153,7 +199,7 @@ export const ClientGeneralMenuModal = () => {
                     <Label htmlFor="profile-phone" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">رقم الهاتف</Label>
                     <Input id="profile-phone" type="tel" defaultValue={user.phone} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
                   </div>
-                  <Button className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
+                  <Button onClick={handleProfileSave} className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
                     حفظ التعديلات
                   </Button>
                 </CardContent>
@@ -181,7 +227,7 @@ export const ClientGeneralMenuModal = () => {
                       <Label htmlFor="confirm-new-password" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">تأكيد كلمة المرور الجديدة</Label>
                       <Input id="confirm-new-password" type="password" className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
                     </div>
-                    <Button variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
+                    <Button onClick={handleChangePassword} variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
                       تغيير كلمة المرور
                     </Button>
                   </div>
@@ -190,11 +236,11 @@ export const ClientGeneralMenuModal = () => {
                     <h3 className="text-xl font-cairo text-brand-text-dark">إعدادات الإشعارات</h3>
                     <div className="flex flex-row-reverse items-center justify-between">
                       <Label htmlFor="email-notifications" className="text-brand-text-dark font-ibm-plex-arabic text-lg">تلقي إشعارات عبر البريد الإلكتروني</Label>
-                      <Switch id="email-notifications" defaultChecked />
+                      <Switch id="email-notifications" defaultChecked onCheckedChange={(checked) => handleNotificationToggle('email-notifications', checked)} />
                     </div>
                     <div className="flex flex-row-reverse items-center justify-between">
                       <Label htmlFor="push-notifications" className="text-brand-text-dark font-ibm-plex-arabic text-lg">تلقي إشعارات فورية</Label>
-                      <Switch id="push-notifications" defaultChecked />
+                      <Switch id="push-notifications" defaultChecked onCheckedChange={(checked) => handleNotificationToggle('push-notifications', checked)} />
                     </div>
                   </div>
 
@@ -212,7 +258,7 @@ export const ClientGeneralMenuModal = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    <Button className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
+                    <Button onClick={handleSaveLanguageSettings} className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
                       حفظ إعدادات اللغة
                     </Button>
                   </div>
@@ -291,7 +337,7 @@ export const ClientGeneralMenuModal = () => {
                 </CardHeader>
                 <CardContent className="p-0 space-y-4">
                   <p className="text-brand-text-muted font-ibm-plex-arabic">لا توجد طرق دفع محفوظة حاليًا.</p>
-                  <Button variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
+                  <Button onClick={handleAddPaymentMethod} variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
                     إضافة طريقة دفع جديدة
                   </Button>
                 </CardContent>
@@ -320,11 +366,11 @@ export const ClientGeneralMenuModal = () => {
                         <p className="text-brand-text-dark font-ibm-plex-arabic">{review.comment}</p>
                         <p className="text-xs text-brand-text-muted mt-2 font-ibm-plex-arabic">بتاريخ: {review.date}</p>
                         <div className="flex justify-end gap-3 mt-4">
-                          <Button variant="outline" size="sm" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-lg shadow-soft font-ibm-plex-arabic">
+                          <Button onClick={() => handleEditReview(review.id)} variant="outline" size="sm" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-lg shadow-soft font-ibm-plex-arabic">
                             <Edit className="ml-2 h-4 w-4" />
                             تعديل
                           </Button>
-                          <Button variant="destructive" size="sm" className="bg-brand-danger hover:bg-brand-danger/90 text-white rounded-lg shadow-soft font-ibm-plex-arabic">
+                          <Button onClick={() => handleDeleteReview(review.id)} variant="destructive" size="sm" className="bg-brand-danger hover:bg-brand-danger/90 text-white rounded-lg shadow-soft font-ibm-plex-arabic">
                             <Trash2 className="ml-2 h-4 w-4" />
                             حذف
                           </Button>
@@ -361,25 +407,27 @@ export const ClientGeneralMenuModal = () => {
               <h2 className="text-xl font-cairo text-brand-text-dark mb-4 text-right">تواصل مع الدعم الفني</h2>
               <Card className="bg-brand-card-bg rounded-2xl shadow-soft p-6 text-right">
                 <CardContent className="p-0 space-y-4">
-                  <div>
-                    <Label htmlFor="support-name" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">اسمك الكامل</Label>
-                    <Input id="support-name" type="text" placeholder="ادخل اسمك" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
-                  </div>
-                  <div>
-                    <Label htmlFor="support-email" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">بريدك الإلكتروني</Label>
-                    <Input id="support-email" type="email" placeholder="ادخل بريدك الإلكتروني" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
-                  </div>
-                  <div>
-                    <Label htmlFor="support-subject" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">الموضوع</Label>
-                    <Input id="support-subject" type="text" placeholder="موضوع رسالتك" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
-                  </div>
-                  <div>
-                    <Label htmlFor="support-message" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">رسالتك</Label>
-                    <Textarea id="support-message" placeholder="اكتب رسالتك هنا بالتفصيل..." rows={5} required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
-                  </div>
-                  <Button className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
-                    إرسال الرسالة
-                  </Button>
+                  <form onSubmit={handleSubmitSupportMessage} className="space-y-4">
+                    <div>
+                      <Label htmlFor="support-name" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">اسمك الكامل</Label>
+                      <Input id="support-name" type="text" placeholder="ادخل اسمك" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                    </div>
+                    <div>
+                      <Label htmlFor="support-email" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">بريدك الإلكتروني</Label>
+                      <Input id="support-email" type="email" placeholder="ادخل بريدك الإلكتروني" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                    </div>
+                    <div>
+                      <Label htmlFor="support-subject" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">الموضوع</Label>
+                      <Input id="support-subject" type="text" placeholder="موضوع رسالتك" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                    </div>
+                    <div>
+                      <Label htmlFor="support-message" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">رسالتك</Label>
+                      <Textarea id="support-message" placeholder="اكتب رسالتك هنا بالتفصيل..." rows={5} required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                    </div>
+                    <Button type="submit" className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
+                      إرسال الرسالة
+                    </Button>
+                  </form>
                 </CardContent>
               </Card>
             </TabsContent>

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { MapPin, CalendarDays, MessageSquare } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
+import { toast } from 'sonner';
 
 interface ProviderRequestCardProps {
   request: {
@@ -21,6 +22,11 @@ interface ProviderRequestCardProps {
 }
 
 const ProviderRequestCard = ({ request }: ProviderRequestCardProps) => {
+  const handleContactClient = () => {
+    toast.info(`سيتم فتح نافذة محادثة مع ${request.clientName} (وظيفة وهمية)!`);
+    console.log('Contact client clicked for request:', request.id);
+  };
+
   return (
     <Card className="bg-brand-card-bg rounded-xl shadow-soft hover:shadow-soft-lg transition-all duration-300">
       <CardHeader className="p-4 pb-2 text-right">
@@ -74,14 +80,14 @@ const ProviderRequestCard = ({ request }: ProviderRequestCardProps) => {
                 <p className="font-semibold mt-4">طالب الخدمة: {request.clientName}</p>
               </div>
               <div className="mt-6 text-center">
-                <Button className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
+                <Button onClick={handleContactClient} className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
                   <MessageSquare className="ml-2 h-5 w-5" />
                   الاتصال بالطالب
                 </Button>
               </div>
             </DialogContent>
           </Dialog>
-          <Button className="bg-brand-primary hover:bg-brand-primary-dark text-white px-3 py-2 rounded-lg shadow-soft font-ibm-plex-arabic text-sm">
+          <Button onClick={handleContactClient} className="bg-brand-primary hover:bg-brand-primary-dark text-white px-3 py-2 rounded-lg shadow-soft font-ibm-plex-arabic text-sm">
             الاتصال بالطالب
           </Button>
         </div>

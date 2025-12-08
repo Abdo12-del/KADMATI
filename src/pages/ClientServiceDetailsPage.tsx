@@ -155,8 +155,13 @@ const ClientServiceDetailsPage = () => {
   };
 
   const handleAddToFavorites = () => {
-    toast.success('تمت إضافة الخدمة إلى المفضلة!');
+    toast.success('تمت إضافة الخدمة إلى المفضلة (وظيفة وهمية)!');
     // Logic to add to favorites
+  };
+
+  const handleContactProvider = () => {
+    toast.info('سيتم فتح نافذة محادثة مع مقدم الخدمة (وظيفة وهمية)!');
+    console.log('Contact provider clicked');
   };
 
   // Placeholder for service features and FAQs as they are not in the backend model
@@ -313,7 +318,7 @@ const ClientServiceDetailsPage = () => {
                       <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">الهاتف: {provider.phone || 'غير متوفر'}</p>
                     </div>
                     <div className="mt-6 text-center">
-                      <Button className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
+                      <Button onClick={handleContactProvider} className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
                         <MessageSquare className="ml-2 h-5 w-5" />
                         إرسال رسالة
                       </Button>
@@ -424,7 +429,7 @@ const ClientServiceDetailsPage = () => {
                     اطلب الخدمة الآن
                   </Button>
                 </Link>
-                <Button variant="outline" className="w-full border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
+                <Button onClick={handleContactProvider} variant="outline" className="w-full border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
                   <MessageSquare className="ml-2 h-5 w-5" />
                   تواصل مع مقدم الخدمة
                 </Button>

@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -7,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Link } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'sonner';
 
 const SignupPage = () => {
   const [stage, setStage] = useState(1);
@@ -15,6 +18,13 @@ const SignupPage = () => {
   const handleRoleSelect = (selectedRole: 'seeker' | 'provider') => {
     setRole(selectedRole);
     setStage(2);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Placeholder for actual signup logic
+    toast.success(`تم إنشاء حسابك كـ ${role === 'seeker' ? 'طالب خدمة' : 'عارض خدمة'} بنجاح (وظيفة وهمية)!`);
+    console.log('Signup form submitted with role:', role);
   };
 
   return (
@@ -47,7 +57,7 @@ const SignupPage = () => {
             )}
 
             {stage === 2 && role && (
-              <form className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <Label htmlFor="name" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">الاسم الكامل</Label>
                   <Input id="name" type="text" placeholder="ادخل اسمك الكامل" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />

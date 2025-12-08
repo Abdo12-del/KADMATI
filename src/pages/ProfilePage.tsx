@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -6,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
 
 const ProfilePage = () => {
   // Placeholder user data
@@ -15,6 +18,16 @@ const ProfilePage = () => {
     role: 'مقدم خدمة',
     bio: 'مصمم جرافيك بخبرة 5 سنوات في تصميم الشعارات والهويات البصرية.',
     avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=AM', // Example avatar
+  };
+
+  const handleSaveChanges = () => {
+    toast.success('تم حفظ التعديلات بنجاح (وظيفة وهمية)!');
+    console.log('Profile changes saved');
+  };
+
+  const handleChangePassword = () => {
+    toast.success('تم تغيير كلمة المرور بنجاح (وظيفة وهمية)!');
+    console.log('Password changed');
   };
 
   return (
@@ -51,7 +64,7 @@ const ProfilePage = () => {
                 <Label htmlFor="profile-bio" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">نبذة عني</Label>
                 <Textarea id="profile-bio" defaultValue={user.bio} rows={4} className="rounded-xl shadow-soft bg-brand-card-bg border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
               </div>
-              <Button className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
+              <Button onClick={handleSaveChanges} className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
                 حفظ التعديلات
               </Button>
             </CardContent>
@@ -74,7 +87,7 @@ const ProfilePage = () => {
                 <Label htmlFor="confirm-new-password" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">تأكيد كلمة المرور الجديدة</Label>
                 <Input id="confirm-new-password" type="password" className="rounded-xl shadow-soft bg-brand-card-bg border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
               </div>
-              <Button variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
+              <Button onClick={handleChangePassword} variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
                 تغيير كلمة المرور
               </Button>
             </CardContent>

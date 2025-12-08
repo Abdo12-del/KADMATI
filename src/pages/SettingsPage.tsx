@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -6,8 +8,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
 
 const SettingsPage = () => {
+  const handleSendMessage = () => {
+    toast.success('تم إرسال رسالتك بنجاح (وظيفة وهمية)!');
+    console.log('Contact message sent');
+  };
+
+  const handleDeleteAccount = () => {
+    toast.error('تم طلب حذف الحساب (وظيفة وهمية)!');
+    console.log('Account deletion requested');
+  };
+
+  const handleNotificationToggle = (id: string, checked: boolean) => {
+    toast.info(`تم ${checked ? 'تفعيل' : 'تعطيل'} إشعارات ${id === 'email-notifications' ? 'البريد الإلكتروني' : 'الفورية'} (وظيفة وهمية)!`);
+    console.log(`Notification ${id} toggled: ${checked}`);
+  };
+
   return (
     <DashboardLayout>
       <Card className="bg-brand-card-bg p-8 rounded-2xl shadow-soft w-full max-w-3xl mx-auto text-right">
@@ -22,11 +40,11 @@ const SettingsPage = () => {
             <CardContent className="p-0 space-y-4">
               <div className="flex flex-row-reverse items-center justify-between">
                 <Label htmlFor="email-notifications" className="text-brand-text-dark font-ibm-plex-arabic text-lg">تلقي إشعارات عبر البريد الإلكتروني</Label>
-                <Switch id="email-notifications" defaultChecked />
+                <Switch id="email-notifications" defaultChecked onCheckedChange={(checked) => handleNotificationToggle('email-notifications', checked)} />
               </div>
               <div className="flex flex-row-reverse items-center justify-between">
                 <Label htmlFor="push-notifications" className="text-brand-text-dark font-ibm-plex-arabic text-lg">تلقي إشعارات فورية</Label>
-                <Switch id="push-notifications" />
+                <Switch id="push-notifications" onCheckedChange={(checked) => handleNotificationToggle('push-notifications', checked)} />
               </div>
             </CardContent>
           </Card>
@@ -44,7 +62,7 @@ const SettingsPage = () => {
                 <Label htmlFor="contact-message" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">رسالتك</Label>
                 <Textarea id="contact-message" placeholder="اكتب رسالتك هنا..." rows={5} className="rounded-xl shadow-soft bg-brand-card-bg border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
               </div>
-              <Button className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
+              <Button onClick={handleSendMessage} className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
                 إرسال الرسالة
               </Button>
             </CardContent>
@@ -55,7 +73,7 @@ const SettingsPage = () => {
               <CardTitle className="font-cairo text-brand-text-dark text-2xl">إدارة الحساب</CardTitle>
             </CardHeader>
             <CardContent className="p-0 space-y-4">
-              <Button variant="destructive" className="w-full bg-brand-danger hover:bg-brand-danger/90 text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
+              <Button onClick={handleDeleteAccount} variant="destructive" className="w-full bg-brand-danger hover:bg-brand-danger/90 text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
                 حذف الحساب
               </Button>
             </CardContent>
