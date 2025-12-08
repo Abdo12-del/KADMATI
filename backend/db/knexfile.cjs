@@ -1,12 +1,12 @@
 const path = require('path');
-const { env } = require('../config/env'); // Import env for production config
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') }); // Load .env from project root
 
 /** @type {import('knex').Knex.Config} */
 const config = {
   development: {
     client: 'sqlite3',
     connection: {
-      filename: path.resolve(__dirname, 'database.db'), // Ensure correct path to database.db
+      filename: process.env.DATABASE_URL || path.resolve(__dirname, 'database.db'), // Use DATABASE_URL from .env or default
     },
     useNullAsDefault: true,
     migrations: {
@@ -20,7 +20,7 @@ const config = {
   production: {
     client: 'sqlite3',
     connection: {
-      filename: path.resolve(__dirname, 'database.db'), // Ensure correct path to database.db
+      filename: process.env.DATABASE_URL || path.resolve(__dirname, 'database.db'), // Use DATABASE_URL from .env or default
     },
     useNullAsDefault: true,
     migrations: {
