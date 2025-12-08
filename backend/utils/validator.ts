@@ -29,7 +29,7 @@ export const validateUser = (data: any, isUpdate: boolean = false) => {
 export const validateService = (data: any, isUpdate: boolean = false) => {
   const errors: string[] = [];
 
-  if (!isUpdate && !data.provider_id) {
+  if (!isUpdate && (data.provider_id === undefined || data.provider_id === null)) {
     errors.push('Provider ID is required.');
   }
   if (!isUpdate && !data.title) {
@@ -53,7 +53,7 @@ export const validateService = (data: any, isUpdate: boolean = false) => {
 export const validateRequest = (data: any, isUpdate: boolean = false) => {
   const errors: string[] = [];
 
-  if (!isUpdate && !data.client_id) {
+  if (!isUpdate && (data.client_id === undefined || data.client_id === null)) {
     errors.push('Client ID is required.');
   }
   if (!isUpdate && !data.title) {
@@ -63,7 +63,7 @@ export const validateRequest = (data: any, isUpdate: boolean = false) => {
     errors.push('Description is required.');
   }
   if (data.status && !['pending', 'accepted', 'completed', 'cancelled'].includes(data.status)) {
-    errors.push('Invalid request status.');
+    errors.push('Invalid request status. Must be "pending", "accepted", "completed", or "cancelled".');
   }
 
   return errors;
@@ -72,10 +72,10 @@ export const validateRequest = (data: any, isUpdate: boolean = false) => {
 export const validateRating = (data: any, isUpdate: boolean = false) => {
   const errors: string[] = [];
 
-  if (!isUpdate && !data.service_id) {
+  if (!isUpdate && (data.service_id === undefined || data.service_id === null)) {
     errors.push('Service ID is required.');
   }
-  if (!isUpdate && !data.client_id) {
+  if (!isUpdate && (data.client_id === undefined || data.client_id === null)) {
     errors.push('Client ID is required.');
   }
   if (!isUpdate && (data.rating === undefined || data.rating === null)) {
@@ -90,10 +90,10 @@ export const validateRating = (data: any, isUpdate: boolean = false) => {
 export const validateMessage = (data: any, isUpdate: boolean = false) => {
   const errors: string[] = [];
 
-  if (!isUpdate && !data.sender_id) {
+  if (!isUpdate && (data.sender_id === undefined || data.sender_id === null)) {
     errors.push('Sender ID is required.');
   }
-  if (!isUpdate && !data.receiver_id) {
+  if (!isUpdate && (data.receiver_id === undefined || data.receiver_id === null)) {
     errors.push('Receiver ID is required.');
   }
   if (!isUpdate && !data.conversation_id) {
