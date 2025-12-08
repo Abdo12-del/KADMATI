@@ -34,9 +34,12 @@ router.get('/:id', async (req, res, next) => {
 // Create a new user
 router.post('/', async (req, res, next) => {
   try {
+    console.log('Received signup request body:', req.body); // Added for debugging
     const validationErrors = validateUser(req.body);
+    console.log('Validation errors from validateUser:', validationErrors); // Added for debugging
+
     if (validationErrors.length > 0) {
-      console.error('Validation failed for user creation:', validationErrors); // Added console.error here
+      console.error('Validation failed for user creation with errors:', validationErrors); // Updated log
       throw new ApiError('Validation failed', 400, validationErrors);
     }
 
@@ -45,6 +48,11 @@ router.post('/', async (req, res, next) => {
     const existingUser = await userService.getUserByEmail(email);
     if (existingUser) {
       throw new ApiError('User with this email already exists', 409);
+    }
+
+    // Safeguard in case validateUser somehow misses an empty password
+    if (!password) {
+      throw new ApiError('Password is required', 400, ['Password is required.']);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -73,9 +81,12 @@ router.put('/:id', async (req, res, next) => {
     const { id } = req.params;
     const updates = req.body;
 
+    console.log('Received user update request body:', req.body); // Added for debugging
     const validationErrors = validateUser(updates, true);
+    console.log('Validation errors from validateUser (update):', validationErrors); // Added for debugging
+
     if (validationErrors.length > 0) {
-      console.error('Validation failed for user update:', validationErrors); // Added console.error here
+      console.error('Validation failed for user update with errors:', validationErrors); // Updated log
       throw new ApiError('Validation failed', 400, validationErrors);
     }
 
