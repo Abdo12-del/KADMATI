@@ -3,7 +3,7 @@ import { userService } from '../services/userService';
 import { successResponse, errorResponse } from '../utils/response';
 import { ApiError } from '../utils/errorHandler';
 import { validateUser } from '../utils/validator';
-import bcrypt from 'bcryptjs'; // For password hashing
+// import bcrypt from 'bcryptjs'; // For password hashing - Temporarily commented out
 
 const router = Router();
 
@@ -40,12 +40,11 @@ router.post('/', async (req, res, next) => {
 
     if (validationErrors.length > 0) {
       console.error('Validation failed for user creation with errors:', validationErrors);
-      // Return specific validation errors directly in the response
       return errorResponse(res, 'Validation failed', 400, validationErrors);
     }
 
     console.log("3. Validation passed.");
-    const { name, email, password, role, phone, bio, avatar_url, provider_type, id_number, address } = req.body; // Destructure all potential fields
+    const { name, email, password, role, phone, bio, avatar_url, provider_type, id_number, address } = req.body;
 
     const existingUser = await userService.getUserByEmail(email);
     if (existingUser) {
@@ -56,10 +55,11 @@ router.post('/', async (req, res, next) => {
     if (!password) {
       throw new ApiError('Password is required', 400, ['Password is required.']);
     }
-    console.log("5. Password is present. Hashing password...");
+    console.log("5. Password is present. Skipping hashing for simulation...");
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    console.log("6. Password hashed successfully.");
+    // const hashedPassword = await bcrypt.hash(password, 10); // Temporarily commented out
+    const hashedPassword = password; // Store password as plain text for simulation
+    console.log("6. Password stored (not hashed) successfully.");
 
     const newUser = await userService.createUser({
       name,
@@ -69,18 +69,17 @@ router.post('/', async (req, res, next) => {
       phone,
       bio,
       avatar_url,
-      provider_type, // Pass provider-specific fields
-      id_number,     // Pass provider-specific fields
-      address,       // Pass provider-specific fields
+      provider_type,
+      id_number,
+      address,
     });
     console.log("7. User created successfully in service.");
 
-    // Remove password before sending response
     const { password: _, ...userWithoutPassword } = newUser;
     successResponse(res, 'User created successfully', userWithoutPassword, 201);
     console.log("8. Success response sent.");
   } catch (error) {
-    console.error("Error in POST /api/users:", error); // Log error before passing to next
+    console.error("Error in POST /api/users:", error);
     next(error);
   }
 });
@@ -97,12 +96,12 @@ router.put('/:id', async (req, res, next) => {
 
     if (validationErrors.length > 0) {
       console.error('Validation failed for user update with errors:', validationErrors);
-      // Return specific validation errors directly in the response
       return errorResponse(res, 'Validation failed', 400, validationErrors);
     }
 
     if (updates.password) {
-      updates.password = await bcrypt.hash(updates.password, 10);
+      // updates.password = await bcrypt.hash(updates.password, 10); // Temporarily commented out
+      updates.password = updates.password; // Store password as plain text for simulation
     }
 
     const updatedUser = await userService.updateUser(Number(id), updates);
@@ -110,7 +109,6 @@ router.put('/:id', async (req, res, next) => {
       throw new ApiError('User not found', 404);
     }
 
-    // Remove password before sending response
     const { password: _, ...userWithoutPassword } = updatedUser;
     successResponse(res, 'User updated successfully', userWithoutPassword);
   } catch (error) {
