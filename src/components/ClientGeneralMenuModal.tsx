@@ -282,7 +282,7 @@ export const ClientGeneralMenuModal = () => {
                         {transactions.map(transaction => (
                           <TableRow key={transaction.id}>
                             <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">{transaction.service}</TableCell>
-                            <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">${transaction.amount}</TableCell>
+                            <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">{transaction.amount} د.ج</TableCell>
                             <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">{transaction.date}</TableCell>
                             <TableCell className="text-right">
                               <Badge variant={getStatusBadgeVariant(transaction.status)} className="rounded-md font-ibm-plex-arabic">

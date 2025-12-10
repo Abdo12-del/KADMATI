@@ -48,7 +48,7 @@ const ClientServiceCard = ({ service }: ClientServiceCardProps) => {
           {renderStars(service.rating)}
         </div>
         <div className="flex justify-between items-center pt-4">
-          <span className="text-brand-primary font-bold text-xl font-cairo">${service.price}</span>
+          <span className="text-brand-primary font-bold text-xl font-cairo">{service.price} د.ج</span>
           <div className="flex gap-2"> {/* تم إضافة div لتجميع الأزرار */}
             <Link to={`/client-home/services/${service.id}`}>
               <Button variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 px-3 py-2 rounded-lg shadow-soft font-ibm-plex-arabic text-sm">

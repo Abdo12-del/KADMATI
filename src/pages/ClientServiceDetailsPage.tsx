@@ -396,7 +396,7 @@ const ClientServiceDetailsPage = () => {
             <CardContent className="space-y-6 p-0">
               <div className="flex justify-between items-center text-xl font-bold text-brand-text-dark font-cairo">
                 <span>السعر الأساسي:</span>
-                <span className="text-brand-primary">${service.price}</span>
+                <span className="text-brand-primary">{service.price} د.ج</span>
               </div>
               
               {/* Placeholder for service options */}
@@ -406,7 +406,7 @@ const ClientServiceDetailsPage = () => {
                   {service.options.map(option => (
                     <div key={option.id} className="flex justify-between items-center text-brand-text-dark font-ibm-plex-arabic">
                       <span>{option.name}</span>
-                      <span>+${option.price}</span>
+                      <span>+{option.price} د.ج</span>
                     </div>
                   ))}
                 </div>

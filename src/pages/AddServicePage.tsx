@@ -12,6 +12,8 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const AddServicePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth(); // Get current user from auth context
@@ -50,7 +52,7 @@ const AddServicePage = () => {
     };
 
     try {
-      const response = await fetch('/api/services', {
+      const response = await fetch(`${API_BASE_URL}/api/services`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -120,11 +122,11 @@ const AddServicePage = () => {
             </Select>
           </div>
           <div>
-            <Label htmlFor="service-price" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">السعر ($)</Label>
+            <Label htmlFor="service-price" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">السعر (د.ج)</Label>
             <Input
               id="service-price"
               type="number"
-              placeholder="مثال: 150"
+              placeholder="مثال: 15000"
               required
               min="0"
               value={price}

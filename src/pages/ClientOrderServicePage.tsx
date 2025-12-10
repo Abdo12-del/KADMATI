@@ -162,7 +162,7 @@ const ClientOrderServicePage = () => {
         <div className="space-y-4 text-brand-text-dark font-ibm-plex-arabic">
           <div className="flex justify-between items-center">
             <span className="font-semibold">السعر الأساسي:</span>
-            <span className="text-brand-primary font-bold text-xl">${service.price}</span>
+            <span className="text-brand-primary font-bold text-xl">{service.price} د.ج</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="font-semibold">مدة التسليم المتوقعة:</span>

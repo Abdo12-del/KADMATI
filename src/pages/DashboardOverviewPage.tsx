@@ -135,7 +135,7 @@ const DashboardOverviewPage = () => {
   // Placeholder for earnings, as request model doesn't have price
   const totalEarnings = useMemo(() => {
     // In a real app, this would sum prices of completed services/requests
-    return (completedOrders * 150).toLocaleString('en-US', { style: 'currency', currency: 'USD' }); // Assuming avg $150 per completed order
+    return (completedOrders * 15000).toLocaleString('ar-EG', { style: 'currency', currency: 'DZD', minimumFractionDigits: 0 }); // Assuming avg 15000 DZD per completed order
   }, [completedOrders]);
 
   // --- Tasks List ---

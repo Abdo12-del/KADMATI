@@ -138,7 +138,7 @@ const EditServicePage = () => {
             </Select>
           </div>
           <div>
-            <Label htmlFor="service-price" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">السعر ($)</Label>
+            <Label htmlFor="service-price" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">السعر (د.ج)</Label>
             <Input id="service-price" type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} required min="0" className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
           </div>
           <div>

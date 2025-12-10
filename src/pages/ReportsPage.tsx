@@ -37,7 +37,7 @@ const ReportsPage = () => {
             </Select>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-4xl font-cairo text-brand-text-dark font-bold mb-2">$12,345</div>
+            <div className="text-4xl font-cairo text-brand-text-dark font-bold mb-2">12,345 د.ج</div>
             <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">+15% عن الشهر الماضي</p>
             <div className="h-[200px] mt-4">
               <ResponsiveContainer width="100%" height="100%">
@@ -98,21 +98,21 @@ const ReportsPage = () => {
                 <p className="font-cairo text-brand-text-dark font-semibold">تصميم شعار احترافي</p>
                 <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">50 طلب، متوسط تقييم 4.9</p>
               </div>
-              <span className="font-bold text-brand-primary text-lg font-cairo">$7,500</span>
+              <span className="font-bold text-brand-primary text-lg font-cairo">7,500 د.ج</span>
             </li>
             <li className="flex flex-row-reverse justify-between items-center border-b border-border pb-3 last:border-b-0 last:pb-0">
               <div className="text-right">
                 <p className="font-cairo text-brand-text-dark font-semibold">تطوير موقع ويب شخصي</p>
                 <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">20 طلب، متوسط تقييم 4.7</p>
               </div>
-              <span className="font-bold text-brand-primary text-lg font-cairo">$10,000</span>
+              <span className="font-bold text-brand-primary text-lg font-cairo">10,000 د.ج</span>
             </li>
             <li className="flex flex-row-reverse justify-between items-center border-b border-border pb-3 last:border-b-0 last:pb-0">
               <div className="text-right">
                 <p className="font-cairo text-brand-text-dark font-semibold">كتابة محتوى تسويقي</p>
                 <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">30 طلب، متوسط تقييم 4.8</p>
               </div>
-              <span className="font-bold text-brand-primary text-lg font-cairo">$3,000</span>
+              <span className="font-bold text-brand-primary text-lg font-cairo">3,000 د.ج</span>
             </li>
           </ul>
         </CardContent>

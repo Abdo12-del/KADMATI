@@ -40,7 +40,7 @@ const ClientOrderCard = ({ order }: ClientOrderCardProps) => {
         <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">التاريخ: {order.date}</p>
         <div className="flex justify-between items-center pt-2">
           <span className={`font-semibold font-ibm-plex-arabic ${getStatusColor(order.status)}`}>الحالة: {order.status}</span>
-          <span className="font-bold text-brand-primary text-xl font-cairo">${order.price}</span>
+          <span className="font-bold text-brand-primary text-xl font-cairo">{order.price} د.ج</span>
         </div>
         <Link to={`/client-dashboard/orders/${order.id}`}>
           <Button variant="outline" className="w-full mt-4 border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-lg shadow-soft font-ibm-plex-arabic">

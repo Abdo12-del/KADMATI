@@ -42,7 +42,7 @@ const ServiceCard = ({ service }: ServiceCardProps) => {
       <CardContent className="p-4 pt-0 space-y-3 text-right">
         <p className="text-sm text-brand-text-muted line-clamp-2 font-ibm-plex-arabic">{service.description}</p>
         <div className="flex justify-between items-center pt-2">
-          <span className="text-brand-primary font-bold text-xl font-cairo">${service.price}</span>
+          <span className="text-brand-primary font-bold text-xl font-cairo">{service.price} د.ج</span>
           <Link to={`/dashboard/services/edit/${service.id}`}>
             <Button className="bg-brand-primary hover:bg-brand-primary-dark text-white px-5 py-2 rounded-lg shadow-soft font-ibm-plex-arabic">
               تعديل الخدمة
