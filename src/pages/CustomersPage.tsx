@@ -45,7 +45,7 @@ const CustomersPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:3000/api/users');
+      const response = await fetch('/api/users');
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'فشل جلب المستخدمين.');

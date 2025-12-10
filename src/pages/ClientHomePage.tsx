@@ -64,8 +64,8 @@ const ClientHomePage = () => {
     setError(null);
     try {
       const [servicesResponse, usersResponse] = await Promise.all([
-        fetch('http://localhost:3000/api/services'),
-        fetch('http://localhost:3000/api/users'),
+        fetch('/api/services'),
+        fetch('/api/users'),
       ]);
 
       if (!servicesResponse.ok) {

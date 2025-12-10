@@ -82,10 +82,10 @@ const DashboardOverviewPage = () => {
     setError(null);
     try {
       const [requestsResponse, ratingsResponse, messagesResponse, usersResponse] = await Promise.all([
-        fetch('http://localhost:3000/api/requests'),
-        fetch('http://localhost:3000/api/ratings'),
-        fetch('http://localhost:3000/api/messages'),
-        fetch('http://localhost:3000/api/users'),
+        fetch('/api/requests'),
+        fetch('/api/ratings'),
+        fetch('/api/messages'),
+        fetch('/api/users'),
       ]);
 
       if (!requestsResponse.ok) throw new Error('فشل جلب الطلبات.');

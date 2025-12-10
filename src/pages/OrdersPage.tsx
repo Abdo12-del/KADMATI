@@ -58,8 +58,8 @@ const OrdersPage = () => {
     setError(null);
     try {
       const [requestsResponse, usersResponse] = await Promise.all([
-        fetch('http://localhost:3000/api/requests'),
-        fetch('http://localhost:3000/api/users'),
+        fetch('/api/requests'),
+        fetch('/api/users'),
       ]);
 
       if (!requestsResponse.ok) {

@@ -77,7 +77,7 @@ const ClientServiceDetailsPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const serviceResponse = await fetch(`http://localhost:3000/api/services/${id}`);
+      const serviceResponse = await fetch(`/api/services/${id}`);
       if (!serviceResponse.ok) {
         const errorData = await serviceResponse.json();
         throw new Error(errorData.message || 'فشل جلب تفاصيل الخدمة.');
@@ -87,7 +87,7 @@ const ClientServiceDetailsPage = () => {
       setService(fetchedService);
 
       // Fetch provider details
-      const providerResponse = await fetch(`http://localhost:3000/api/users/${fetchedService.provider_id}`);
+      const providerResponse = await fetch(`/api/users/${fetchedService.provider_id}`);
       if (!providerResponse.ok) {
         const errorData = await providerResponse.json();
         throw new Error(errorData.message || 'فشل جلب معلومات مقدم الخدمة.');
@@ -96,7 +96,7 @@ const ClientServiceDetailsPage = () => {
       setProvider(providerResult.data);
 
       // Fetch ratings for this service
-      const ratingsResponse = await fetch(`http://localhost:3000/api/ratings`);
+      const ratingsResponse = await fetch(`/api/ratings`);
       if (!ratingsResponse.ok) {
         const errorData = await ratingsResponse.json();
         throw new Error(errorData.message || 'فشل جلب التقييمات.');
@@ -106,7 +106,7 @@ const ClientServiceDetailsPage = () => {
       setReviews(serviceReviews);
 
       // Fetch users for reviews
-      const usersResponse = await fetch(`http://localhost:3000/api/users`);
+      const usersResponse = await fetch(`/api/users`);
       if (!usersResponse.ok) {
         const errorData = await usersResponse.json();
         throw new Error(errorData.message || 'فشل جلب المستخدمين للتقييمات.');

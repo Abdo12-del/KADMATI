@@ -44,7 +44,7 @@ const MyServicesListPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:3000/api/services');
+      const response = await fetch('/api/services');
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'فشل جلب الخدمات.');

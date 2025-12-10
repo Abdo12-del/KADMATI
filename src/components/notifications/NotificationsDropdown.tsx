@@ -103,11 +103,11 @@ export const NotificationsDropdown = () => {
     setError(null);
     try {
       const [messagesResponse, requestsResponse, ratingsResponse, usersResponse, servicesResponse] = await Promise.all([
-        fetch('http://localhost:3000/api/messages'),
-        fetch('http://localhost:3000/api/requests'),
-        fetch('http://localhost:3000/api/ratings'),
-        fetch('http://localhost:3000/api/users'),
-        fetch('http://localhost:3000/api/services'),
+        fetch('/api/messages'),
+        fetch('/api/requests'),
+        fetch('/api/ratings'),
+        fetch('/api/users'),
+        fetch('/api/services'),
       ]);
 
       if (!messagesResponse.ok) throw new Error('فشل جلب الرسائل.');
@@ -226,7 +226,7 @@ export const NotificationsDropdown = () => {
     const [type, backendId] = id.split('-');
     try {
       if (type === 'msg') {
-        await fetch(`http://localhost:3000/api/messages/${backendId}`, {
+        await fetch(`/api/messages/${backendId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ read: true }),

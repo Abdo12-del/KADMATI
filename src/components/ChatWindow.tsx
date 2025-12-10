@@ -59,7 +59,7 @@ const ChatWindow = ({ conversation, currentUserId, currentBackendUserId, onMessa
       setTimeout(scrollToBottom, 100); // Scroll after optimistic update
 
       try {
-        const response = await fetch('http://localhost:3000/api/messages', {
+        const response = await fetch('/api/messages', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

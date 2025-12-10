@@ -46,7 +46,7 @@ const ClientOrderServicePage = () => {
     setLoading(true);
     setError(null);
     try {
-      const serviceResponse = await fetch(`http://localhost:3000/api/services/${id}`);
+      const serviceResponse = await fetch(`/api/services/${id}`);
       if (!serviceResponse.ok) {
         const errorData = await serviceResponse.json();
         throw new Error(errorData.message || 'فشل جلب تفاصيل الخدمة.');
@@ -55,7 +55,7 @@ const ClientOrderServicePage = () => {
       const fetchedService: ServiceData = serviceResult.data;
       setService(fetchedService);
 
-      const providerResponse = await fetch(`http://localhost:3000/api/users/${fetchedService.provider_id}`);
+      const providerResponse = await fetch(`/api/users/${fetchedService.provider_id}`);
       if (!providerResponse.ok) {
         const errorData = await providerResponse.json();
         throw new Error(errorData.message || 'فشل جلب معلومات مقدم الخدمة.');
@@ -96,7 +96,7 @@ const ClientOrderServicePage = () => {
     };
 
     try {
-      const response = await fetch('http://localhost:3000/api/requests', {
+      const response = await fetch('/api/requests', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

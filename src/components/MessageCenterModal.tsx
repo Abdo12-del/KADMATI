@@ -70,8 +70,8 @@ export const MessageCenterModal = ({ currentUserId = 'provider', isPage = false 
     setError(null);
     try {
       const [messagesResponse, usersResponse] = await Promise.all([
-        fetch('http://localhost:3000/api/messages'),
-        fetch('http://localhost:3000/api/users'),
+        fetch('/api/messages'),
+        fetch('/api/users'),
       ]);
 
       if (!messagesResponse.ok) {
@@ -185,7 +185,7 @@ export const MessageCenterModal = ({ currentUserId = 'provider', isPage = false 
 
     for (const msg of messagesToMarkAsRead) {
       try {
-        await fetch(`http://localhost:3000/api/messages/${msg.id}`, {
+        await fetch(`/api/messages/${msg.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ read: true }),

@@ -60,9 +60,9 @@ const RatingsReviewsPage = () => {
     setError(null);
     try {
       const [ratingsResponse, servicesResponse, usersResponse] = await Promise.all([
-        fetch('http://localhost:3000/api/ratings'),
-        fetch('http://localhost:3000/api/services'),
-        fetch('http://localhost:3000/api/users'),
+        fetch('/api/ratings'),
+        fetch('/api/services'),
+        fetch('/api/users'),
       ]);
 
       if (!ratingsResponse.ok) {

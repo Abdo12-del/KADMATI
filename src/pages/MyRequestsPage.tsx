@@ -42,7 +42,7 @@ const MyRequestsPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://localhost:3000/api/requests');
+      const response = await fetch('/api/requests');
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'فشل جلب الطلبات.');

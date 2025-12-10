@@ -27,7 +27,7 @@ const EditServicePage = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`http://localhost:3000/api/services/${id}`);
+      const response = await fetch(`/api/services/${id}`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'فشل جلب تفاصيل الخدمة.');
@@ -70,7 +70,7 @@ const EditServicePage = () => {
     };
 
     try {
-      const response = await fetch(`http://localhost:3000/api/services/${id}`, {
+      const response = await fetch(`/api/services/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
