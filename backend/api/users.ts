@@ -34,9 +34,9 @@ router.get('/:id', async (req, res, next) => {
 // Create a new user
 router.post('/', async (req, res, next) => {
   try {
-    console.log("REQ BODY:", req.body); // Log full request body
+    console.log("1. Received POST /api/users request. Body:", req.body);
     const validationErrors = validateUser(req.body);
-    console.log("VALIDATION ERRORS:", validationErrors); // Log full validation output
+    console.log("2. Validation errors:", validationErrors);
 
     if (validationErrors.length > 0) {
       console.error('Validation failed for user creation with errors:', validationErrors);
@@ -44,18 +44,22 @@ router.post('/', async (req, res, next) => {
       return errorResponse(res, 'Validation failed', 400, validationErrors);
     }
 
-    const { name, email, password, role, phone, bio, avatar_url } = req.body;
+    console.log("3. Validation passed.");
+    const { name, email, password, role, phone, bio, avatar_url, provider_type, id_number, address } = req.body; // Destructure all potential fields
 
     const existingUser = await userService.getUserByEmail(email);
     if (existingUser) {
       throw new ApiError('User with this email already exists', 409);
     }
+    console.log("4. User does not exist.");
 
-    if (!password) { // This check is redundant if validateUser is robust, but kept as a safeguard
+    if (!password) {
       throw new ApiError('Password is required', 400, ['Password is required.']);
     }
+    console.log("5. Password is present. Hashing password...");
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    console.log("6. Password hashed successfully.");
 
     const newUser = await userService.createUser({
       name,
@@ -65,12 +69,18 @@ router.post('/', async (req, res, next) => {
       phone,
       bio,
       avatar_url,
+      provider_type, // Pass provider-specific fields
+      id_number,     // Pass provider-specific fields
+      address,       // Pass provider-specific fields
     });
+    console.log("7. User created successfully in service.");
 
     // Remove password before sending response
     const { password: _, ...userWithoutPassword } = newUser;
     successResponse(res, 'User created successfully', userWithoutPassword, 201);
+    console.log("8. Success response sent.");
   } catch (error) {
+    console.error("Error in POST /api/users:", error); // Log error before passing to next
     next(error);
   }
 });
