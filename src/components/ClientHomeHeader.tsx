@@ -17,7 +17,7 @@ const ClientHomeHeader = () => {
     <header className="bg-brand-card-bg text-brand-text-dark p-4 shadow-soft border-b border-border">
       <div className="container mx-auto flex justify-between items-center">
         <Link to="/client-home" className="text-2xl font-bold font-cairo text-brand-primary">
-          منصة الخدمات
+          KHEDMATI AI
         </Link>
         <div className="flex items-center space-x-4 rtl:space-x-reverse">
           <ThemeToggle />

@@ -22,7 +22,7 @@ const Header = () => {
     <header className="bg-brand-card-bg text-brand-text-dark p-4 shadow-soft border-b border-border">
       <div className="container mx-auto flex justify-between items-center">
         <Link to="/" className="text-2xl font-bold font-cairo text-brand-primary">
-          منصة الخدمات
+          KHEDMATI AI
         </Link>
         <NavigationMenu className="hidden md:flex">
           <NavigationMenuList>

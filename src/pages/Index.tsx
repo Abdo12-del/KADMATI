@@ -12,8 +12,8 @@ const Index = () => {
       {/* <Header /> */} {/* Removed */}
       <main className="flex-grow container mx-auto px-8 py-10">
         <section className="text-center py-20 bg-gradient-to-br from-brand-primary to-brand-primary-light text-white rounded-2xl shadow-soft-lg">
-          <h1 className="text-5xl font-cairo mb-4">منصة الخدمات المتكاملة</h1>
-          <p className="text-xl font-ibm-plex-arabic mb-8">اكتشف، اطلب، وقدم الخدمات بسهولة وفعالية.</p>
+          <h1 className="text-5xl font-cairo mb-4">KHEDMATI AI: منصة الخدمات الذكية</h1>
+          <p className="text-xl font-ibm-plex-arabic mb-8">منصة رقمية ذكية تربط مقدمي الخدمات بالمستخدمين، معتمدة على الذكاء الاصطناعي لتقديم توصيات مثلى وأسعار عادلة.</p>
           <div className="relative max-w-xl mx-auto mb-8">
             <Input
               type="text"
