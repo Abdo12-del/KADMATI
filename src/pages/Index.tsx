@@ -12,8 +12,8 @@ const Index = () => {
       {/* <Header /> */} {/* Removed */}
       <main className="flex-grow container mx-auto px-8 py-10">
         <section className="text-center py-20 bg-gradient-to-br from-brand-primary to-brand-primary-light text-white rounded-2xl shadow-soft-lg">
-          <h1 className="text-5xl font-cairo mb-4">KHEDMATI AI: منصة الخدمات الذكية</h1>
-          <p className="text-xl font-ibm-plex-arabic mb-8">منصة رقمية ذكية تربط مقدمي الخدمات بالمستخدمين، معتمدة على الذكاء الاصطناعي لتقديم توصيات مثلى وأسعار عادلة.</p>
+          <h1 className="text-5xl font-cairo mb-4">KHEDMATI: منصة الخدمات الذكية</h1>
+          <p className="text-xl font-ibm-plex-arabic mb-8">منصة رقمية ذكية تربط مقدمي الخدمات بالمستخدمين الباحثين عن خدمة قريبة وسريعة. تهدف المنصة إلى تحسين كفاءة سوق الخدمات في الجزائر، وتسهيل الوصول إلى الخدمات للمواطنين بطريقة ذكية وسريعة، مع إمكانية التوسع والتطوير إلى تطبيق حقيقي على مستوى السوق المحلي.</p>
           <div className="relative max-w-xl mx-auto mb-8">
             <Input
               type="text"
