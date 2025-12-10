@@ -30,6 +30,8 @@ interface ChatWindowProps {
   onMessageSent: () => void; // Callback to notify parent about new message
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const ChatWindow = ({ conversation, currentUserId, currentBackendUserId, onMessageSent }: ChatWindowProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [messageInput, setMessageInput] = useState('');
@@ -59,7 +61,7 @@ const ChatWindow = ({ conversation, currentUserId, currentBackendUserId, onMessa
       setTimeout(scrollToBottom, 100); // Scroll after optimistic update
 
       try {
-        const response = await fetch('/api/messages', {
+        const response = await fetch(`${API_BASE_URL}/api/messages`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

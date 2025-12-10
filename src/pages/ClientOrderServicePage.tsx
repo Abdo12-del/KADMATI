@@ -31,6 +31,8 @@ interface UserData {
   name: string;
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const ClientOrderServicePage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -46,7 +48,7 @@ const ClientOrderServicePage = () => {
     setLoading(true);
     setError(null);
     try {
-      const serviceResponse = await fetch(`/api/services/${id}`);
+      const serviceResponse = await fetch(`${API_BASE_URL}/api/services/${id}`);
       if (!serviceResponse.ok) {
         const errorData = await serviceResponse.json();
         throw new Error(errorData.message || 'فشل جلب تفاصيل الخدمة.');
@@ -55,7 +57,7 @@ const ClientOrderServicePage = () => {
       const fetchedService: ServiceData = serviceResult.data;
       setService(fetchedService);
 
-      const providerResponse = await fetch(`/api/users/${fetchedService.provider_id}`);
+      const providerResponse = await fetch(`${API_BASE_URL}/api/users/${fetchedService.provider_id}`);
       if (!providerResponse.ok) {
         const errorData = await providerResponse.json();
         throw new Error(errorData.message || 'فشل جلب معلومات مقدم الخدمة.');
@@ -96,7 +98,7 @@ const ClientOrderServicePage = () => {
     };
 
     try {
-      const response = await fetch('/api/requests', {
+      const response = await fetch(`${API_BASE_URL}/api/requests`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

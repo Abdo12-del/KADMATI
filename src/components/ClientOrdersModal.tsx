@@ -32,6 +32,8 @@ interface ClientOrderCardPropsData {
   price: number; // Placeholder as request model doesn't have price
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const ClientOrdersModal = () => {
   const CLIENT_ID = 2; // Hardcoded client ID for Laila Seeker
   const [requests, setRequests] = useState<RequestData[]>([]);
@@ -44,8 +46,8 @@ const ClientOrdersModal = () => {
     setError(null);
     try {
       const [requestsResponse, usersResponse] = await Promise.all([
-        fetch('/api/requests'),
-        fetch('/api/users'),
+        fetch(`${API_BASE_URL}/api/requests`),
+        fetch(`${API_BASE_URL}/api/users`),
       ]);
 
       if (!requestsResponse.ok) {

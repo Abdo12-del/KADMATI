@@ -39,6 +39,8 @@ interface ReviewCardPropsData {
   avatarUrl?: string;
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const RatingsReviewsPage = () => {
   const { user } = useAuth(); // Get current user from auth context
   const PROVIDER_ID = user?.id; // Use actual provider ID
@@ -60,9 +62,9 @@ const RatingsReviewsPage = () => {
     setError(null);
     try {
       const [ratingsResponse, servicesResponse, usersResponse] = await Promise.all([
-        fetch('/api/ratings'),
-        fetch('/api/services'),
-        fetch('/api/users'),
+        fetch(`${API_BASE_URL}/api/ratings`),
+        fetch(`${API_BASE_URL}/api/services`),
+        fetch(`${API_BASE_URL}/api/users`),
       ]);
 
       if (!ratingsResponse.ok) {

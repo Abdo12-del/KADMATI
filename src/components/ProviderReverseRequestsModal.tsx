@@ -39,6 +39,8 @@ interface ProviderRequestCardPropsData {
   clientName: string;
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export const ProviderReverseRequestsModal = () => {
   const { user } = useAuth(); // Get current user from auth context
   const PROVIDER_ID = user?.id; // Use actual provider ID
@@ -65,8 +67,8 @@ export const ProviderReverseRequestsModal = () => {
     setError(null);
     try {
       const [requestsResponse, usersResponse] = await Promise.all([
-        fetch('/api/requests'),
-        fetch('/api/users'),
+        fetch(`${API_BASE_URL}/api/requests`),
+        fetch(`${API_BASE_URL}/api/users`),
       ]);
 
       if (!requestsResponse.ok) {

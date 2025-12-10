@@ -60,6 +60,8 @@ const ordersBreakdownData = [
   { name: 'ملغاة', value: 10, color: 'var(--brand-danger)' },
 ];
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const DashboardOverviewPage = () => {
   const { user } = useAuth(); // Get current user from auth context
   const PROVIDER_ID = user?.id; // Use actual provider ID
@@ -82,10 +84,10 @@ const DashboardOverviewPage = () => {
     setError(null);
     try {
       const [requestsResponse, ratingsResponse, messagesResponse, usersResponse] = await Promise.all([
-        fetch('/api/requests'),
-        fetch('/api/ratings'),
-        fetch('/api/messages'),
-        fetch('/api/users'),
+        fetch(`${API_BASE_URL}/api/requests`),
+        fetch(`${API_BASE_URL}/api/ratings`),
+        fetch(`${API_BASE_URL}/api/messages`),
+        fetch(`${API_BASE_URL}/api/users`),
       ]);
 
       if (!requestsResponse.ok) throw new Error('فشل جلب الطلبات.');

@@ -64,6 +64,8 @@ const renderStars = (rating: number) => {
   );
 };
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const ClientServiceDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const [service, setService] = useState<ServiceData | null>(null);
@@ -77,7 +79,7 @@ const ClientServiceDetailsPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const serviceResponse = await fetch(`/api/services/${id}`);
+      const serviceResponse = await fetch(`${API_BASE_URL}/api/services/${id}`);
       if (!serviceResponse.ok) {
         const errorData = await serviceResponse.json();
         throw new Error(errorData.message || 'فشل جلب تفاصيل الخدمة.');
@@ -87,7 +89,7 @@ const ClientServiceDetailsPage = () => {
       setService(fetchedService);
 
       // Fetch provider details
-      const providerResponse = await fetch(`/api/users/${fetchedService.provider_id}`);
+      const providerResponse = await fetch(`${API_BASE_URL}/api/users/${fetchedService.provider_id}`);
       if (!providerResponse.ok) {
         const errorData = await providerResponse.json();
         throw new Error(errorData.message || 'فشل جلب معلومات مقدم الخدمة.');
@@ -96,7 +98,7 @@ const ClientServiceDetailsPage = () => {
       setProvider(providerResult.data);
 
       // Fetch ratings for this service
-      const ratingsResponse = await fetch(`/api/ratings`);
+      const ratingsResponse = await fetch(`${API_BASE_URL}/api/ratings`);
       if (!ratingsResponse.ok) {
         const errorData = await ratingsResponse.json();
         throw new Error(errorData.message || 'فشل جلب التقييمات.');
@@ -106,7 +108,7 @@ const ClientServiceDetailsPage = () => {
       setReviews(serviceReviews);
 
       // Fetch users for reviews
-      const usersResponse = await fetch(`/api/users`);
+      const usersResponse = await fetch(`${API_BASE_URL}/api/users`);
       if (!usersResponse.ok) {
         const errorData = await usersResponse.json();
         throw new Error(errorData.message || 'فشل جلب المستخدمين للتقييمات.');

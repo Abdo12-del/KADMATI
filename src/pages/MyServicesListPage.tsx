@@ -23,6 +23,8 @@ interface Service {
   provider_id: number; // Ensure provider_id is present
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const MyServicesListPage = () => {
   const { user } = useAuth(); // Get current user from auth context
   const PROVIDER_ID = user?.id; // Use actual provider ID
@@ -44,7 +46,7 @@ const MyServicesListPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/services');
+      const response = await fetch(`${API_BASE_URL}/api/services`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'فشل جلب الخدمات.');

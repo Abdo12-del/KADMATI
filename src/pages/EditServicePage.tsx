@@ -11,6 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useParams, useNavigate } from 'react-router-dom'; // Import useParams, useNavigate
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const EditServicePage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -27,7 +29,7 @@ const EditServicePage = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/services/${id}`);
+      const response = await fetch(`${API_BASE_URL}/api/services/${id}`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'فشل جلب تفاصيل الخدمة.');
@@ -70,7 +72,7 @@ const EditServicePage = () => {
     };
 
     try {
-      const response = await fetch(`/api/services/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/services/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

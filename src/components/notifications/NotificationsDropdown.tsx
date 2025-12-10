@@ -83,6 +83,8 @@ const getNotificationIcon = (type: Notification['type']) => {
   }
 };
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export const NotificationsDropdown = () => {
   const { user } = useAuth(); // Get current user from auth context
   const CURRENT_USER_ID = user?.id; // Use actual current user ID
@@ -103,11 +105,11 @@ export const NotificationsDropdown = () => {
     setError(null);
     try {
       const [messagesResponse, requestsResponse, ratingsResponse, usersResponse, servicesResponse] = await Promise.all([
-        fetch('/api/messages'),
-        fetch('/api/requests'),
-        fetch('/api/ratings'),
-        fetch('/api/users'),
-        fetch('/api/services'),
+        fetch(`${API_BASE_URL}/api/messages`),
+        fetch(`${API_BASE_URL}/api/requests`),
+        fetch(`${API_BASE_URL}/api/ratings`),
+        fetch(`${API_BASE_URL}/api/users`),
+        fetch(`${API_BASE_URL}/api/services`),
       ]);
 
       if (!messagesResponse.ok) throw new Error('فشل جلب الرسائل.');
@@ -226,7 +228,7 @@ export const NotificationsDropdown = () => {
     const [type, backendId] = id.split('-');
     try {
       if (type === 'msg') {
-        await fetch(`/api/messages/${backendId}`, {
+        await fetch(`${API_BASE_URL}/api/messages/${backendId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ read: true }),

@@ -47,6 +47,8 @@ interface MessageCenterModalProps {
   isPage?: boolean; // New prop to indicate if it's rendered as a full page
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export const MessageCenterModal = ({ currentUserId = 'provider', isPage = false }: MessageCenterModalProps) => {
   const { user } = useAuth(); // Get current user from auth context
   const CURRENT_USER_BACKEND_ID = user?.id; // Use actual current user ID
@@ -70,8 +72,8 @@ export const MessageCenterModal = ({ currentUserId = 'provider', isPage = false 
     setError(null);
     try {
       const [messagesResponse, usersResponse] = await Promise.all([
-        fetch('/api/messages'),
-        fetch('/api/users'),
+        fetch(`${API_BASE_URL}/api/messages`),
+        fetch(`${API_BASE_URL}/api/users`),
       ]);
 
       if (!messagesResponse.ok) {
@@ -185,7 +187,7 @@ export const MessageCenterModal = ({ currentUserId = 'provider', isPage = false 
 
     for (const msg of messagesToMarkAsRead) {
       try {
-        await fetch(`/api/messages/${msg.id}`, {
+        await fetch(`${API_BASE_URL}/api/messages/${msg.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ read: true }),

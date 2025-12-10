@@ -38,6 +38,8 @@ interface OrderCardPropsData {
   price: number; // Placeholder as backend request model doesn't have price
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const OrdersPage = () => {
   const { user } = useAuth(); // Get current user from auth context
   const PROVIDER_ID = user?.id; // Use actual provider ID
@@ -58,8 +60,8 @@ const OrdersPage = () => {
     setError(null);
     try {
       const [requestsResponse, usersResponse] = await Promise.all([
-        fetch('/api/requests'),
-        fetch('/api/users'),
+        fetch(`${API_BASE_URL}/api/requests`),
+        fetch(`${API_BASE_URL}/api/users`),
       ]);
 
       if (!requestsResponse.ok) {

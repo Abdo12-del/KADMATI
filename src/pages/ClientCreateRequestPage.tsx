@@ -12,6 +12,8 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const ClientCreateRequestPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth(); // Get current user from auth context
@@ -45,7 +47,7 @@ const ClientCreateRequestPage = () => {
     };
 
     try {
-      const response = await fetch('/api/requests', {
+      const response = await fetch(`${API_BASE_URL}/api/requests`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

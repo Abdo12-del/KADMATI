@@ -24,6 +24,8 @@ interface RequestCardPropsData {
   status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled';
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const MyRequestsPage = () => {
   const { user } = useAuth(); // Get current user from auth context
   const CLIENT_ID = user?.id; // Use actual client ID
@@ -42,7 +44,7 @@ const MyRequestsPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/requests');
+      const response = await fetch(`${API_BASE_URL}/api/requests`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'فشل جلب الطلبات.');

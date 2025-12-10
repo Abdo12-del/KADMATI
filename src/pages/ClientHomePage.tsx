@@ -43,6 +43,8 @@ interface ClientServiceCardPropsData {
   imageUrl?: string;
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const ClientHomePage = () => {
   const { user } = useAuth(); // Get current user from auth context
   const CLIENT_ID = user?.id; // Use actual client ID
@@ -64,8 +66,8 @@ const ClientHomePage = () => {
     setError(null);
     try {
       const [servicesResponse, usersResponse] = await Promise.all([
-        fetch('/api/services'),
-        fetch('/api/users'),
+        fetch(`${API_BASE_URL}/api/services`),
+        fetch(`${API_BASE_URL}/api/users`),
       ]);
 
       if (!servicesResponse.ok) {
