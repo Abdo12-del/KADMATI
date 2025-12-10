@@ -195,11 +195,15 @@ const NotificationsPage = () => {
     const [type, backendId] = id.split('-');
     try {
       if (type === 'msg') {
-        await fetch(`/api/messages/${backendId}`, {
+        const response = await fetch(`/api/messages/${backendId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ read: true }),
         });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'فشل تحديث الرسالة.');
+        }
       }
       // For requests/ratings, you'd need a 'read' status in their models/APIs
       // For now, we'll just update frontend state for other types
@@ -217,14 +221,23 @@ const NotificationsPage = () => {
     const [type, backendId] = id.split('-');
     try {
       if (type === 'msg') {
-        await fetch(`/api/messages/${backendId}`, {
+        const response = await fetch(`/api/messages/${backendId}`, {
           method: 'DELETE',
         });
+        // Check for 204 No Content explicitly
+        if (response.status === 204) {
+          toast.success('تم حذف الإشعار.');
+        } else if (!response.ok) {
+          const errorData = await response.json(); // Only try to parse JSON if not 204 and not ok
+          throw new Error(errorData.message || 'فشل حذف الرسالة.');
+        } else {
+          // If it's ok but not 204, it might have a body, but we don't expect one for DELETE
+          toast.success('تم حذف الإشعار.');
+        }
       }
       // For requests/ratings, you'd need a delete API
       // For now, we'll just update frontend state for other types
       setNotifications(prev => prev.filter(notif => notif.id !== id));
-      toast.success('تم حذف الإشعار.');
       fetchNotifications(); // Re-fetch to ensure consistency
     } catch (err: any) {
       toast.error('فشل حذف الإشعار: ' + err.message);

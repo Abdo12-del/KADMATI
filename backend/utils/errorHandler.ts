@@ -1,11 +1,17 @@
 import { Request, Response, NextFunction } from 'express';
 
 export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.stack); // Log the error stack for debugging
+  console.error('API Error caught:', err); // Log the full error object
+  console.error('Error stack:', err.stack); // Log the error stack for debugging
 
   const statusCode = err.statusCode || 500;
   const message = err.message || 'An unexpected error occurred.';
   const errors = err.errors || null; // Ensure validation errors are included
+
+  // If the response has already been sent, delegate to default Express error handler
+  if (res.headersSent) {
+    return next(err);
+  }
 
   res.status(statusCode).json({
     success: false,
