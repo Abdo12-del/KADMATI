@@ -13,16 +13,22 @@ import authRoutes from './api/auth'; // New import for auth routes
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
   // Application specific logging, throwing an error, or other logic here
-  process.exit(1); // Exit with a failure code
+  // process.exit(1); // Comment out exit for now to keep server running for more debugging
 });
 
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error);
   // Application specific logging, throwing an error, or other logic here
-  process.exit(1); // Exit with a failure code
+  // process.exit(1); // Comment out exit for now to keep server running for more debugging
 });
 
 const app = express();
+
+// Add a simple logging middleware to see if requests reach Express
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
 
 // Middleware
 app.use(cors());
