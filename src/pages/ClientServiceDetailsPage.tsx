@@ -13,6 +13,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 interface ServiceData {
   id: number;
@@ -39,6 +40,7 @@ interface UserData {
   phone?: string;
   bio?: string;
   avatar_url?: string;
+  favorite_service_ids?: number[];
 }
 
 interface RatingData {
@@ -68,12 +70,14 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const ClientServiceDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
+  const { user, isLoggedIn, updateUserFavorites } = useAuth(); // Get user and updateUserFavorites from auth context
   const [service, setService] = useState<ServiceData | null>(null);
   const [provider, setProvider] = useState<UserData | null>(null);
   const [reviews, setReviews] = useState<RatingData[]>([]);
   const [reviewCustomers, setReviewCustomers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   const fetchServiceDetails = useCallback(async () => {
     setLoading(true);
@@ -116,13 +120,18 @@ const ClientServiceDetailsPage = () => {
       const usersResult = await usersResponse.json();
       setReviewCustomers(usersResult.data);
 
+      // Check if service is in user's favorites
+      if (user && user.favorite_service_ids && fetchedService.id) {
+        setIsFavorite(user.favorite_service_ids.includes(fetchedService.id));
+      }
+
     } catch (err: any) {
       setError(err.message);
       toast.error(err.message || 'حدث خطأ أثناء جلب تفاصيل الخدمة.');
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, user]); // Depend on user to re-check favorites
 
   useEffect(() => {
     fetchServiceDetails();
@@ -156,9 +165,22 @@ const ClientServiceDetailsPage = () => {
     }
   };
 
-  const handleAddToFavorites = () => {
-    toast.success('تمت إضافة الخدمة إلى المفضلة (وظيفة وهمية)!');
-    // Logic to add to favorites
+  const handleToggleFavorite = async () => {
+    if (!isLoggedIn || !user || !service) {
+      toast.error('الرجاء تسجيل الدخول لإدارة المفضلة.');
+      return;
+    }
+    try {
+      if (isFavorite) {
+        await updateUserFavorites(service.id, 'remove');
+        setIsFavorite(false);
+      } else {
+        await updateUserFavorites(service.id, 'add');
+        setIsFavorite(true);
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'حدث خطأ أثناء تحديث المفضلة.');
+    }
   };
 
   const handleContactProvider = () => {
@@ -430,9 +452,14 @@ const ClientServiceDetailsPage = () => {
                   <Share2 className="h-5 w-5" />
                   <span className="sr-only">مشاركة</span>
                 </Button>
-                <Button variant="outline" size="icon" onClick={handleAddToFavorites} className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-full shadow-soft">
-                  <Heart className="h-5 w-5" />
-                  <span className="sr-only">إضافة للمفضلة</span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleToggleFavorite}
+                  className={`border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-full shadow-soft ${isFavorite ? 'bg-brand-primary text-white hover:bg-brand-primary-dark' : ''}`}
+                >
+                  <Heart className={`h-5 w-5 ${isFavorite ? 'fill-white' : ''}`} />
+                  <span className="sr-only">{isFavorite ? 'إزالة من المفضلة' : 'إضافة للمفضلة'}</span>
                 </Button>
                 <Dialog>
                   <DialogTrigger asChild>

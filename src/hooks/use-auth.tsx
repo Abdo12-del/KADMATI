@@ -12,6 +12,7 @@ interface User {
   avatar_url?: string;
   phone?: string;
   bio?: string;
+  favorite_service_ids?: number[]; // Added to User interface
 }
 
 interface AuthContextType {
@@ -21,6 +22,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   signup: (userData: Omit<User, 'id'> & { password: string }) => Promise<void>;
   logout: () => void;
+  updateUserFavorites: (serviceId: number, action: 'add' | 'remove') => Promise<void>; // New function
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -53,6 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email: 'ahmed.provider@example.com',
         role: 'provider',
         avatar_url: 'https://api.dicebear.com/7.x/initials/svg?seed=AP',
+        favorite_service_ids: [], // Ensure this is initialized
       };
       setUser(loggedInUser);
       setIsLoggedIn(true);
@@ -67,6 +70,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email: 'layla.seeker@example.com',
         role: 'seeker',
         avatar_url: 'https://api.dicebear.com/7.x/initials/svg?seed=LS',
+        favorite_service_ids: [], // Ensure this is initialized
       };
       setUser(loggedInUser);
       setIsLoggedIn(true);
@@ -93,6 +97,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       phone: userData.phone,
       bio: userData.bio,
       avatar_url: userData.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${userData.name.split(' ').map(n => n[0]).join('')}`,
+      favorite_service_ids: [], // Initialize for new users
     };
 
     setUser(newUser);
@@ -117,8 +122,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     navigate('/login');
   };
 
+  const updateUserFavorites = async (serviceId: number, action: 'add' | 'remove') => {
+    if (!user) {
+      toast.error('الرجاء تسجيل الدخول لإدارة المفضلة.');
+      return;
+    }
+
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+    let response;
+    let method;
+    let url;
+
+    if (action === 'add') {
+      method = 'POST';
+      url = `${API_BASE_URL}/api/users/${user.id}/favorites`;
+      response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ serviceId }),
+      });
+    } else { // action === 'remove'
+      method = 'DELETE';
+      url = `${API_BASE_URL}/api/users/${user.id}/favorites/${serviceId}`;
+      response = await fetch(url, { method });
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `فشل ${action === 'add' ? 'إضافة' : 'إزالة'} الخدمة من المفضلة.`);
+    }
+
+    const updatedUserData = await response.json();
+    const updatedUser = updatedUserData.data;
+
+    setUser(updatedUser);
+    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+    toast.success(`تم ${action === 'add' ? 'إضافة' : 'إزالة'} الخدمة من المفضلة بنجاح!`);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn, userRole, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, isLoggedIn, userRole, login, signup, logout, updateUserFavorites }}>
       {children}
     </AuthContext.Provider>
   );

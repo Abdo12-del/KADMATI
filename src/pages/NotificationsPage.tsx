@@ -222,25 +222,38 @@ const NotificationsPage = () => {
   const handleDelete = async (id: string) => {
     const [type, backendId] = id.split('-');
     try {
+      let response;
       if (type === 'msg') {
-        const response = await fetch(`${API_BASE_URL}/api/messages/${backendId}`, {
+        response = await fetch(`${API_BASE_URL}/api/messages/${backendId}`, {
           method: 'DELETE',
         });
-        // Check for 204 No Content explicitly
-        if (response.status === 204) {
-          toast.success('تم حذف الإشعار.');
-        } else if (!response.ok) {
-          const errorData = await response.json(); // Only try to parse JSON if not 204 and not ok
-          throw new Error(errorData.message || 'فشل حذف الرسالة.');
-        } else {
-          // If it's ok but not 204, it might have a body, but we don't expect one for DELETE
-          toast.success('تم حذف الإشعار.');
-        }
+      } else if (type === 'req') {
+        response = await fetch(`${API_BASE_URL}/api/requests/${backendId}`, {
+          method: 'DELETE',
+        });
+      } else if (type === 'rating') {
+        response = await fetch(`${API_BASE_URL}/api/ratings/${backendId}`, {
+          method: 'DELETE',
+        });
+      } else {
+        // For 'system' or 'general' notifications, we might just remove them from frontend state
+        setNotifications(prev => prev.filter(notif => notif.id !== id));
+        toast.success('تم حذف الإشعار.');
+        return;
       }
-      // For requests/ratings, you'd need a delete API
-      // For now, we'll just update frontend state for other types
-      setNotifications(prev => prev.filter(notif => notif.id !== id));
-      fetchNotifications(); // Re-fetch to ensure consistency
+
+      // Check for 204 No Content explicitly
+      if (response && response.status === 204) {
+        toast.success('تم حذف الإشعار.');
+        fetchNotifications(); // Re-fetch to ensure consistency
+      } else if (response && !response.ok) {
+        const errorData = await response.json(); // Only try to parse JSON if not 204 and not ok
+        throw new Error(errorData.message || 'فشل حذف الإشعار.');
+      } else if (response) {
+        // If it's ok but not 204, it might have a body, but we don't expect one for DELETE
+        toast.success('تم حذف الإشعار.');
+        fetchNotifications(); // Re-fetch to ensure consistency
+      }
     } catch (err: any) {
       toast.error('فشل حذف الإشعار: ' + err.message);
     }

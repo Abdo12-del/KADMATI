@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { Star, Edit, Trash2, Menu, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom'; // For internal links within the modal content
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 // Helper for stars
 const renderStars = (rating: number) => {
@@ -35,14 +36,40 @@ const renderStars = (rating: number) => {
 };
 
 // Placeholder Data (will be replaced by actual data from context/backend)
-const user = {
-  name: 'ليلى ناصر', // This will come from auth context
-  email: 'layla.nasser@example.com', // This will come from auth context
-  phone: '+966501234567', // This will come from auth context
-  avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=LN', // This will come from auth context
-};
+// const user = { // This will now come from useAuth
+//   name: 'ليلى ناصر',
+//   email: 'layla.nasser@example.com',
+//   phone: '+966501234567',
+//   avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=LN',
+// };
 
-const favoriteServices: any[] = []; // Empty array, will be fetched from backend
+interface ServiceData {
+  id: number;
+  provider_id: number;
+  title: string;
+  description: string;
+  category: string;
+  price: number;
+  delivery_time?: number;
+  image_url?: string;
+  rating?: number;
+  reviews_count?: number;
+  location?: string;
+  service_level?: string;
+}
+
+interface UserData {
+  id: number;
+  name: string;
+  email: string;
+  role: 'seeker' | 'provider';
+  phone?: string;
+  bio?: string;
+  avatar_url?: string;
+}
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const favoriteProviders: any[] = []; // Empty array, will be fetched from backend
 const transactions: any[] = []; // Empty array, will be fetched from backend
 const myReviews: any[] = []; // Empty array, will be fetched from backend
@@ -72,6 +99,66 @@ const getStatusBadgeVariant = (status: string) => {
 };
 
 export const ClientGeneralMenuModal = () => {
+  const { user, logout } = useAuth(); // Get user and logout from auth context
+  const [favoriteServices, setFavoriteServices] = useState<ServiceData[]>([]);
+  const [allUsers, setAllUsers] = useState<UserData[]>([]); // To get provider names for favorite services
+  const [loadingFavorites, setLoadingFavorites] = useState(true);
+  const [errorFavorites, setErrorFavorites] = useState<string | null>(null);
+
+  const fetchFavoriteServices = useCallback(async () => {
+    if (!user || !user.id || user.role !== 'seeker') {
+      setLoadingFavorites(false);
+      setErrorFavorites('User not logged in as a seeker.');
+      return;
+    }
+
+    setLoadingFavorites(true);
+    setErrorFavorites(null);
+    try {
+      const [servicesResponse, usersResponse] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/services`),
+        fetch(`${API_BASE_URL}/api/users`),
+      ]);
+
+      if (!servicesResponse.ok) throw new Error('فشل جلب الخدمات.');
+      if (!usersResponse.ok) throw new Error('فشل جلب المستخدمين.');
+
+      const servicesData: ServiceData[] = (await servicesResponse.json()).data;
+      const usersData: UserData[] = (await usersResponse.json()).data;
+      setAllUsers(usersData);
+
+      const userFavorites = user.favorite_service_ids || [];
+      const fetchedFavoriteServices = servicesData.filter(service => userFavorites.includes(service.id!));
+      setFavoriteServices(fetchedFavoriteServices);
+
+    } catch (err: any) {
+      setErrorFavorites(err.message);
+      toast.error(err.message || 'حدث خطأ أثناء جلب الخدمات المفضلة.');
+    } finally {
+      setLoadingFavorites(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchFavoriteServices();
+  }, [fetchFavoriteServices]);
+
+  const mappedFavoriteServices = useMemo(() => {
+    return favoriteServices.map(service => {
+      const provider = allUsers.find(u => u.id === service.provider_id);
+      return {
+        id: service.id.toString(),
+        title: service.title,
+        description: service.description,
+        price: service.price,
+        providerName: provider?.name || 'مقدم خدمة غير معروف',
+        rating: service.rating || 0,
+        location: service.location || 'غير محدد',
+        imageUrl: service.image_url || '/placeholder.svg',
+      };
+    });
+  }, [favoriteServices, allUsers]);
+
   const handleImageChange = () => {
     toast.info('وظيفة تغيير الصورة قيد التطوير (وظيفة وهمية)!');
     console.log('Change image clicked');
@@ -150,22 +237,22 @@ export const ClientGeneralMenuModal = () => {
                 <CardContent className="p-0 space-y-4">
                   <div className="flex flex-col items-center mb-4">
                     <Avatar className="h-20 w-20 mb-3">
-                      <AvatarImage src={user.avatarUrl} alt={user.name} />
-                      <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                      <AvatarImage src={user?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name.split(' ').map(n => n[0]).join('')}`} alt={user?.name} />
+                      <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{user?.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                     </Avatar>
                     <Button onClick={handleImageChange} variant="outline" size="sm" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-lg shadow-soft font-ibm-plex-arabic">تغيير الصورة</Button>
                   </div>
                   <div>
                     <Label htmlFor="profile-name" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">الاسم الكامل</Label>
-                    <Input id="profile-name" type="text" defaultValue={user.name} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                    <Input id="profile-name" type="text" defaultValue={user?.name} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
                   </div>
                   <div>
                     <Label htmlFor="profile-email" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">البريد الإلكتروني</Label>
-                    <Input id="profile-email" type="email" defaultValue={user.email} disabled className="rounded-xl shadow-soft bg-brand-background border-none font-ibm-plex-arabic text-right" />
+                    <Input id="profile-email" type="email" defaultValue={user?.email} disabled className="rounded-xl shadow-soft bg-brand-background border-none font-ibm-plex-arabic text-right" />
                   </div>
                   <div>
                     <Label htmlFor="profile-phone" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">رقم الهاتف</Label>
-                    <Input id="profile-phone" type="tel" defaultValue={user.phone} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                    <Input id="profile-phone" type="tel" defaultValue={user?.phone} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
                   </div>
                   <Button onClick={handleProfileSave} className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
                     حفظ التعديلات
@@ -238,8 +325,12 @@ export const ClientGeneralMenuModal = () => {
             <TabsContent value="favorites" className="mt-0">
               <h2 className="text-xl font-cairo text-brand-text-dark mb-4 text-right">الخدمات المفضلة</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                {favoriteServices.length > 0 ? (
-                  favoriteServices.map(service => (
+                {loadingFavorites ? (
+                  <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">جاري تحميل الخدمات المفضلة...</p>
+                ) : errorFavorites ? (
+                  <p className="text-brand-danger col-span-full font-ibm-plex-arabic text-right">خطأ: {errorFavorites}</p>
+                ) : mappedFavoriteServices.length > 0 ? (
+                  mappedFavoriteServices.map(service => (
                     <ClientServiceCard key={service.id} service={service} />
                   ))
                 ) : (
@@ -401,11 +492,9 @@ export const ClientGeneralMenuModal = () => {
             </TabsContent>
           </div>
           <div className="mt-6 border-t border-border pt-4 text-center flex-shrink-0">
-            <Button asChild variant="destructive" className="bg-brand-danger hover:bg-brand-danger/90 text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
-              <Link to="/login">
-                <LogOut className="ml-2 h-5 w-5" />
-                تسجيل الخروج
-              </Link>
+            <Button onClick={logout} variant="destructive" className="bg-brand-danger hover:bg-brand-danger/90 text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
+              <LogOut className="ml-2 h-5 w-5" />
+              تسجيل الخروج
             </Button>
           </div>
         </Tabs>

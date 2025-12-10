@@ -75,6 +75,7 @@ router.post('/', async (req, res, next) => {
       provider_type,
       id_number,
       address,
+      favorite_service_ids: [], // Initialize for new users
     });
     const { password: _, ...userWithoutPassword } = newUser;
     successResponse(res, 'User created successfully', userWithoutPassword, 201);
@@ -114,6 +115,77 @@ router.put('/:id', async (req, res, next) => {
     console.log(`[${new Date().toISOString()}] PUT /api/users/:id - User updated successfully for ID: ${id}`);
   } catch (error) {
     console.error(`[${new Date().toISOString()}] PUT /api/users/:id - Error:`, error);
+    next(error);
+  }
+});
+
+// Add a service to user's favorites
+router.post('/:userId/favorites', async (req, res, next) => {
+  console.log(`[${new Date().toISOString()}] POST /api/users/:userId/favorites - Request received. Params: ${req.params.userId}, Body:`, req.body);
+  try {
+    const { userId } = req.params;
+    const { serviceId } = req.body;
+
+    if (!serviceId) {
+      throw new ApiError('Service ID is required', 400);
+    }
+
+    const user = await userService.getUserById(Number(userId));
+    if (!user) {
+      throw new ApiError('User not found', 404);
+    }
+
+    const currentFavorites = user.favorite_service_ids || [];
+    if (currentFavorites.includes(serviceId)) {
+      return successResponse(res, 'Service already in favorites', user, 200);
+    }
+
+    const updatedUser = await userService.updateUser(Number(userId), {
+      favorite_service_ids: [...currentFavorites, serviceId],
+    });
+
+    if (!updatedUser) {
+      throw new ApiError('Failed to add service to favorites', 500);
+    }
+
+    successResponse(res, 'Service added to favorites successfully', updatedUser);
+    console.log(`[${new Date().toISOString()}] POST /api/users/:userId/favorites - Service ${serviceId} added to favorites for user ${userId}`);
+  } catch (error) {
+    console.error(`[${new Date().toISOString()}] POST /api/users/:userId/favorites - Error:`, error);
+    next(error);
+  }
+});
+
+// Remove a service from user's favorites
+router.delete('/:userId/favorites/:serviceId', async (req, res, next) => {
+  console.log(`[${new Date().toISOString()}] DELETE /api/users/:userId/favorites/:serviceId - Request received. Params:`, req.params);
+  try {
+    const { userId, serviceId } = req.params;
+
+    const user = await userService.getUserById(Number(userId));
+    if (!user) {
+      throw new ApiError('User not found', 404);
+    }
+
+    const currentFavorites = user.favorite_service_ids || [];
+    const updatedFavorites = currentFavorites.filter(id => id !== Number(serviceId));
+
+    if (updatedFavorites.length === currentFavorites.length) {
+      return successResponse(res, 'Service not found in favorites', user, 200);
+    }
+
+    const updatedUser = await userService.updateUser(Number(userId), {
+      favorite_service_ids: updatedFavorites,
+    });
+
+    if (!updatedUser) {
+      throw new ApiError('Failed to remove service from favorites', 500);
+    }
+
+    successResponse(res, 'Service removed from favorites successfully', updatedUser);
+    console.log(`[${new Date().toISOString()}] DELETE /api/users/:userId/favorites/:serviceId - Service ${serviceId} removed from favorites for user ${userId}`);
+  } catch (error) {
+    console.error(`[${new Date().toISOString()}] DELETE /api/users/:userId/favorites/:serviceId - Error:`, error);
     next(error);
   }
 });

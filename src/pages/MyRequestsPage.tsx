@@ -7,6 +7,8 @@ import RequestCard from '@/components/RequestCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth'; // Import useAuth
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'; // Import AlertDialog components
+import { Button } from '@/components/ui/button'; // Import Button for delete action
 
 interface RequestData {
   id: number;
@@ -22,6 +24,7 @@ interface RequestCardPropsData {
   title: string;
   description: string;
   status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled';
+  onDelete?: (id: string) => void; // Added onDelete prop
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -65,6 +68,25 @@ const MyRequestsPage = () => {
     fetchRequests();
   }, [fetchRequests]);
 
+  const handleDeleteRequest = async (requestId: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/requests/${requestId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.status === 204) { // 204 No Content is typical for successful DELETE
+        toast.success('تم حذف الطلب بنجاح!');
+        fetchRequests(); // Re-fetch requests to update the list
+      } else if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'فشل حذف الطلب.');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'حدث خطأ أثناء حذف الطلب.');
+      console.error('Error deleting request:', error);
+    }
+  };
+
   const mapRequestsToCardProps = (reqs: RequestData[]): RequestCardPropsData[] => {
     const statusMap = {
       'pending': 'Pending',
@@ -77,6 +99,7 @@ const MyRequestsPage = () => {
       title: req.title,
       description: req.description,
       status: statusMap[req.status || 'pending'] as RequestCardPropsData['status'],
+      onDelete: handleDeleteRequest, // Pass the delete handler
     }));
   };
 
@@ -117,7 +140,7 @@ const MyRequestsPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {pendingRequests.length > 0 ? (
               pendingRequests.map(request => (
-                <RequestCard key={request.id} request={request} />
+                <RequestCard key={request.id} request={request} onDelete={handleDeleteRequest} />
               ))
             ) : (
               <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد طلبات حالية.</p>
@@ -129,7 +152,7 @@ const MyRequestsPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {acceptedServices.length > 0 ? (
                 acceptedServices.map(service => (
-                  <RequestCard key={service.id} request={service} />
+                  <RequestCard key={service.id} request={service} onDelete={handleDeleteRequest} />
                 ))
               ) : (
                 <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لم تقم بتقديم أي خدمات بعد.</p>
@@ -141,7 +164,7 @@ const MyRequestsPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {completedRequests.length > 0 ? (
                 completedRequests.map(request => (
-                  <RequestCard key={request.id} request={request} />
+                  <RequestCard key={request.id} request={request} onDelete={handleDeleteRequest} />
                 ))
               ) : (
                 <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا يوجد سجل للطلبات المكتملة.</p>

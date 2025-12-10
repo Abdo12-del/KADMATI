@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useParams, useNavigate } from 'react-router-dom'; // Import useParams, useNavigate
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'; // Import AlertDialog components
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -95,6 +96,25 @@ const EditServicePage = () => {
     }
   };
 
+  const handleDeleteService = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/services/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.status === 204) { // 204 No Content is typical for successful DELETE
+        toast.success('تم حذف الخدمة بنجاح!');
+        navigate('/dashboard/services'); // Redirect to services list after deletion
+      } else if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'فشل حذف الخدمة.');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'حدث خطأ أثناء حذف الخدمة.');
+      console.error('Error deleting service:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="text-center py-10 text-brand-text-dark font-ibm-plex-arabic">جاري تحميل تفاصيل الخدمة...</div>
@@ -149,9 +169,34 @@ const EditServicePage = () => {
             <Label htmlFor="service-image" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">رابط صورة الخدمة (اختياري)</Label>
             <Input id="service-image" type="text" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="مثال: https://example.com/image.jpg" className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
           </div>
-          <Button type="submit" className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white py-3 rounded-xl shadow-soft font-ibm-plex-arabic text-lg">
-            حفظ التعديلات
-          </Button>
+          <div className="flex justify-between gap-4 mt-8">
+            <Button type="submit" className="flex-grow bg-brand-primary hover:bg-brand-primary-dark text-white py-3 rounded-xl shadow-soft font-ibm-plex-arabic text-lg">
+              حفظ التعديلات
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="bg-brand-danger hover:bg-brand-danger/90 text-white py-3 rounded-xl shadow-soft font-ibm-plex-arabic text-lg">
+                  حذف الخدمة
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="rounded-2xl shadow-soft bg-brand-card-bg p-6 text-right">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="font-cairo text-brand-text-dark text-2xl">هل أنت متأكد تمامًا؟</AlertDialogTitle>
+                  <AlertDialogDescription className="font-ibm-plex-arabic text-brand-text-muted">
+                    سيؤدي هذا الإجراء إلى حذف الخدمة بشكل دائم من قائمتك. لا يمكن التراجع عن هذا الإجراء.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter className="flex flex-row-reverse justify-start gap-3">
+                  <AlertDialogAction onClick={handleDeleteService} className="bg-brand-danger hover:bg-brand-danger/90 text-white rounded-xl shadow-soft font-ibm-plex-arabic">
+                    نعم، احذف الخدمة
+                  </AlertDialogAction>
+                  <AlertDialogCancel className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic">
+                    إلغاء
+                  </AlertDialogCancel>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </form>
       </CardContent>
     </Card>
