@@ -7,6 +7,9 @@ export interface User {
   phone?: string;
   bio?: string;
   avatar_url?: string;
+  provider_type?: string; // Added for providers
+  id_number?: string; // Added for providers
+  address?: string; // Added for providers
   created_at?: Date;
   updated_at?: Date;
 }
