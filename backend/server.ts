@@ -2,12 +2,12 @@ import express from 'express';
 import cors from 'cors';
 import { env } from './config/env';
 import { errorHandler } from './utils/errorHandler';
-import usersRoutes from './api/users';
-import servicesRoutes from './api/services';
-import requestsRoutes from './api/requests';
-import ratingsRoutes from './api/ratings';
-import messagesRoutes from './api/messages';
-import authRoutes from './api/auth'; // New import for auth routes
+// import usersRoutes from './api/users'; // Commented out
+// import servicesRoutes from './api/services'; // Commented out
+// import requestsRoutes from './api/requests'; // Commented out
+// import ratingsRoutes from './api/ratings'; // Commented out
+// import messagesRoutes from './api/messages'; // Commented out
+// import authRoutes from './api/auth'; // Commented out
 
 // Global error handlers for better debugging
 process.on('unhandledRejection', (reason, promise) => {
@@ -39,13 +39,13 @@ app.get('/', (req, res) => {
   res.send('Backend API is running!');
 });
 
-// API Routes
-app.use('/api/users', usersRoutes);
-app.use('/api/services', servicesRoutes);
-app.use('/api/requests', requestsRoutes);
-app.use('/api/ratings', ratingsRoutes);
-app.use('/api/messages', messagesRoutes);
-app.use('/api/auth', authRoutes); // New route for authentication
+// API Routes - Temporarily commented out for debugging
+// app.use('/api/users', usersRoutes);
+// app.use('/api/services', servicesRoutes);
+// app.use('/api/requests', requestsRoutes);
+// app.use('/api/ratings', ratingsRoutes);
+// app.use('/api/messages', messagesRoutes);
+// app.use('/api/auth', authRoutes);
 
 // Global error handler middleware
 app.use(errorHandler);
