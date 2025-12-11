@@ -1,208 +1,31 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import ClientServiceCard from '@/components/ClientServiceCard';
-import ProviderCard from '@/components/ProviderCard';
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Star, Edit, Trash2, Menu, LogOut } from 'lucide-react';
-import { Link } from 'react-router-dom'; // For internal links within the modal content
+import { Menu, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
-import { useAuth } from '@/hooks/use-auth'; // Import useAuth
+import { useAuth } from '@/hooks/use-auth';
 
-// Helper for stars
-const renderStars = (rating: number) => {
-  return (
-    <div className="flex rtl:flex-row-reverse">
-      {[...Array(5)].map((_, i) => (
-        <Star
-          key={i}
-          className={`h-5 w-5 ${i < rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`}
-        />
-      ))}
-    </div>
-  );
-};
-
-// Placeholder Data (will be replaced by actual data from context/backend)
-// const user = { // This will now come from useAuth
-//   name: 'ليلى ناصر',
-//   email: 'layla.nasser@example.com',
-//   phone: '+966501234567',
-//   avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=LN',
-// };
-
-interface ServiceData {
-  id: number;
-  provider_id: number;
-  title: string;
-  description: string;
-  category: string;
-  price: number;
-  delivery_time?: number;
-  image_url?: string;
-  rating?: number;
-  reviews_count?: number;
-  location?: string;
-  service_level?: string;
-}
-
-interface UserData {
-  id: number;
-  name: string;
-  email: string;
-  role: 'seeker' | 'provider';
-  phone?: string;
-  bio?: string;
-  avatar_url?: string;
-}
+// Import new modular tab components
+import { ClientProfileTab } from '@/components/client-menu/ClientProfileTab.tsx';
+import { ClientSettingsTab } from '@/components/client-menu/ClientSettingsTab.tsx';
+import { ClientFavoritesTab } from '@/components/client-menu/ClientFavoritesTab.tsx';
+import { ClientPaymentsTab } from '@/components/client-menu/ClientPaymentsTab.tsx';
+import { ClientReviewsTab } from '@/components/client-menu/ClientReviewsTab.tsx';
+import { ClientSupportTab } from '@/components/client-menu/ClientSupportTab.tsx';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-const favoriteProviders: any[] = []; // Empty array, will be fetched from backend
-const transactions: any[] = []; // Empty array, will be fetched from backend
-const myReviews: any[] = []; // Empty array, will be fetched from backend
-
-const faqs = [ // Keeping FAQs as they are static content
-  {
-    question: 'كيف يمكنني طلب خدمة جديدة؟',
-    answer: 'يمكنك تصفح كتالوج الخدمات، اختيار الخدمة التي تناسبك، ثم النقر على زر "اطلب الخدمة الآن" واتباع الخطوات.',
-  },
-  {
-    question: 'كيف أتواصل مع مقدم الخدمة بعد الطلب؟',
-    answer: 'بعد تأكيد الطلب، ستتمكن من التواصل مباشرة مع مقدم الخدمة عبر مركز الرسائل الخاص بك.',
-  },
-];
-
-const getStatusBadgeVariant = (status: string) => {
-  switch (status) {
-    case 'Completed':
-      return 'default';
-    case 'Pending':
-      return 'secondary';
-    case 'Cancelled':
-      return 'destructive';
-    default:
-      return 'outline';
-  }
-};
-
 export const ClientGeneralMenuModal = () => {
-  const { user, logout } = useAuth(); // Get user and logout from auth context
-  const [favoriteServices, setFavoriteServices] = useState<ServiceData[]>([]);
-  const [allUsers, setAllUsers] = useState<UserData[]>([]); // To get provider names for favorite services
-  const [loadingFavorites, setLoadingFavorites] = useState(true);
-  const [errorFavorites, setErrorFavorites] = useState<string | null>(null);
+  const { user, logout, updateUserFavorites } = useAuth();
 
-  const fetchFavoriteServices = useCallback(async () => {
-    if (!user || !user.id || user.role !== 'seeker') {
-      setLoadingFavorites(false);
-      setErrorFavorites('User not logged in as a seeker.');
-      return;
-    }
-
-    setLoadingFavorites(true);
-    setErrorFavorites(null);
-    try {
-      const [servicesResponse, usersResponse] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/services`),
-        fetch(`${API_BASE_URL}/api/users`),
-      ]);
-
-      if (!servicesResponse.ok) throw new Error('فشل جلب الخدمات.');
-      if (!usersResponse.ok) throw new Error('فشل جلب المستخدمين.');
-
-      const servicesData: ServiceData[] = (await servicesResponse.json()).data;
-      const usersData: UserData[] = (await usersResponse.json()).data;
-      setAllUsers(usersData);
-
-      const userFavorites = user.favorite_service_ids || [];
-      const fetchedFavoriteServices = servicesData.filter(service => userFavorites.includes(service.id!));
-      setFavoriteServices(fetchedFavoriteServices);
-
-    } catch (err: any) {
-      setErrorFavorites(err.message);
-      toast.error(err.message || 'حدث خطأ أثناء جلب الخدمات المفضلة.');
-    } finally {
-      setLoadingFavorites(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    fetchFavoriteServices();
-  }, [fetchFavoriteServices]);
-
-  const mappedFavoriteServices = useMemo(() => {
-    return favoriteServices.map(service => {
-      const provider = allUsers.find(u => u.id === service.provider_id);
-      return {
-        id: service.id.toString(),
-        title: service.title,
-        description: service.description,
-        price: service.price,
-        providerName: provider?.name || 'مقدم خدمة غير معروف',
-        rating: service.rating || 0,
-        location: service.location || 'غير محدد',
-        imageUrl: service.image_url || '/placeholder.svg',
-      };
-    });
-  }, [favoriteServices, allUsers]);
-
-  const handleImageChange = () => {
-    toast.info('وظيفة تغيير الصورة قيد التطوير (وظيفة وهمية)!');
-    console.log('Change image clicked');
-  };
-
-  const handleProfileSave = () => {
-    toast.success('تم حفظ تعديلات الملف الشخصي بنجاح (وظيفة وهمية)!');
-    console.log('Profile saved');
-  };
-
-  const handleChangePassword = () => {
-    toast.success('تم تغيير كلمة المرور بنجاح (وظيفة وهمية)!');
-    console.log('Password changed');
-  };
-
-  const handleNotificationToggle = (id: string, checked: boolean) => {
-    toast.info(`تم ${checked ? 'تفعيل' : 'تعطيل'} إشعارات ${id === 'email-notifications' ? 'البريد الإلكتروني' : 'الفورية'} (وظيفة وهمية)!`);
-    console.log(`Notification ${id} toggled: ${checked}`);
-  };
-
-  const handleSaveLanguageSettings = () => {
-    toast.success('تم حفظ إعدادات اللغة بنجاح (وظيفة وهمية)!');
-    console.log('Language settings saved');
-  };
-
-  const handleAddPaymentMethod = () => {
-    toast.info('وظيفة إضافة طريقة دفع جديدة قيد التطوير (وظيفة وهمية)!');
-    console.log('Add payment method clicked');
-  };
-
-  const handleEditReview = (reviewId: string) => {
-    toast.info(`تعديل التقييم ${reviewId} (وظيفة وهمية)!`);
-    console.log('Edit review clicked for:', reviewId);
-  };
-
-  const handleDeleteReview = (reviewId: string) => {
-    toast.error(`حذف التقييم ${reviewId} (وظيفة وهمية)!`);
-    console.log('Delete review clicked for:', reviewId);
-  };
-
-  const handleSubmitSupportMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast.success('تم إرسال رسالتك إلى الدعم الفني بنجاح (وظيفة وهمية)!');
-    console.log('Support message sent from modal');
+  const handleProfileUpdate = (updatedFields: Partial<any>) => {
+    // This would typically involve an API call to update the user profile
+    console.log('Updating profile with:', updatedFields);
+    // For now, just a toast and console log
+    toast.success('تم تحديث الملف الشخصي بنجاح (وظيفة وهمية)!');
   };
 
   return (
@@ -227,268 +50,29 @@ export const ClientGeneralMenuModal = () => {
             <TabsTrigger value="support" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">الدعم</TabsTrigger>
           </TabsList>
 
-          <div className="flex-grow overflow-y-auto pr-2"> {/* This div handles the scrolling for all tab contents */}
-            {/* Profile Tab Content */}
+          <div className="flex-grow overflow-y-auto pr-2">
             <TabsContent value="profile" className="mt-0">
-              <Card className="bg-brand-card-bg p-6 rounded-2xl shadow-soft w-full max-w-2xl mx-auto text-right">
-                <CardHeader className="p-0 pb-4">
-                  <CardTitle className="font-cairo text-brand-text-dark text-2xl">الملف الشخصي</CardTitle>
-                </CardHeader>
-                <CardContent className="p-0 space-y-4">
-                  <div className="flex flex-col items-center mb-4">
-                    <Avatar className="h-20 w-20 mb-3">
-                      <AvatarImage src={user?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name.split(' ').map(n => n[0]).join('')}`} alt={user?.name} />
-                      <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{user?.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                    </Avatar>
-                    <Button onClick={handleImageChange} variant="outline" size="sm" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-lg shadow-soft font-ibm-plex-arabic">تغيير الصورة</Button>
-                  </div>
-                  <div>
-                    <Label htmlFor="profile-name" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">الاسم الكامل</Label>
-                    <Input id="profile-name" type="text" defaultValue={user?.name} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
-                  </div>
-                  <div>
-                    <Label htmlFor="profile-email" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">البريد الإلكتروني</Label>
-                    <Input id="profile-email" type="email" defaultValue={user?.email} disabled className="rounded-xl shadow-soft bg-brand-background border-none font-ibm-plex-arabic text-right" />
-                  </div>
-                  <div>
-                    <Label htmlFor="profile-phone" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">رقم الهاتف</Label>
-                    <Input id="profile-phone" type="tel" defaultValue={user?.phone} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
-                  </div>
-                  <Button onClick={handleProfileSave} className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
-                    حفظ التعديلات
-                  </Button>
-                </CardContent>
-              </Card>
+              <ClientProfileTab user={user} onProfileUpdate={handleProfileUpdate} />
             </TabsContent>
 
-            {/* Settings Tab Content */}
             <TabsContent value="settings" className="mt-0">
-              <Card className="bg-brand-card-bg p-6 rounded-2xl shadow-soft w-full max-w-2xl mx-auto text-right">
-                <CardHeader className="p-0 pb-4">
-                  <CardTitle className="font-cairo text-brand-text-dark text-2xl">الإعدادات</CardTitle>
-                </CardHeader>
-                <CardContent className="p-0 space-y-6">
-                  <div className="space-y-4">
-                    <h3 className="text-xl font-cairo text-brand-text-dark">تغيير كلمة المرور</h3>
-                    <div>
-                      <Label htmlFor="current-password" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">كلمة المرور الحالية</Label>
-                      <Input id="current-password" type="password" className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
-                    </div>
-                    <div>
-                      <Label htmlFor="new-password" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">كلمة المرور الجديدة</Label>
-                      <Input id="new-password" type="password" className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
-                    </div>
-                    <div>
-                      <Label htmlFor="confirm-new-password" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">تأكيد كلمة المرور الجديدة</Label>
-                      <Input id="confirm-new-password" type="password" className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
-                    </div>
-                    <Button onClick={handleChangePassword} variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
-                      تغيير كلمة المرور
-                    </Button>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="text-xl font-cairo text-brand-text-dark">إعدادات الإشعارات</h3>
-                    <div className="flex flex-row-reverse items-center justify-between">
-                      <Label htmlFor="email-notifications" className="text-brand-text-dark font-ibm-plex-arabic text-lg">تلقي إشعارات عبر البريد الإلكتروني</Label>
-                      <Switch id="email-notifications" defaultChecked onCheckedChange={(checked) => handleNotificationToggle('email-notifications', checked)} />
-                    </div>
-                    <div className="flex flex-row-reverse items-center justify-between">
-                      <Label htmlFor="push-notifications" className="text-brand-text-dark font-ibm-plex-arabic text-lg">تلقي إشعارات فورية</Label>
-                      <Switch id="push-notifications" defaultChecked onCheckedChange={(checked) => handleNotificationToggle('push-notifications', checked)} />
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="text-xl font-cairo text-brand-text-dark">اللغة</h3>
-                    <div>
-                      <Label htmlFor="language-select" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">لغة الواجهة</Label>
-                      <Select defaultValue="ar">
-                        <SelectTrigger id="language-select" className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right">
-                          <SelectValue placeholder="اختر اللغة" />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl shadow-soft bg-brand-card-bg font-ibm-plex-arabic text-right">
-                          <SelectItem value="ar">العربية</SelectItem>
-                          <SelectItem value="en">English</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button onClick={handleSaveLanguageSettings} className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
-                      حفظ إعدادات اللغة
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <ClientSettingsTab />
             </TabsContent>
 
-            {/* Favorites Tab Content */}
             <TabsContent value="favorites" className="mt-0">
-              <h2 className="text-xl font-cairo text-brand-text-dark mb-4 text-right">الخدمات المفضلة</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                {loadingFavorites ? (
-                  <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">جاري تحميل الخدمات المفضلة...</p>
-                ) : errorFavorites ? (
-                  <p className="text-brand-danger col-span-full font-ibm-plex-arabic text-right">خطأ: {errorFavorites}</p>
-                ) : mappedFavoriteServices.length > 0 ? (
-                  mappedFavoriteServices.map(service => (
-                    <ClientServiceCard key={service.id} service={service} />
-                  ))
-                ) : (
-                  <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد خدمات في قائمة المفضلة.</p>
-                )}
-              </div>
-
-              <h2 className="text-xl font-cairo text-brand-text-dark mb-4 text-right">مقدمو الخدمات المفضلون</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {favoriteProviders.length > 0 ? (
-                  favoriteProviders.map(provider => (
-                    <ProviderCard key={provider.id} provider={provider} />
-                  ))
-                ) : (
-                  <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا يوجد مقدمو خدمات في قائمة المفضلة.</p>
-                )}
-              </div>
+              <ClientFavoritesTab API_BASE_URL={API_BASE_URL} />
             </TabsContent>
 
-            {/* Payments Tab Content */}
             <TabsContent value="payments" className="mt-0">
-              <Card className="bg-brand-card-bg rounded-2xl shadow-soft p-6">
-                <CardHeader className="p-0 pb-4 text-right">
-                  <CardTitle className="font-cairo text-brand-text-dark text-2xl">سجل المعاملات</CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  {transactions.length > 0 ? (
-                    <Table className="text-right">
-                      <TableCaption className="font-ibm-plex-arabic text-right">قائمة بجميع معاملاتك السابقة.</TableCaption>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="text-brand-text-dark font-semibold font-cairo text-right">الخدمة</TableHead>
-                          <TableHead className="text-brand-text-dark font-semibold font-cairo text-right">المبلغ</TableHead>
-                          <TableHead className="text-brand-text-dark font-semibold font-cairo text-right">التاريخ</TableHead>
-                          <TableHead className="text-brand-text-dark font-semibold font-cairo text-right">الحالة</TableHead>
-                          <TableHead className="text-brand-text-dark font-semibold font-cairo text-right">طريقة الدفع</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {transactions.map(transaction => (
-                          <TableRow key={transaction.id}>
-                            <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">{transaction.service}</TableCell>
-                            <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">{transaction.amount} د.ج</TableCell>
-                            <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">{transaction.date}</TableCell>
-                            <TableCell className="text-right">
-                              <Badge variant={getStatusBadgeVariant(transaction.status)} className="rounded-md font-ibm-plex-arabic">
-                                {transaction.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">{transaction.method}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <p className="text-brand-text-muted font-ibm-plex-arabic text-right">لا توجد معاملات سابقة.</p>
-                  )}
-                </CardContent>
-              </Card>
-              <Card className="rounded-2xl shadow-soft bg-brand-background p-6 mt-6">
-                <CardHeader className="p-0 pb-4">
-                  <CardTitle className="font-cairo text-brand-text-dark text-2xl">طرق الدفع</CardTitle>
-                </CardHeader>
-                <CardContent className="p-0 space-y-4">
-                  <p className="text-brand-text-muted font-ibm-plex-arabic">لا توجد طرق دفع محفوظة حاليًا.</p>
-                  <Button onClick={handleAddPaymentMethod} variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
-                    إضافة طريقة دفع جديدة
-                  </Button>
-                </CardContent>
-              </Card>
+              <ClientPaymentsTab />
             </TabsContent>
 
-            {/* Reviews Tab Content */}
             <TabsContent value="reviews" className="mt-0">
-              <h2 className="text-xl font-cairo text-brand-text-dark mb-4 text-right">تقييماتي</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {myReviews.length > 0 ? (
-                  myReviews.map(review => (
-                    <Card key={review.id} className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6">
-                      <CardHeader className="flex flex-row-reverse items-center space-x-4 rtl:space-x-reverse p-0 pb-3">
-                        <Avatar className="h-12 w-12">
-                          <AvatarImage src={review.providerAvatarUrl} alt={review.providerName} />
-                          <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{review.providerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                        </Avatar>
-                        <div className="text-right">
-                          <CardTitle className="text-lg font-cairo text-brand-text-dark">{review.serviceTitle}</CardTitle>
-                          <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">مقدم الخدمة: {review.providerName}</p>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="p-0 space-y-3 text-right">
-                        <div className="flex justify-end">{renderStars(review.rating)}</div>
-                        <p className="text-brand-text-dark font-ibm-plex-arabic">{review.comment}</p>
-                        <p className="text-xs text-brand-text-muted mt-2 font-ibm-plex-arabic">بتاريخ: {review.date}</p>
-                        <div className="flex justify-end gap-3 mt-4">
-                          <Button onClick={() => handleEditReview(review.id)} variant="outline" size="sm" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-lg shadow-soft font-ibm-plex-arabic">
-                            <Edit className="ml-2 h-4 w-4" />
-                            تعديل
-                          </Button>
-                          <Button onClick={() => handleDeleteReview(review.id)} variant="destructive" size="sm" className="bg-brand-danger hover:bg-brand-danger/90 text-white rounded-lg shadow-soft font-ibm-plex-arabic">
-                            <Trash2 className="ml-2 h-4 w-4" />
-                            حذف
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                ) : (
-                  <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لم تقم بتقييم أي خدمات بعد.</p>
-                )}
-              </div>
+              <ClientReviewsTab />
             </TabsContent>
 
-            {/* Support Tab Content */}
             <TabsContent value="support" className="mt-0">
-              <h2 className="text-xl font-cairo text-brand-text-dark mb-4 text-right">الأسئلة الشائعة</h2>
-              <Card className="bg-brand-card-bg rounded-2xl shadow-soft p-6 mb-6">
-                <CardContent className="p-0">
-                  <Accordion type="single" collapsible className="w-full">
-                    {faqs.map((faq, index) => (
-                      <AccordionItem key={index} value={`item-${index}`} className="border-b border-border last:border-b-0">
-                        <AccordionTrigger className="font-cairo text-brand-text-dark text-lg text-right hover:no-underline hover:text-brand-primary py-4">
-                          {faq.question}
-                        </AccordionTrigger>
-                        <AccordionContent className="text-brand-text-muted font-ibm-plex-arabic text-right pb-4">
-                          {faq.answer}
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </CardContent>
-              </Card>
-
-              <h2 className="text-xl font-cairo text-brand-text-dark mb-4 text-right">تواصل مع الدعم الفني</h2>
-              <Card className="bg-brand-card-bg rounded-2xl shadow-soft p-6 text-right">
-                <CardContent className="p-0 space-y-4">
-                  <form onSubmit={handleSubmitSupportMessage} className="space-y-4">
-                    <div>
-                      <Label htmlFor="support-name" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">اسمك الكامل</Label>
-                      <Input id="support-name" type="text" placeholder="ادخل اسمك" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
-                    </div>
-                    <div>
-                      <Label htmlFor="support-email" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">بريدك الإلكتروني</Label>
-                      <Input id="support-email" type="email" placeholder="ادخل بريدك الإلكتروني" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
-                    </div>
-                    <div>
-                      <Label htmlFor="support-subject" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">الموضوع</Label>
-                      <Input id="support-subject" type="text" placeholder="موضوع رسالتك" required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
-                    </div>
-                    <div>
-                      <Label htmlFor="support-message" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">رسالتك</Label>
-                      <Textarea id="support-message" placeholder="اكتب رسالتك هنا بالتفصيل..." rows={5} required className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
-                    </div>
-                    <Button type="submit" className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
-                      إرسال الرسالة
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
+              <ClientSupportTab />
             </TabsContent>
           </div>
           <div className="mt-6 border-t border-border pt-4 text-center flex-shrink-0">
