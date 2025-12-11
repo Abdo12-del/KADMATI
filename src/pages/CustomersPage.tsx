@@ -17,15 +17,6 @@ interface UserData {
   created_at?: string;
 }
 
-interface CustomerCardPropsData {
-  id: string;
-  name: string;
-  email: string;
-  avatarUrl?: string;
-  totalOrders: number; // Placeholder
-  lastOrderDate: string; // Placeholder
-}
-
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const CustomersPage = () => {

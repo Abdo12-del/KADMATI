@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+// import React, { useState, useEffect, useCallback, useMemo } from 'react'; // Removed
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -140,7 +141,7 @@ export const MessageCenterModal = ({ currentUserId = 'provider', isPage = false 
         text: msg.text,
         time: msg.created_at ? new Date(msg.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '',
       });
-      if (!msg.read && msg.sender_id !== CURRENT_USER_BACKEND_ID) {
+      if (!msg.read && msg.receiver_id === CURRENT_USER_BACKEND_ID) { // Only count unread if current user is the receiver
         conv.unreadCount++;
       }
       conv.lastMessageTime = msg.created_at ? new Date(msg.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '';
@@ -267,7 +268,7 @@ export const MessageCenterModal = ({ currentUserId = 'provider', isPage = false 
         !selectedConversationId && "hidden lg:flex items-center justify-center text-brand-text-muted font-ibm-plex-arabic",
         selectedConversationId && "w-full" // Take full width on small screens if chat is selected
       )}>
-        {selectedConversation ? (
+        {selectedConversation && CURRENT_USER_BACKEND_ID !== undefined ? ( // Ensure CURRENT_USER_BACKEND_ID is defined
           <>
             {/* Chat Window Header */}
             <div className="flex flex-row-reverse items-center border-b border-border pb-4 px-4 pt-0 flex-shrink-0">

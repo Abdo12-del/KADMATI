@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react'; // Removed
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Home, Briefcase, Package, MessageSquare, Calendar, Users, Star, BarChart, Settings, HelpCircle } from 'lucide-react';

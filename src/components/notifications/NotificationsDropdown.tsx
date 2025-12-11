@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+// import React, { useState, useEffect, useCallback, useMemo } from 'react'; // Removed
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, Package, MessageSquare, CreditCard, Settings, Info, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';

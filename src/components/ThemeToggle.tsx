@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+// import * as React from "react"; // Removed
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme"; // Assuming a useTheme hook will be created
 

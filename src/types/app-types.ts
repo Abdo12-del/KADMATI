@@ -56,12 +56,12 @@ export interface ClientServiceCardPropsData {
 
 export interface ReviewCardPropsData {
   id: string;
-  customerName: string;
   serviceTitle: string;
+  providerName: string;
+  providerAvatarUrl?: string; // Added this field
   rating: number;
   comment?: string;
   date: string;
-  avatarUrl?: string;
 }
 
 export interface TransactionData {

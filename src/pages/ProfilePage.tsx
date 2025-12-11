@@ -13,10 +13,10 @@ import { toast } from 'sonner';
 const ProfilePage = () => {
   // Placeholder user data - will be replaced by actual data from auth context
   const [name, setName] = useState('أحمد محمد');
-  const [email, setEmail] = useState('ahmed.mohamed@example.com');
-  const [role, setRole] = useState('مقدم خدمة');
+  const email = 'ahmed.mohamed@example.com'; // Removed setEmail
+  const role = 'مقدم خدمة'; // Removed setRole
   const [bio, setBio] = useState('مصمم جرافيك بخبرة 5 سنوات في تصميم الشعارات والهويات البصرية.');
-  const [avatarUrl, setAvatarUrl] = useState('https://api.dicebear.com/7.x/initials/svg?seed=AM'); // Example avatar
+  const avatarUrl = 'https://api.dicebear.com/7.x/initials/svg?seed=AM'; // Removed setAvatarUrl
 
   const handleSaveChanges = () => {
     toast.success('تم حفظ التعديلات بنجاح (وظيفة وهمية)!');

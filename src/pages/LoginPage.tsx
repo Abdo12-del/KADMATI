@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from 'sonner';
+// import { toast } from 'sonner'; // Removed
 import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 const LoginPage = () => {

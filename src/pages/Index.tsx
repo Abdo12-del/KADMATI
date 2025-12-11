@@ -1,6 +1,5 @@
-import React from 'react';
+// import React from 'react'; // Removed
 // import Header from '@/components/Header'; // Removed
-// import Footer from '@/components/Footer'; // Removed
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';

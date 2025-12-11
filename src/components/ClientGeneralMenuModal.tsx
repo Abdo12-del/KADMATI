@@ -19,7 +19,7 @@ import { ClientSupportTab } from '@/components/client-menu/ClientSupportTab.tsx'
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const ClientGeneralMenuModal = () => {
-  const { user, logout, updateUserFavorites } = useAuth();
+  const { user, logout } = useAuth(); // Removed updateUserFavorites
 
   const handleProfileUpdate = (updatedFields: Partial<any>) => {
     // This would typically involve an API call to update the user profile

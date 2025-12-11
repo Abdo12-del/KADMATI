@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+// import React, { useState, useEffect, useCallback, useMemo } from 'react'; // Removed
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,17 +27,6 @@ interface RequestData {
 interface UserData {
   id: number;
   name: string;
-}
-
-interface ProviderRequestCardPropsData {
-  id: string;
-  title: string;
-  description: string;
-  location?: string;
-  dateAdded: string;
-  dueDate?: string;
-  additionalOptions?: string;
-  clientName: string;
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;

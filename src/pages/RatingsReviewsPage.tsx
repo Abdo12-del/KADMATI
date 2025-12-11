@@ -29,16 +29,6 @@ interface UserData {
   avatar_url?: string;
 }
 
-interface ReviewCardPropsData {
-  id: string;
-  customerName: string;
-  serviceTitle: string;
-  rating: number;
-  comment?: string;
-  date: string;
-  avatarUrl?: string;
-}
-
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const RatingsReviewsPage = () => {
@@ -158,7 +148,7 @@ const RatingsReviewsPage = () => {
               <CardHeader className="flex flex-row-reverse items-center space-x-4 rtl:space-x-reverse p-0 pb-3">
                 <Avatar className="h-12 w-12">
                   <AvatarImage src={review.avatarUrl} alt={review.customerName} />
-                  <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{review.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{review.customerName?.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                 </Avatar>
                 <div className="text-right">
                   <CardTitle className="text-lg font-cairo text-brand-text-dark">{review.customerName}</CardTitle>

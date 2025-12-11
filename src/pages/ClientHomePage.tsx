@@ -32,17 +32,6 @@ interface UserData {
   name: string;
 }
 
-interface ClientServiceCardPropsData {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  providerName: string;
-  rating: number;
-  location: string;
-  imageUrl?: string;
-}
-
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const ClientHomePage = () => {

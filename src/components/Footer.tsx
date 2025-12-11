@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react'; // Removed
 import { MadeWithDyad } from '@/components/made-with-dyad';
 
 const Footer = () => {

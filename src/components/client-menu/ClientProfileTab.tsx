@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
+// import React, { useState } from 'react'; // Removed
+import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

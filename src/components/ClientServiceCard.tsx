@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+// import React from 'react'; // Removed
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Star, MapPin } from 'lucide-react';

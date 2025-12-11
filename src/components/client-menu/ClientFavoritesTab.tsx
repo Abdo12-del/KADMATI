@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+// import React, { useState, useEffect, useCallback, useMemo } from 'react'; // Removed
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import ClientServiceCard from '@/components/ClientServiceCard';
 import ProviderCard from '@/components/ProviderCard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+// import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Removed
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { ServiceData, UserData, ClientServiceCardPropsData, ProviderCardPropsData } from '@/types/app-types.ts';
