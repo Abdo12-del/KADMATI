@@ -1,13 +1,15 @@
 "use client";
 
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Star, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { ReviewCardPropsData } from '@/types/app-types.ts';
+import { useAuth } from '@/hooks/use-auth';
+import { ReviewCardPropsData, ServiceData, UserData, RatingData } from '@/types/app-types.ts';
 
-// Helper for stars (moved here for modularity, or could be imported from a utils file)
+// Helper for stars
 const renderStars = (rating: number) => {
   return (
     <div className="flex rtl:flex-row-reverse">
@@ -21,45 +23,122 @@ const renderStars = (rating: number) => {
   );
 };
 
-// Placeholder data for reviews
-const myReviews: ReviewCardPropsData[] = [
-  {
-    id: 'r1',
-    serviceTitle: 'تصميم شعار احترافي',
-    providerName: 'أحمد مقدم',
-    providerAvatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=AP',
-    rating: 5,
-    comment: 'خدمة ممتازة وشعار رائع، أنصح به بشدة!',
-    date: '2023-11-05',
-  },
-  {
-    id: 'r2',
-    serviceTitle: 'كتابة محتوى تسويقي',
-    providerName: 'فاطمة كاتبة',
-    providerAvatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=FK',
-    rating: 4,
-    comment: 'محتوى جيد جداً وسرعة في التنفيذ، شكراً.',
-    date: '2023-10-20',
-  },
-];
+interface ClientReviewsTabProps {
+  API_BASE_URL: string;
+}
 
-export const ClientReviewsTab = () => {
+export const ClientReviewsTab = ({ API_BASE_URL }: ClientReviewsTabProps) => {
+  const { user } = useAuth();
+  const CLIENT_ID = user?.id;
+
+  const [ratings, setRatings] = useState<RatingData[]>([]);
+  const [services, setServices] = useState<ServiceData[]>([]);
+  const [providers, setProviders] = useState<UserData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchReviewsData = useCallback(async () => {
+    if (!CLIENT_ID) {
+      setLoading(false);
+      setError('معرف العميل غير متاح. الرجاء تسجيل الدخول كطالب خدمة.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const [ratingsResponse, servicesResponse, usersResponse] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/ratings`),
+        fetch(`${API_BASE_URL}/api/services`),
+        fetch(`${API_BASE_URL}/api/users`),
+      ]);
+
+      if (!ratingsResponse.ok) throw new Error('فشل جلب التقييمات.');
+      if (!servicesResponse.ok) throw new Error('فشل جلب الخدمات.');
+      if (!usersResponse.ok) throw new Error('فشل جلب المستخدمين.');
+
+      const ratingsResult: { data: RatingData[] } = await ratingsResponse.json();
+      const servicesResult: { data: ServiceData[] } = await servicesResponse.json();
+      const usersResult: { data: UserData[] } = await usersResponse.json();
+
+      // Filter ratings to only include those made by the current client
+      const clientRatings = ratingsResult.data.filter(r => r.client_id === CLIENT_ID);
+      setRatings(clientRatings);
+      setServices(servicesResult.data);
+      setProviders(usersResult.data.filter(u => u.role === 'provider')); // Only store providers
+
+    } catch (err: any) {
+      setError(err.message);
+      toast.error(err.message || 'حدث خطأ أثناء جلب تقييماتك.');
+    } finally {
+      setLoading(false);
+    }
+  }, [CLIENT_ID, API_BASE_URL]);
+
+  useEffect(() => {
+    fetchReviewsData();
+  }, [fetchReviewsData]);
+
+  const mappedReviews = useMemo(() => {
+    return ratings.map(rating => {
+      const service = services.find(s => s.id === rating.service_id);
+      const provider = providers.find(p => p.id === service?.provider_id);
+
+      return {
+        id: rating.id?.toString() || '',
+        serviceTitle: service?.title || 'خدمة غير معروفة',
+        providerName: provider?.name || 'مقدم خدمة غير معروف',
+        providerAvatarUrl: provider?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${provider?.name.split(' ').map(n => n[0]).join('') || 'UN'}`,
+        rating: rating.rating,
+        comment: rating.comment,
+        date: rating.created_at ? new Date(rating.created_at).toLocaleDateString('ar-EG') : 'غير محدد',
+      } as ReviewCardPropsData;
+    });
+  }, [ratings, services, providers]);
+
   const handleEditReview = (reviewId: string) => {
     toast.info(`تعديل التقييم ${reviewId} (وظيفة وهمية)!`);
     console.log('Edit review clicked for:', reviewId);
+    // In a real app, this would open a dialog to edit the review
   };
 
-  const handleDeleteReview = (reviewId: string) => {
-    toast.error(`حذف التقييم ${reviewId} (وظيفة وهمية)!`);
-    console.log('Delete review clicked for:', reviewId);
+  const handleDeleteReview = async (reviewId: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/ratings/${reviewId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.status === 204) { // 204 No Content is typical for successful DELETE
+        toast.success('تم حذف التقييم بنجاح!');
+        fetchReviewsData(); // Re-fetch reviews to update the list
+      } else if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'فشل حذف التقييم.');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'حدث خطأ أثناء حذف التقييم.');
+      console.error('Error deleting review:', error);
+    }
   };
+
+  if (loading) {
+    return (
+      <p className="text-center py-10 text-brand-text-dark font-ibm-plex-arabic">جاري تحميل تقييماتك...</p>
+    );
+  }
+
+  if (error) {
+    return (
+      <p className="text-center py-10 text-brand-danger font-ibm-plex-arabic">خطأ: {error}</p>
+    );
+  }
 
   return (
     <>
       <h2 className="text-xl font-cairo text-brand-text-dark mb-4 text-right">تقييماتي</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {myReviews.length > 0 ? (
-          myReviews.map(review => (
+        {mappedReviews.length > 0 ? (
+          mappedReviews.map(review => (
             <Card key={review.id} className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6">
               <CardHeader className="flex flex-row-reverse items-center space-x-4 rtl:space-x-reverse p-0 pb-3">
                 <Avatar className="h-12 w-12">

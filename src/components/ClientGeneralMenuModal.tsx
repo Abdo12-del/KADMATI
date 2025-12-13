@@ -67,7 +67,7 @@ export const ClientGeneralMenuModal = () => {
             </TabsContent>
 
             <TabsContent value="reviews" className="mt-0">
-              <ClientReviewsTab />
+              <ClientReviewsTab API_BASE_URL={API_BASE_URL} />
             </TabsContent>
 
             <TabsContent value="support" className="mt-0">
