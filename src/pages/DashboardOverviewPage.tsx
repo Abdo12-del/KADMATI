@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 // import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+// import { Link } from 'react-router-dom'; // Removed unused import
 import { Package, Star, MessageSquare, DollarSign, CheckCircle, Clock } from 'lucide-react'; // Removed unused icons
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
