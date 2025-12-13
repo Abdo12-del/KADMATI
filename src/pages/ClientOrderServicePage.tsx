@@ -1,14 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-// import ClientHomeHeader from '@/components/ClientHomeHeader'; // Removed
-// import Footer from '@/components/Footer'; // Removed
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom'; // Removed Link
 import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
-import { useAuth } from '@/hooks/use-auth'; // Import useAuth
+import { useAuth } from '@/hooks/use-auth';
 
 interface ServiceData {
   id: number;
@@ -35,8 +33,8 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const ClientOrderServicePage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth(); // Get current user from auth context
-  const CLIENT_ID = user?.id; // Use actual client ID
+  const { user } = useAuth();
+  const CLIENT_ID = user?.id;
 
   const [service, setService] = useState<ServiceData | null>(null);
   const [provider, setProvider] = useState<UserData | null>(null);
@@ -88,6 +86,7 @@ const ClientOrderServicePage = () => {
 
     const newRequest = {
       client_id: CLIENT_ID,
+      service_id: service.id, // Link the request to the service ID
       title: `طلب خدمة: ${service.title}`,
       description: `طلب العميل لخدمة: ${service.title} من مقدم الخدمة: ${provider?.name || 'غير معروف'}.`,
       category: service.category,
@@ -184,7 +183,7 @@ const ClientOrderServicePage = () => {
         </Button>
         <Button
           variant="outline"
-          onClick={() => navigate(-1)} // Go back to previous page
+          onClick={() => navigate(-1)}
           className="w-full mt-4 border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg"
         >
           إلغاء

@@ -112,13 +112,18 @@ export const validateRequest = (data: any, isUpdate: boolean = false) => {
   if (!isUpdate && (data.client_id === undefined || data.client_id === null)) {
     errors.push('Client ID is required.');
   }
+  // service_id is optional, so no 'required' check for it
+  if (data.service_id !== undefined && data.service_id !== null && typeof data.service_id !== 'number') {
+    errors.push('Service ID must be a number.');
+  }
+
   if (!isUpdate && !data.title) {
     errors.push('Title is required.');
   }
   if (!isUpdate && !data.description) {
     errors.push('Description is required.');
   }
-  if (data.status && !['pending', 'accepted', 'completed', 'cancelled', 'payment_pending'].includes(data.status)) { // Added 'payment_pending'
+  if (data.status && !['pending', 'accepted', 'completed', 'cancelled', 'payment_pending'].includes(data.status)) {
     errors.push('Invalid request status. Must be "pending", "accepted", "completed", "cancelled", or "payment_pending".');
   }
 

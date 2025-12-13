@@ -1,7 +1,6 @@
 "use client";
 
-// import React, { useState } from 'react'; // Removed
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // Added useEffect
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,22 +11,35 @@ import { UserData } from '@/types/app-types.ts';
 
 interface ClientProfileTabProps {
   user: UserData | null;
-  onProfileUpdate: (updatedUser: Partial<UserData>) => void;
+  onProfileUpdate: (updatedUser: Partial<UserData>) => Promise<void>; // Changed return type to Promise<void>
 }
 
 export const ClientProfileTab = ({ user, onProfileUpdate }: ClientProfileTabProps) => {
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
+  const [bio, setBio] = useState(user?.bio || ''); // Added bio state
+
+  useEffect(() => {
+    if (user) {
+      setName(user.name || '');
+      setPhone(user.phone || '');
+      setBio(user.bio || '');
+    }
+  }, [user]);
 
   const handleImageChange = () => {
     toast.info('وظيفة تغيير الصورة قيد التطوير (وظيفة وهمية)!');
     console.log('Change image clicked');
   };
 
-  const handleProfileSave = () => {
-    onProfileUpdate({ name, phone });
-    toast.success('تم حفظ تعديلات الملف الشخصي بنجاح (وظيفة وهمية)!');
-    console.log('Profile saved', { name, phone });
+  const handleProfileSave = async () => {
+    try {
+      await onProfileUpdate({ name, phone, bio }); // Pass bio as well
+      // toast.success is handled by the parent's onProfileUpdate or useAuth
+    } catch (error) {
+      console.error('Failed to save profile changes in ClientProfileTab:', error);
+      // Error toast is handled by the parent's onProfileUpdate or useAuth
+    }
   };
 
   return (
@@ -54,6 +66,10 @@ export const ClientProfileTab = ({ user, onProfileUpdate }: ClientProfileTabProp
         <div>
           <Label htmlFor="profile-phone" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">رقم الهاتف</Label>
           <Input id="profile-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+        </div>
+        <div>
+          <Label htmlFor="profile-bio" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">نبذة عني</Label>
+          <Input id="profile-bio" type="text" value={bio} onChange={(e) => setBio(e.target.value)} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
         </div>
         <Button onClick={handleProfileSave} className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
           حفظ التعديلات

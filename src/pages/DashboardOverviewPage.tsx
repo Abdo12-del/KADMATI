@@ -1,75 +1,28 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-// import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-// import { Link } from 'react-router-dom'; // Removed unused import
-import { Package, Star, MessageSquare, DollarSign, CheckCircle, Clock } from 'lucide-react'; // Removed unused icons
+import { Link } from 'react-router-dom'; // Re-added Link for quick actions
+import { Package, Star, MessageSquare, DollarSign, CheckCircle, Clock } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { useAuth } from '@/hooks/use-auth'; // Import useAuth
-
-interface RequestData {
-  id: number;
-  client_id: number;
-  title: string;
-  status?: 'pending' | 'accepted' | 'completed' | 'cancelled';
-  created_at?: string;
-}
-
-interface RatingData {
-  id: number;
-  service_id: number;
-  client_id: number;
-  rating: number;
-}
-
-interface MessageData {
-  id: number;
-  sender_id: number;
-  receiver_id: number;
-  conversation_id: string;
-  text: string;
-  read?: boolean;
-  created_at?: string;
-}
-
-interface UserData {
-  id: number;
-  name: string;
-  avatar_url?: string;
-  role: 'seeker' | 'provider';
-}
-
-const performanceData = [
-  { name: 'يناير', sales: 4000, orders: 2400 },
-  { name: 'فبراير', sales: 3000, orders: 1398 },
-  { name: 'مارس', sales: 2000, orders: 9800 },
-  { name: 'أبريل', sales: 2780, orders: 3908 },
-  { name: 'مايو', sales: 1890, orders: 4800 },
-  { name: 'يونيو', sales: 2390, orders: 3800 },
-];
-
-const ordersBreakdownData = [
-  { name: 'معلقة', value: 15, color: 'var(--brand-warning)' },
-  { name: 'مقبولة', value: 30, color: 'var(--brand-primary)' },
-  { name: 'مكتملة', value: 55, color: 'var(--brand-success)' },
-  { name: 'ملغاة', value: 10, color: 'var(--brand-danger)' },
-];
+import { useAuth } from '@/hooks/use-auth';
+import { RequestData, RatingData, MessageData, UserData, ServiceData } from '@/types/app-types'; // Import ServiceData
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const DashboardOverviewPage = () => {
-  const { user } = useAuth(); // Get current user from auth context
-  const PROVIDER_ID = user?.id; // Use actual provider ID
+  const { user } = useAuth();
+  const PROVIDER_ID = user?.id;
 
   const [requests, setRequests] = useState<RequestData[]>([]);
   const [ratings, setRatings] = useState<RatingData[]>([]);
   const [messages, setMessages] = useState<MessageData[]>([]);
-  const [allUsers, setAllUsers] = useState<UserData[]>([]); // Renamed to avoid conflict with 'user' from auth context
+  const [allUsers, setAllUsers] = useState<UserData[]>([]);
+  const [services, setServices] = useState<ServiceData[]>([]); // New state for services
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -83,27 +36,42 @@ const DashboardOverviewPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const [requestsResponse, ratingsResponse, messagesResponse, usersResponse] = await Promise.all([
+      const [requestsResponse, ratingsResponse, messagesResponse, usersResponse, servicesResponse] = await Promise.all([
         fetch(`${API_BASE_URL}/api/requests`),
         fetch(`${API_BASE_URL}/api/ratings`),
         fetch(`${API_BASE_URL}/api/messages`),
         fetch(`${API_BASE_URL}/api/users`),
+        fetch(`${API_BASE_URL}/api/services`), // Fetch services
       ]);
 
       if (!requestsResponse.ok) throw new Error('فشل جلب الطلبات.');
       if (!ratingsResponse.ok) throw new Error('فشل جلب التقييمات.');
       if (!messagesResponse.ok) throw new Error('فشل جلب الرسائل.');
       if (!usersResponse.ok) throw new Error('فشل جلب المستخدمين.');
+      if (!servicesResponse.ok) throw new Error('فشل جلب الخدمات.');
 
       const requestsResult = await requestsResponse.json();
       const ratingsResult = await ratingsResponse.json();
       const messagesResult = await messagesResponse.json();
       const usersResult = await usersResponse.json();
+      const servicesResult = await servicesResponse.json(); // Get services data
 
-      setRequests(requestsResult.data);
-      setRatings(ratingsResult.data);
-      setMessages(messagesResult.data);
+      // Filter requests and ratings relevant to this provider
+      const providerServices = servicesResult.data.filter((s: ServiceData) => s.provider_id === PROVIDER_ID);
+      const providerServiceIds = providerServices.map((s: ServiceData) => s.id);
+
+      const providerRequests = requestsResult.data.filter((req: RequestData) =>
+        req.service_id && providerServiceIds.includes(req.service_id)
+      );
+      const providerRatings = ratingsResult.data.filter((r: RatingData) =>
+        providerServiceIds.includes(r.service_id)
+      );
+
+      setRequests(providerRequests);
+      setRatings(providerRatings);
+      setMessages(messagesResult.data); // All messages, will filter by receiver_id later
       setAllUsers(usersResult.data);
+      setServices(providerServices); // Set provider's services
 
     } catch (err: any) {
       setError(err.message);
@@ -119,11 +87,11 @@ const DashboardOverviewPage = () => {
 
   // --- Analytics Calculations ---
   const totalOrders = requests.length;
-  const activeOrders = requests.filter(req => req.status === 'pending' || req.status === 'accepted').length;
-  const completedOrders = requests.filter(req => req.status === 'completed').length;
+  const activeOrders = requests.filter(req => req.status === 'pending' || req.status === 'accepted' || req.status === 'payment_pending').length;
+  // const completedOrders = requests.filter(req => req.status === 'completed').length; // Removed: 'completedOrders' is declared but its value is never read.
 
   const averageRating = useMemo(() => {
-    if (ratings.length === 0) return 0;
+    if (ratings.length === 0) return '0.0';
     const totalRating = ratings.reduce((sum, r) => sum + r.rating, 0);
     return (totalRating / ratings.length).toFixed(1);
   }, [ratings]);
@@ -132,21 +100,102 @@ const DashboardOverviewPage = () => {
     return messages.filter(msg => !msg.read && msg.receiver_id === PROVIDER_ID).length;
   }, [messages, PROVIDER_ID]);
 
-  // Placeholder for earnings, as request model doesn't have price
   const totalEarnings = useMemo(() => {
-    // In a real app, this would sum prices of completed services/requests
-    return (completedOrders * 15000).toLocaleString('ar-EG', { style: 'currency', currency: 'DZD', minimumFractionDigits: 0 }); // Assuming avg 15000 DZD per completed order
-  }, [completedOrders]);
+    const completedRequestsForProvider = requests.filter(req => req.status === 'completed');
+    let earnings = 0;
+    completedRequestsForProvider.forEach(req => {
+      const service = services.find(s => s.id === req.service_id);
+      if (service) {
+        earnings += service.price;
+      }
+    });
+    return earnings.toLocaleString('ar-EG', { style: 'currency', currency: 'DZD', minimumFractionDigits: 0 });
+  }, [requests, services]);
+
+  // --- Dynamic Performance Data (Sales & Orders) ---
+  const getMonthlyPerformanceData = useMemo(() => {
+    const monthlyDataMap = new Map<string, { sales: number; orders: number }>();
+    const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+    const currentYear = new Date().getFullYear();
+
+    // Initialize for last 6 months
+    for (let i = 0; i < 6; i++) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const monthName = months[date.getMonth()];
+      const year = date.getFullYear();
+      monthlyDataMap.set(`${monthName} ${year}`, { sales: 0, orders: 0 });
+    }
+
+    requests.forEach(req => {
+      if (req.created_at) {
+        const reqDate = new Date(req.created_at);
+        if (reqDate.getFullYear() === currentYear || reqDate.getFullYear() === currentYear -1) { // Include current and last year for data
+          const monthName = months[reqDate.getMonth()];
+          const key = `${monthName} ${reqDate.getFullYear()}`;
+          const entry = monthlyDataMap.get(key) || { sales: 0, orders: 0 };
+
+          entry.orders += 1;
+          if (req.status === 'completed') {
+            const service = services.find(s => s.id === req.service_id);
+            if (service) {
+              entry.sales += service.price;
+            }
+          }
+          monthlyDataMap.set(key, entry);
+        }
+      }
+    });
+
+    // Convert map to array and sort by date
+    const sortedData = Array.from(monthlyDataMap.entries())
+      .map(([key, value]) => ({ name: key.split(' ')[0], ...value }))
+      .sort((a, b) => {
+        const monthA = months.indexOf(a.name);
+        const monthB = months.indexOf(b.name);
+        // Assuming data is for current/last year, simple month sort is fine for 6 months
+        return monthA - monthB;
+      });
+    
+    // Take only the last 6 months for display
+    return sortedData.slice(-6);
+  }, [requests, services]);
+
+  // --- Dynamic Orders Breakdown Data ---
+  const ordersBreakdownData = useMemo(() => {
+    const statusCounts = {
+      'pending': 0,
+      'accepted': 0,
+      'completed': 0,
+      'cancelled': 0,
+      'payment_pending': 0,
+    };
+
+    requests.forEach(req => {
+      if (req.status) {
+        statusCounts[req.status] += 1;
+      }
+    });
+
+    return [
+      { name: 'معلقة', value: statusCounts.pending + statusCounts.payment_pending, color: 'hsl(var(--brand-warning))' },
+      { name: 'مقبولة', value: statusCounts.accepted, color: 'hsl(var(--brand-primary))' },
+      { name: 'مكتملة', value: statusCounts.completed, color: 'hsl(var(--brand-success))' },
+      { name: 'ملغاة', value: statusCounts.cancelled, color: 'hsl(var(--brand-danger))' },
+    ];
+  }, [requests]);
+
 
   // --- Tasks List ---
   const recentTasks = useMemo(() => {
     return requests
-      .filter(req => req.status === 'pending' || req.status === 'accepted')
+      .filter(req => req.status === 'pending' || req.status === 'accepted' || req.status === 'payment_pending')
+      .sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()) // Sort by most recent
       .slice(0, 3) // Show up to 3 recent tasks
       .map(req => ({
         id: req.id.toString(),
         title: `الرد على طلب خدمة: ${req.title}`,
-        status: req.status === 'pending' ? 'Pending' : 'Accepted',
+        status: req.status === 'pending' ? 'Pending' : req.status === 'payment_pending' ? 'Payment Pending' : 'Accepted',
         dueDate: req.created_at ? new Date(new Date(req.created_at).setDate(new Date(req.created_at).getDate() + 7)).toLocaleDateString('ar-EG') : 'غير محدد', // Due in 7 days from creation
       }));
   }, [requests]);
@@ -256,7 +305,7 @@ const DashboardOverviewPage = () => {
           </CardHeader>
           <CardContent className="h-[300px] p-0">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={performanceData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              <LineChart data={getMonthlyPerformanceData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                 <XAxis dataKey="name" tick={{ fill: 'var(--brand-text-muted)', fontFamily: 'var(--font-ibm-plex-arabic)' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: 'var(--brand-text-muted)', fontFamily: 'var(--font-ibm-plex-arabic)' }} axisLine={false} tickLine={false} />
@@ -309,9 +358,11 @@ const DashboardOverviewPage = () => {
                         <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">تاريخ الاستحقاق: {task.dueDate}</p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" className="text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic">
-                      عرض
-                    </Button>
+                    <Link to={`/dashboard/orders`}> {/* Link to orders page */}
+                      <Button variant="ghost" size="sm" className="text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic">
+                        عرض
+                      </Button>
+                    </Link>
                   </li>
                 ))
               ) : (
@@ -342,9 +393,11 @@ const DashboardOverviewPage = () => {
                       <p className="font-cairo text-brand-text-dark font-semibold">{msg.customerName}</p>
                       <p className="text-sm text-brand-text-muted font-ibm-plex-arabic line-clamp-1">{msg.message}</p>
                     </div>
-                    <Button variant="ghost" size="sm" className="text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic">
-                      رد
-                    </Button>
+                    <Link to={`/dashboard/messages`}> {/* Link to messages page */}
+                      <Button variant="ghost" size="sm" className="text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic">
+                        رد
+                      </Button>
+                    </Link>
                   </li>
                 ))
               ) : (
