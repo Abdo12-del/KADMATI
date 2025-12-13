@@ -1,13 +1,14 @@
 import { Router } from 'express';
 import { requestService } from '../services/requestService';
-import { successResponse } from '../utils/response'; // Removed errorResponse
+import { successResponse } from '../utils/response';
 import { ApiError } from '../utils/errorHandler';
 import { validateRequest } from '../utils/validator';
+import { Request } from '../models/requestModel'; // Import Request interface
 
 const router = Router();
 
 // Get all requests
-router.get('/', async (_req, res, next) => { // Renamed req to _req
+router.get('/', async (_req, res, next) => {
   console.log(`[${new Date().toISOString()}] GET /api/requests - Request received.`);
   try {
     const requests = await requestService.getAllRequests();
@@ -90,9 +91,9 @@ router.patch('/:id/payment', async (req, res, next) => {
     const { payment_status, payment_reference, receipt_url } = req.body;
 
     const updates: Partial<Request> = {
-      payment_status: payment_status, // Explicitly assign
-      payment_reference: payment_reference, // Explicitly assign
-      receipt_url: receipt_url, // Explicitly assign
+      payment_status: payment_status,
+      payment_reference: payment_reference,
+      receipt_url: receipt_url,
       status: 'payment_pending', // Automatically set request status to 'payment_pending' when client confirms payment
     };
 
@@ -114,6 +115,43 @@ router.patch('/:id/payment', async (req, res, next) => {
     next(error);
   }
 });
+
+// New endpoint: Provider accepts a request
+router.patch('/:id/accept', async (req, res, next) => {
+  console.log(`[${new Date().toISOString()}] PATCH /api/requests/:id/accept - Request received. Params: ${req.params.id}, Body:`, req.body);
+  try {
+    const { id } = req.params;
+    const { assigned_provider_id, agreed_price } = req.body;
+
+    if (!assigned_provider_id || agreed_price === undefined) {
+      throw new ApiError('Provider ID and agreed price are required to accept a request.', 400);
+    }
+
+    const updates: Partial<Request> = {
+      status: 'accepted',
+      assigned_provider_id: Number(assigned_provider_id),
+      agreed_price: Number(agreed_price),
+    };
+
+    const validationErrors = validateRequest(updates, true);
+    if (validationErrors.length > 0) {
+      console.error(`[${new Date().toISOString()}] PATCH /api/requests/:id/accept - Validation failed:`, validationErrors);
+      throw new ApiError('Validation failed', 400, validationErrors);
+    }
+
+    const updatedRequest = await requestService.updateRequest(Number(id), updates);
+    if (!updatedRequest) {
+      console.log(`[${new Date().toISOString()}] PATCH /api/requests/:id/accept - Request not found for ID: ${id}`);
+      throw new ApiError('Request not found', 404);
+    }
+    successResponse(res, 'Request accepted successfully', updatedRequest);
+    console.log(`[${new Date().toISOString()}] PATCH /api/requests/:id/accept - Request ${id} accepted by provider ${assigned_provider_id} with price ${agreed_price}.`);
+  } catch (error) {
+    console.error(`[${new Date().toISOString()}] PATCH /api/requests/:id/accept - Error:`, error);
+    next(error);
+  }
+});
+
 
 // Delete a request
 router.delete('/:id', async (req, res, next) => {

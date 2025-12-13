@@ -35,10 +35,12 @@ export interface RequestData {
   location?: string;
   due_date?: string;
   additional_options?: string;
-  status?: 'pending' | 'accepted' | 'completed' | 'cancelled' | 'payment_pending'; // Added 'payment_pending'
-  payment_status?: 'unpaid' | 'pending_review' | 'paid' | 'rejected'; // New field
-  payment_reference?: string; // New field
-  receipt_url?: string; // New field
+  status?: 'pending' | 'accepted' | 'completed' | 'cancelled' | 'payment_pending';
+  payment_status?: 'unpaid' | 'pending_review' | 'paid' | 'rejected';
+  payment_reference?: string;
+  receipt_url?: string;
+  assigned_provider_id?: number; // New field
+  agreed_price?: number; // New field
   created_at?: string;
   updated_at?: string;
 }
@@ -75,30 +77,30 @@ export interface ReviewCardPropsData {
   id: string;
   serviceTitle: string;
   providerName: string;
-  providerAvatarUrl?: string; // Added this field
+  providerAvatarUrl?: string;
   rating: number;
   comment?: string;
   date: string;
 }
 
 export interface TransactionData {
-  id: string; // This will be the request ID
-  serviceTitle: string; // Title of the service requested
-  amount: number; // Price of the service
-  date: string; // Date of the request
-  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled' | 'Payment Pending'; // Request status
-  paymentStatus: 'Unpaid' | 'Pending Review' | 'Paid' | 'Rejected'; // Payment status
-  method?: string; // Payment method (if recorded)
-  paymentReference?: string; // Payment reference
-  receiptUrl?: string; // Receipt URL
+  id: string;
+  serviceTitle: string;
+  amount: number;
+  date: string;
+  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled' | 'Payment Pending';
+  paymentStatus: 'Unpaid' | 'Pending Review' | 'Paid' | 'Rejected';
+  method?: string;
+  paymentReference?: string;
+  receiptUrl?: string;
 }
 
 export interface RequestCardPropsData {
   id: string;
   title: string;
   description: string;
-  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled' | 'Payment Pending'; // Updated status
-  paymentStatus?: 'Unpaid' | 'Pending Review' | 'Paid' | 'Rejected'; // New field
+  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled' | 'Payment Pending';
+  paymentStatus?: 'Unpaid' | 'Pending Review' | 'Paid' | 'Rejected';
   onDelete?: (id: string) => void;
-  onConfirmPayment?: (id: string, paymentReference: string, receiptUrl: string) => Promise<void>; // New prop
+  onConfirmPayment?: (id: string, paymentReference: string, receiptUrl: string) => Promise<void>;
 }

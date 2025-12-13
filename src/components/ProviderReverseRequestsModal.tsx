@@ -1,6 +1,5 @@
 "use client";
 
-// import React, { useState, useEffect, useCallback, useMemo } from 'react'; // Removed
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -9,31 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, ListFilter } from 'lucide-react';
 import ProviderRequestCard from '@/components/ProviderRequestCard';
 import { toast } from 'sonner';
-import { useAuth } from '@/hooks/use-auth'; // Import useAuth
-
-interface RequestData {
-  id: number;
-  client_id: number;
-  title: string;
-  description: string;
-  location?: string;
-  due_date?: string;
-  additional_options?: string;
-  category?: string;
-  created_at?: string;
-  status?: 'pending' | 'accepted' | 'completed' | 'cancelled'; // Added status property
-}
-
-interface UserData {
-  id: number;
-  name: string;
-}
+import { useAuth } from '@/hooks/use-auth';
+import { RequestData, UserData } from '@/types/app-types'; // Import RequestData and UserData
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const ProviderReverseRequestsModal = () => {
-  const { user } = useAuth(); // Get current user from auth context
-  const PROVIDER_ID = user?.id; // Use actual provider ID
+  const { user } = useAuth();
+  const PROVIDER_ID = user?.id;
 
   const [requests, setRequests] = useState<RequestData[]>([]);
   const [users, setUsers] = useState<UserData[]>([]);
@@ -43,7 +25,7 @@ export const ProviderReverseRequestsModal = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const categories = ['design', 'development', 'writing', 'marketing', 'consulting']; // Match backend categories
+  const categories = ['design', 'development', 'writing', 'marketing', 'consulting', 'maintenance']; // Match backend categories
   const locations = ['الرياض', 'جدة', 'الدمام', 'مكة المكرمة', 'الخبر']; // Example locations
 
   const fetchAllData = useCallback(async () => {
@@ -70,12 +52,11 @@ export const ProviderReverseRequestsModal = () => {
         throw new Error(errorData.message || 'فشل جلب المستخدمين.');
       }
 
-      const requestsResult = await requestsResponse.json();
-      const usersResult = await usersResponse.json();
+      const requestsResult: { data: RequestData[] } = await requestsResponse.json();
+      const usersResult: { data: UserData[] } = await usersResponse.json();
 
-      // Filter requests that are not yet accepted/completed/cancelled
-      // and are potentially open for this provider to offer a service
-      const openRequests = requestsResult.data.filter((req: RequestData) => req.status === 'pending');
+      // Filter requests that are still pending and not assigned to any provider
+      const openRequests = requestsResult.data.filter((req: RequestData) => req.status === 'pending' && req.assigned_provider_id === undefined);
       setRequests(openRequests);
       setUsers(usersResult.data);
     } catch (err: any) {
@@ -89,6 +70,27 @@ export const ProviderReverseRequestsModal = () => {
   useEffect(() => {
     fetchAllData();
   }, [fetchAllData]);
+
+  const handleAcceptRequest = async (requestId: string, providerId: number, agreedPrice: number) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/requests/${requestId}/accept`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ assigned_provider_id: providerId, agreed_price: agreedPrice }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'فشل قبول الطلب.');
+      }
+      // No need to toast success here, ProviderRequestCard will handle it
+    } catch (error: any) {
+      console.error('Error accepting request:', error);
+      throw error; // Re-throw to allow ProviderRequestCard to handle error state
+    }
+  };
 
   const filteredRequests = useMemo(() => {
     return requests
@@ -110,6 +112,8 @@ export const ProviderReverseRequestsModal = () => {
           dueDate: request.due_date,
           additionalOptions: request.additional_options,
           clientName: client?.name || 'عميل غير معروف',
+          clientId: request.client_id,
+          status: request.status || 'pending',
         };
       });
   }, [requests, users, searchTerm, filterCategory, filterLocation]);
@@ -197,7 +201,7 @@ export const ProviderReverseRequestsModal = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredRequests.length > 0 ? (
               filteredRequests.map(request => (
-                <ProviderRequestCard key={request.id} request={request} />
+                <ProviderRequestCard key={request.id} request={request} onAcceptRequest={handleAcceptRequest} onRefreshRequests={fetchAllData} />
               ))
             ) : (
               <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد طلبات مطابقة.</p>

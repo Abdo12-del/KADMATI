@@ -1,48 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-// import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-// import { Link } from 'react-router-dom'; // Removed unused import
-import { Package, Star, MessageSquare, DollarSign, CheckCircle, Clock } from 'lucide-react'; // Removed unused icons
+import { Package, Star, MessageSquare, DollarSign, CheckCircle, Clock } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { useAuth } from '@/hooks/use-auth'; // Import useAuth
-
-interface RequestData {
-  id: number;
-  client_id: number;
-  title: string;
-  status?: 'pending' | 'accepted' | 'completed' | 'cancelled';
-  created_at?: string;
-}
-
-interface RatingData {
-  id: number;
-  service_id: number;
-  client_id: number;
-  rating: number;
-}
-
-interface MessageData {
-  id: number;
-  sender_id: number;
-  receiver_id: number;
-  conversation_id: string;
-  text: string;
-  read?: boolean;
-  created_at?: string;
-}
-
-interface UserData {
-  id: number;
-  name: string;
-  avatar_url?: string;
-  role: 'seeker' | 'provider';
-}
+import { useAuth } from '@/hooks/use-auth';
+import { RequestData, RatingData, MessageData, UserData, ServiceData } from '@/types/app-types'; // Import all necessary types
 
 const performanceData = [
   { name: 'يناير', sales: 4000, orders: 2400 },
@@ -63,13 +30,14 @@ const ordersBreakdownData = [
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const DashboardOverviewPage = () => {
-  const { user } = useAuth(); // Get current user from auth context
-  const PROVIDER_ID = user?.id; // Use actual provider ID
+  const { user } = useAuth();
+  const PROVIDER_ID = user?.id;
 
   const [requests, setRequests] = useState<RequestData[]>([]);
   const [ratings, setRatings] = useState<RatingData[]>([]);
   const [messages, setMessages] = useState<MessageData[]>([]);
-  const [allUsers, setAllUsers] = useState<UserData[]>([]); // Renamed to avoid conflict with 'user' from auth context
+  const [allUsers, setAllUsers] = useState<UserData[]>([]);
+  const [services, setServices] = useState<ServiceData[]>([]); // Fetch services to link ratings
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -83,28 +51,38 @@ const DashboardOverviewPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const [requestsResponse, ratingsResponse, messagesResponse, usersResponse] = await Promise.all([
+      const [requestsResponse, ratingsResponse, messagesResponse, usersResponse, servicesResponse] = await Promise.all([
         fetch(`${API_BASE_URL}/api/requests`),
         fetch(`${API_BASE_URL}/api/ratings`),
         fetch(`${API_BASE_URL}/api/messages`),
         fetch(`${API_BASE_URL}/api/users`),
+        fetch(`${API_BASE_URL}/api/services`),
       ]);
 
       if (!requestsResponse.ok) throw new Error('فشل جلب الطلبات.');
       if (!ratingsResponse.ok) throw new Error('فشل جلب التقييمات.');
       if (!messagesResponse.ok) throw new Error('فشل جلب الرسائل.');
       if (!usersResponse.ok) throw new Error('فشل جلب المستخدمين.');
+      if (!servicesResponse.ok) throw new Error('فشل جلب الخدمات.');
 
-      const requestsResult = await requestsResponse.json();
-      const ratingsResult = await ratingsResponse.json();
-      const messagesResult = await messagesResponse.json();
-      const usersResult = await usersResponse.json();
+      const requestsResult: { data: RequestData[] } = await requestsResponse.json();
+      const ratingsResult: { data: RatingData[] } = await ratingsResponse.json();
+      const messagesResult: { data: MessageData[] } = await messagesResponse.json();
+      const usersResult: { data: UserData[] } = await usersResponse.json();
+      const servicesResult: { data: ServiceData[] } = await servicesResponse.json();
 
-      setRequests(requestsResult.data);
-      setRatings(ratingsResult.data);
+      // Filter requests relevant to this provider
+      const providerRequests = requestsResult.data.filter(req => req.assigned_provider_id === PROVIDER_ID);
+      setRequests(providerRequests);
+
+      // Filter ratings for services offered by this provider
+      const providerServiceIds = servicesResult.data.filter(s => s.provider_id === PROVIDER_ID).map(s => s.id);
+      const providerRatings = ratingsResult.data.filter(r => providerServiceIds.includes(r.service_id));
+      setRatings(providerRatings);
+      
       setMessages(messagesResult.data);
       setAllUsers(usersResult.data);
-
+      setServices(servicesResult.data); // Store all services for linking
     } catch (err: any) {
       setError(err.message);
       toast.error(err.message || 'حدث خطأ أثناء جلب بيانات لوحة التحكم.');
@@ -119,11 +97,11 @@ const DashboardOverviewPage = () => {
 
   // --- Analytics Calculations ---
   const totalOrders = requests.length;
-  const activeOrders = requests.filter(req => req.status === 'pending' || req.status === 'accepted').length;
+  const activeOrders = requests.filter(req => req.status === 'pending' || req.status === 'accepted' || req.status === 'payment_pending').length;
   const completedOrders = requests.filter(req => req.status === 'completed').length;
 
   const averageRating = useMemo(() => {
-    if (ratings.length === 0) return 0;
+    if (ratings.length === 0) return '0.0';
     const totalRating = ratings.reduce((sum, r) => sum + r.rating, 0);
     return (totalRating / ratings.length).toFixed(1);
   }, [ratings]);
@@ -132,28 +110,76 @@ const DashboardOverviewPage = () => {
     return messages.filter(msg => !msg.read && msg.receiver_id === PROVIDER_ID).length;
   }, [messages, PROVIDER_ID]);
 
-  // Placeholder for earnings, as request model doesn't have price
   const totalEarnings = useMemo(() => {
-    // In a real app, this would sum prices of completed services/requests
-    return (completedOrders * 15000).toLocaleString('ar-EG', { style: 'currency', currency: 'DZD', minimumFractionDigits: 0 }); // Assuming avg 15000 DZD per completed order
-  }, [completedOrders]);
+    const earnings = requests.filter(req => req.status === 'completed' && req.agreed_price !== undefined)
+                              .reduce((sum, req) => sum + (req.agreed_price || 0), 0);
+    return earnings.toLocaleString('ar-EG', { style: 'currency', currency: 'DZD', minimumFractionDigits: 0 });
+  }, [requests]);
+
+  // --- Dynamic Chart Data ---
+  const getMonthlyData = (requests: RequestData[]) => {
+    const monthlyDataMap = new Map<string, { sales: number; orders: number }>();
+    const currentYear = new Date().getFullYear();
+
+    for (let i = 0; i < 6; i++) { // Last 6 months
+      const date = new Date(currentYear, new Date().getMonth() - i, 1);
+      const monthName = date.toLocaleDateString('ar-EG', { month: 'short' });
+      monthlyDataMap.set(monthName, { sales: 0, orders: 0 });
+    }
+
+    requests.forEach(req => {
+      if (req.created_at) {
+        const reqDate = new Date(req.created_at);
+        const monthName = reqDate.toLocaleDateString('ar-EG', { month: 'short' });
+        if (monthlyDataMap.has(monthName)) {
+          const data = monthlyDataMap.get(monthName)!;
+          data.orders += 1;
+          if (req.status === 'completed' && req.agreed_price !== undefined) {
+            data.sales += req.agreed_price;
+          }
+          monthlyDataMap.set(monthName, data);
+        }
+      }
+    });
+
+    return Array.from(monthlyDataMap.entries())
+                .sort((a, b) => new Date(`2000 ${a[0]} 1`).getTime() - new Date(`2000 ${b[0]} 1`).getTime()) // Sort by month
+                .map(([name, data]) => ({ name, ...data }));
+  };
+
+  const dynamicPerformanceData = useMemo(() => getMonthlyData(requests), [requests]);
+
+  const dynamicOrdersBreakdownData = useMemo(() => {
+    const pendingCount = requests.filter(req => req.status === 'pending').length;
+    const acceptedCount = requests.filter(req => req.status === 'accepted').length;
+    const completedCount = requests.filter(req => req.status === 'completed').length;
+    const cancelledCount = requests.filter(req => req.status === 'cancelled').length;
+
+    return [
+      { name: 'معلقة', value: pendingCount, color: 'var(--brand-warning)' },
+      { name: 'مقبولة', value: acceptedCount, color: 'var(--brand-primary)' },
+      { name: 'مكتملة', value: completedCount, color: 'var(--brand-success)' },
+      { name: 'ملغاة', value: cancelledCount, color: 'var(--brand-danger)' },
+    ];
+  }, [requests]);
 
   // --- Tasks List ---
   const recentTasks = useMemo(() => {
     return requests
-      .filter(req => req.status === 'pending' || req.status === 'accepted')
-      .slice(0, 3) // Show up to 3 recent tasks
+      .filter(req => req.status === 'pending' || req.status === 'accepted' || req.status === 'payment_pending')
+      .sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime())
+      .slice(0, 3)
       .map(req => ({
         id: req.id.toString(),
         title: `الرد على طلب خدمة: ${req.title}`,
-        status: req.status === 'pending' ? 'Pending' : 'Accepted',
-        dueDate: req.created_at ? new Date(new Date(req.created_at).setDate(new Date(req.created_at).getDate() + 7)).toLocaleDateString('ar-EG') : 'غير محدد', // Due in 7 days from creation
+        status: req.status === 'pending' ? 'Pending' : req.status === 'accepted' ? 'Accepted' : 'Payment Pending',
+        dueDate: req.created_at ? new Date(new Date(req.created_at).setDate(new Date(req.created_at).getDate() + 7)).toLocaleDateString('ar-EG') : 'غير محدد',
       }));
   }, [requests]);
 
   // --- Customer Messages ---
   const customerMessages = useMemo(() => {
-    const conversationsMap = new Map<number, MessageData>(); // Map client_id to latest message
+    const conversationsMap = new Map<number, MessageData>();
     messages.forEach(msg => {
       if (msg.receiver_id === PROVIDER_ID && msg.sender_id !== PROVIDER_ID) {
         const existingMsg = conversationsMap.get(msg.sender_id);
@@ -165,7 +191,7 @@ const DashboardOverviewPage = () => {
 
     return Array.from(conversationsMap.values())
       .sort((a, b) => (b.created_at ? new Date(b.created_at).getTime() : 0) - (a.created_at ? new Date(a.created_at).getTime() : 0))
-      .slice(0, 2) // Show up to 2 recent messages
+      .slice(0, 2)
       .map(msg => {
         const customer = allUsers.find(u => u.id === msg.sender_id);
         return {
@@ -203,7 +229,7 @@ const DashboardOverviewPage = () => {
           </CardHeader>
           <CardContent className="p-0">
             <div className="text-3xl font-cairo text-brand-text-dark font-bold">{totalOrders}</div>
-            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">+10% عن الشهر الماضي</p>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">الطلبات التي قبلتها</p>
           </CardContent>
         </Card>
         <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 text-right">
@@ -213,7 +239,7 @@ const DashboardOverviewPage = () => {
           </CardHeader>
           <CardContent className="p-0">
             <div className="text-3xl font-cairo text-brand-text-dark font-bold">{activeOrders}</div>
-            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">3 طلبات جديدة</p>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">معلقة أو مقبولة</p>
           </CardContent>
         </Card>
         <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 text-right">
@@ -223,7 +249,7 @@ const DashboardOverviewPage = () => {
           </CardHeader>
           <CardContent className="p-0">
             <div className="text-3xl font-cairo text-brand-text-dark font-bold">{totalEarnings}</div>
-            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">+5% هذا الشهر</p>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">من الطلبات المكتملة</p>
           </CardContent>
         </Card>
         <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 text-right">
@@ -256,7 +282,7 @@ const DashboardOverviewPage = () => {
           </CardHeader>
           <CardContent className="h-[300px] p-0">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={performanceData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              <LineChart data={dynamicPerformanceData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                 <XAxis dataKey="name" tick={{ fill: 'var(--brand-text-muted)', fontFamily: 'var(--font-ibm-plex-arabic)' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: 'var(--brand-text-muted)', fontFamily: 'var(--font-ibm-plex-arabic)' }} axisLine={false} tickLine={false} />
@@ -278,7 +304,7 @@ const DashboardOverviewPage = () => {
           </CardHeader>
           <CardContent className="h-[250px] p-0">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={ordersBreakdownData} layout="vertical">
+              <BarChart data={dynamicOrdersBreakdownData} layout="vertical">
                 <XAxis type="number" hide />
                 <YAxis type="category" dataKey="name" tick={{ fill: 'var(--brand-text-dark)', fontFamily: 'var(--font-ibm-plex-arabic)' }} axisLine={false} tickLine={false} width={80} mirror />
                 <Tooltip contentStyle={{ backgroundColor: 'var(--brand-card-bg)', borderColor: 'var(--border)', borderRadius: '8px', boxShadow: 'var(--shadow-soft)' }} itemStyle={{ fontFamily: 'var(--font-ibm-plex-arabic)', color: 'var(--brand-text-dark)' }} labelStyle={{ fontFamily: 'var(--font-cairo)', color: 'var(--brand-primary)' }} />

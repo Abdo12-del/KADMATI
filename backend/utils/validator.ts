@@ -118,7 +118,7 @@ export const validateRequest = (data: any, isUpdate: boolean = false) => {
   if (!isUpdate && !data.description) {
     errors.push('Description is required.');
   }
-  if (data.status && !['pending', 'accepted', 'completed', 'cancelled', 'payment_pending'].includes(data.status)) { // Added 'payment_pending'
+  if (data.status && !['pending', 'accepted', 'completed', 'cancelled', 'payment_pending'].includes(data.status)) {
     errors.push('Invalid request status. Must be "pending", "accepted", "completed", "cancelled", or "payment_pending".');
   }
 
@@ -131,6 +131,14 @@ export const validateRequest = (data: any, isUpdate: boolean = false) => {
   }
   if (data.receipt_url !== undefined && typeof data.receipt_url !== 'string') {
     errors.push('Receipt URL must be a string.');
+  }
+
+  // New fields for assigned provider and agreed price
+  if (data.assigned_provider_id !== undefined && (typeof data.assigned_provider_id !== 'number' || data.assigned_provider_id <= 0)) {
+    errors.push('Assigned provider ID must be a positive number.');
+  }
+  if (data.agreed_price !== undefined && (typeof data.agreed_price !== 'number' || data.agreed_price < 0)) {
+    errors.push('Agreed price must be a non-negative number.');
   }
 
   return errors;

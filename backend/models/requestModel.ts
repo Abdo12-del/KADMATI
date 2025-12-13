@@ -11,6 +11,8 @@ export interface Request {
   payment_status?: 'unpaid' | 'pending_review' | 'paid' | 'rejected'; // New field for payment status
   payment_reference?: string; // New field for payment reference
   receipt_url?: string; // New field for receipt URL
+  assigned_provider_id?: number; // New field: ID of the provider who accepted this request
+  agreed_price?: number; // New field: The price agreed upon for this request
   created_at?: Date;
   updated_at?: Date;
 }

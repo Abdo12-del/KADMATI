@@ -7,41 +7,36 @@ import ClientOrderCard from '@/components/ClientOrderCard';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface RequestData {
-  id: number;
-  client_id: number;
-  title: string;
-  description: string;
-  status?: 'pending' | 'accepted' | 'completed' | 'cancelled';
-  created_at?: string;
-}
-
-interface UserData {
-  id: number;
-  name: string;
-  role: 'seeker' | 'provider';
-}
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
+import { RequestData, UserData } from '@/types/app-types'; // Import RequestData and UserData
 
 interface ClientOrderCardPropsData {
   id: string;
   serviceTitle: string;
-  providerName: string; // Placeholder as request model doesn't directly link to provider
-  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled';
+  providerName: string;
+  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled' | 'Payment Pending';
   date: string;
-  price: number; // Placeholder as request model doesn't have price
+  price: number;
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const ClientOrdersModal = () => {
-  const CLIENT_ID = 2; // Hardcoded client ID for Laila Seeker
+  const { user } = useAuth();
+  const CLIENT_ID = user?.id;
+
   const [requests, setRequests] = useState<RequestData[]>([]);
-  const [users, setUsers] = useState<UserData[]>([]); // To potentially get provider names
+  const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchClientOrders = useCallback(async () => {
+    if (!CLIENT_ID) {
+      setLoading(false);
+      setError('Client ID not available. Please log in as a seeker.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -59,8 +54,8 @@ const ClientOrdersModal = () => {
         throw new Error(errorData.message || 'فشل جلب المستخدمين.');
       }
 
-      const requestsResult = await requestsResponse.json();
-      const usersResult = await usersResponse.json();
+      const requestsResult: { data: RequestData[] } = await requestsResponse.json();
+      const usersResult: { data: UserData[] } = await usersResponse.json();
 
       setRequests(requestsResult.data);
       setUsers(usersResult.data);
@@ -70,7 +65,7 @@ const ClientOrdersModal = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [CLIENT_ID]);
 
   useEffect(() => {
     fetchClientOrders();
@@ -82,25 +77,24 @@ const ClientOrdersModal = () => {
       'accepted': 'Accepted',
       'completed': 'Completed',
       'cancelled': 'Cancelled',
+      'payment_pending': 'Payment Pending',
     };
     return reqs.map(req => {
-      // In a real app, requests would be linked to a provider_id or service_id to get providerName
-      // For now, we'll use a placeholder or try to infer from service if possible
-      const providerName = "مقدم خدمة افتراضي"; // Placeholder
+      const provider = users.find(u => u.id === req.assigned_provider_id);
       return {
         id: req.id.toString(),
         serviceTitle: req.title,
-        providerName: providerName,
+        providerName: provider?.name || 'مقدم خدمة غير معروف',
         status: statusMap[req.status || 'pending'] as ClientOrderCardPropsData['status'],
         date: req.created_at ? new Date(req.created_at).toLocaleDateString('ar-EG') : 'غير محدد',
-        price: 150, // Placeholder: Backend request model does not have a price field
+        price: req.agreed_price || 0, // Use agreed_price
       };
     });
   };
 
-  const clientRequests = useMemo(() => requests.filter(req => req.client_id === CLIENT_ID), [requests]);
+  const clientRequests = useMemo(() => requests.filter(req => req.client_id === CLIENT_ID), [requests, CLIENT_ID]);
 
-  const pendingOrders = useMemo(() => mapRequestsToClientOrderCards(clientRequests.filter(req => req.status === 'pending')), [clientRequests, users]);
+  const pendingOrders = useMemo(() => mapRequestsToClientOrderCards(clientRequests.filter(req => req.status === 'pending' || req.status === 'payment_pending')), [clientRequests, users]);
   const activeOrders = useMemo(() => mapRequestsToClientOrderCards(clientRequests.filter(req => req.status === 'accepted')), [clientRequests, users]);
   const completedOrders = useMemo(() => mapRequestsToClientOrderCards(clientRequests.filter(req => req.status === 'completed')), [clientRequests, users]);
   const cancelledOrders = useMemo(() => mapRequestsToClientOrderCards(clientRequests.filter(req => req.status === 'cancelled')), [clientRequests, users]);
@@ -136,7 +130,7 @@ const ClientOrdersModal = () => {
             <TabsTrigger value="completed" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">مكتملة</TabsTrigger>
             <TabsTrigger value="cancelled" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">ملغاة</TabsTrigger>
           </TabsList>
-          <div className="flex-grow overflow-y-auto pr-2"> {/* Added pr-2 for scrollbar */}
+          <div className="flex-grow overflow-y-auto pr-2">
             <TabsContent value="pending" className="mt-0">
               <h2 className="text-xl font-cairo text-brand-text-dark mb-4 text-right">الطلبات المعلقة</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
