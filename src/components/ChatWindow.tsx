@@ -1,6 +1,5 @@
 "use client";
 
-// import React, { useState, useEffect, useRef } from 'react'; // Removed
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -105,17 +104,18 @@ const ChatWindow = ({ conversation, currentUserId, currentBackendUserId, onMessa
         {currentMessages.map(msg => (
           <div
             key={msg.id}
-            className={`flex ${msg.sender === currentUserId ? 'justify-start' : 'justify-end'}`}
+            className={cn("flex", msg.sender === currentUserId ? 'justify-start' : 'justify-end')}
           >
             <div
-              className={`max-w-[70%] p-3 rounded-xl shadow-soft ${
+              className={cn(
+                "max-w-[70%] p-3 rounded-xl shadow-soft",
                 msg.sender === currentUserId
                   ? 'bg-brand-primary text-white rounded-br-none'
                   : 'bg-brand-background text-brand-text-dark rounded-bl-none'
-              }`}
+              )}
             >
               <p className="font-ibm-plex-arabic text-sm">{msg.text}</p>
-              <span className={`text-xs mt-1 block font-ibm-plex-arabic ${msg.sender === currentUserId ? 'text-white/80' : 'text-brand-text-muted'}`}>
+              <span className={cn("text-xs mt-1 block font-ibm-plex-arabic", msg.sender === currentUserId ? 'text-white/80' : 'text-brand-text-muted')}>
                 {msg.time}
               </span>
             </div>

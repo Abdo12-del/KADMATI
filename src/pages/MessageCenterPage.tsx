@@ -1,7 +1,5 @@
 "use client";
 
-import React from 'react';
-// import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import { MessageCenterModal } from '@/components/MessageCenterModal';
 
 const MessageCenterPage = () => {

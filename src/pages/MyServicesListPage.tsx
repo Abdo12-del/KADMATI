@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 // import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import ServiceCard from '@/components/ServiceCard';
 import { Button } from '@/components/ui/button';

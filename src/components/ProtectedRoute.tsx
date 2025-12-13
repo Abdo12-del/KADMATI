@@ -1,6 +1,5 @@
 "use client";
 
-import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import DashboardLayout from '@/components/DashboardLayout'; // Assuming provider dashboard uses this
@@ -15,7 +14,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ allowedRoles, redirectPath = '/login', layout = 'none' }: ProtectedRouteProps) => {
-  const { isLoggedIn, userRole, user } = useAuth();
+  const { isLoggedIn, userRole } = useAuth(); // Removed 'user'
 
   if (!isLoggedIn) {
     return <Navigate to={redirectPath} replace />;

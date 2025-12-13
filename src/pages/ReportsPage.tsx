@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+// import { useState } from 'react'; // Removed
 // import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -38,7 +38,7 @@ const ReportsPage = () => {
           </CardHeader>
           <CardContent className="p-0">
             <div className="text-4xl font-cairo text-brand-text-dark font-bold mb-2">12,345 د.ج</div>
-            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">+15% عن الشهر الماضي</p>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">+15% عن الشهر الماضي</p>
             <div className="h-[200px] mt-4">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data}>
@@ -70,7 +70,7 @@ const ReportsPage = () => {
           </CardHeader>
           <CardContent className="p-0">
             <div className="text-4xl font-cairo text-brand-text-dark font-bold mb-2">250</div>
-            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">+8% عن الشهر الماضي</p>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">+8% عن الشهر الماضي</p>
             <div className="h-[200px] mt-4">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data}>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 // import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -297,7 +297,7 @@ const DashboardOverviewPage = () => {
             <ul className="space-y-4">
               {recentTasks.length > 0 ? (
                 recentTasks.map(task => (
-                  <li key={task.id} className="flex flex-row-reverse items-center justify-between border-b border-border pb-3 last:border-b-0 last:pb-0">
+                  <li key={task.id} className={cn("flex flex-row-reverse items-center justify-between border-b border-border pb-3 last:border-b-0 last:pb-0")}>
                     <div className="flex flex-row-reverse items-center">
                       {task.status === 'Completed' ? (
                         <CheckCircle className="h-5 w-5 text-brand-success ml-3" />

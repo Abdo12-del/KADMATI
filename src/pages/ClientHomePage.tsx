@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 // import ClientHomeHeader from '@/components/ClientHomeHeader'; // Removed
 // import Footer from '@/components/Footer'; // Removed
 import { Input } from '@/components/ui/input';

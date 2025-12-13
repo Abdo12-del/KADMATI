@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 // import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import CustomerCard from '@/components/CustomerCard';
 import { Input } from '@/components/ui/input';

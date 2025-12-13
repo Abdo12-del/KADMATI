@@ -1,4 +1,5 @@
-import React from 'react';
+"use client";
+
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Package, MessageSquare, CreditCard, Settings, Info, CheckCircle, Trash2, Star } from 'lucide-react'; // Import Star icon

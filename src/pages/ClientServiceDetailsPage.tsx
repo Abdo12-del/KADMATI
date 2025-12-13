@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 // import ClientHomeHeader from '@/components/ClientHomeHeader'; // Removed
 // import Footer from '@/components/Footer'; // Removed
 import { Button } from '@/components/ui/button';
@@ -319,7 +319,9 @@ const ClientServiceDetailsPage = () => {
                       {renderStars(service.rating || 0)}
                       <span className="mr-2 text-brand-text-muted font-ibm-plex-arabic">({service.reviews_count || 0} تقييم)</span>
                     </div>
-                    <p className="text-brand-text-muted font-ibm-plex-arabic mt-1">{service.reviews_count || 0} خدمة مكتملة</p>
+                    <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">
+                      {service.reviews_count || 0} خدمة مكتملة
+                    </p>
                   </div>
                   <Separator className="my-4 bg-border" />
                   <div className="space-y-4">

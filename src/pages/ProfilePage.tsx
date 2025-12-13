@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react'; // Import useState
+import { useState } from 'react';
 // import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';

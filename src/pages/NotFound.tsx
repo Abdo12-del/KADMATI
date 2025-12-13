@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
 // import Header from '@/components/Header'; // Removed
 // import Footer from '@/components/Footer'; // Removed
