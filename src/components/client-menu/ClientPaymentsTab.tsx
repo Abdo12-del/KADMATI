@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from 'react'; // Removed useEffect, useCallback, useMemo as they are no longer used
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { TransactionData } from '@/types/app-types.ts';
+import { TransactionData, RequestData } from '@/types/app-types.ts';
 import { ConfirmPaymentDialog } from '@/components/ConfirmPaymentDialog';
 import { useAuth } from '@/hooks/use-auth';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const getStatusBadgeVariant = (status: string) => {
   switch (status) {
@@ -31,81 +33,100 @@ const getStatusBadgeVariant = (status: string) => {
 
 export const ClientPaymentsTab = () => {
   const { user } = useAuth();
-  // CLIENT_ID is declared but its value is never read. Removed as it's not used with mock data.
-  // const CLIENT_ID = user?.id; 
+  const CLIENT_ID = user?.id;
 
-  // Mock data for transactions
-  const [transactions, setTransactions] = useState<TransactionData[]>([
-    {
-      id: 'req-1',
-      serviceTitle: 'تصميم شعار احترافي',
-      amount: 15000,
-      date: '2023-11-01',
-      status: 'Pending' as TransactionData['status'], // Explicitly cast to TransactionData['status']
-      paymentStatus: 'Unpaid' as TransactionData['paymentStatus'], // Explicitly cast to TransactionData['paymentStatus']
-      method: 'تحويل بنكي',
-      paymentReference: undefined,
-      receiptUrl: undefined,
-    },
-    {
-      id: 'req-2',
-      serviceTitle: 'تطوير موقع ويب شخصي',
-      amount: 50000,
-      date: '2023-10-25',
-      status: 'Payment Pending' as TransactionData['status'], // Explicitly cast
-      paymentStatus: 'Pending Review' as TransactionData['paymentStatus'], // Explicitly cast
-      method: 'مرجع دفع',
-      paymentReference: 'REF123456',
-      receiptUrl: 'https://example.com/receipts/receipt-123.pdf',
-    },
-    {
-      id: 'req-3',
-      serviceTitle: 'كتابة محتوى تسويقي',
-      amount: 10000,
-      date: '2023-10-15',
-      status: 'Completed' as TransactionData['status'], // Explicitly cast
-      paymentStatus: 'Paid' as TransactionData['paymentStatus'], // Explicitly cast
-      method: 'بطاقة ائتمان',
-      paymentReference: 'CARD7890',
-      receiptUrl: 'https://example.com/receipts/receipt-456.jpg',
-    },
-    {
-      id: 'req-4',
-      serviceTitle: 'صيانة منزلية',
-      amount: 7500,
-      date: '2023-09-30',
-      status: 'Cancelled' as TransactionData['status'], // Explicitly cast
-      paymentStatus: 'Rejected' as TransactionData['paymentStatus'], // Explicitly cast
-      method: 'نقداً',
-      paymentReference: undefined,
-      receiptUrl: undefined,
-    },
-  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())); // Sort by most recent
+  const [requests, setRequests] = useState<RequestData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock handleConfirmPayment function
+  const fetchTransactions = useCallback(async () => {
+    if (!CLIENT_ID) {
+      setLoading(false);
+      setError('معرف العميل غير متاح. الرجاء تسجيل الدخول كطالب خدمة.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/requests`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'فشل جلب الطلبات.');
+      }
+      const result = await response.json();
+      // Filter requests by the current client's ID
+      const clientRequests = result.data.filter((req: RequestData) => req.client_id === CLIENT_ID);
+      setRequests(clientRequests);
+    } catch (err: any) {
+      setError(err.message);
+      toast.error(err.message || 'حدث خطأ أثناء جلب معاملاتك.');
+    } finally {
+      setLoading(false);
+    }
+  }, [CLIENT_ID]);
+
+  useEffect(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
+
   const handleConfirmPayment = async (requestId: string, paymentReference: string, receiptUrl: string) => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/requests/${requestId}/payment`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          payment_status: 'pending_review',
+          payment_reference: paymentReference,
+          receipt_url: receiptUrl,
+        }),
+      });
 
-    setTransactions(prevTransactions =>
-      prevTransactions.map(transaction =>
-        transaction.id === requestId
-          ? {
-              ...transaction,
-              status: 'Payment Pending' as TransactionData['status'], // Explicitly cast
-              paymentStatus: 'Pending Review' as TransactionData['paymentStatus'], // Explicitly cast
-              paymentReference: paymentReference,
-              receiptUrl: receiptUrl,
-            }
-          : transaction
-      )
-    );
-    toast.success('تم تأكيد الدفع بنجاح! سيتم مراجعة الوصل من قبل مقدم الخدمة (محاكاة).');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'فشل تأكيد الدفع.');
+      }
+
+      toast.success('تم تأكيد الدفع بنجاح! سيتم مراجعة الوصل من قبل مقدم الخدمة.');
+      fetchTransactions(); // Re-fetch requests to update the list
+    } catch (error: any) {
+      toast.error(error.message || 'حدث خطأ أثناء تأكيد الدفع.');
+      console.error('Error confirming payment:', error);
+      throw error; // Re-throw to allow dialog to handle error state
+    }
   };
 
-  // No loading or error states needed for mock data
-  const loading = false;
-  const error = null;
+  const transactions = useMemo(() => {
+    const statusMap = {
+      'pending': 'Pending',
+      'accepted': 'Accepted',
+      'completed': 'Completed',
+      'cancelled': 'Cancelled',
+      'payment_pending': 'Payment Pending',
+    };
+    const paymentStatusMap = {
+      'unpaid': 'Unpaid',
+      'pending_review': 'Pending Review',
+      'paid': 'Paid',
+      'rejected': 'Rejected',
+    };
+
+    return requests
+      .map(req => ({
+        id: req.id?.toString() || '',
+        serviceTitle: req.title,
+        amount: 0, // Placeholder: Request model doesn't have price. You might need to fetch service details or add price to request model.
+        date: req.created_at ? new Date(req.created_at).toLocaleDateString('ar-EG') : 'غير محدد',
+        status: statusMap[req.status || 'pending'] as TransactionData['status'],
+        paymentStatus: paymentStatusMap[req.payment_status || 'unpaid'] as TransactionData['paymentStatus'],
+        method: req.payment_reference ? 'مرجع دفع' : 'غير محدد', // Infer method from reference presence
+        paymentReference: req.payment_reference,
+        receiptUrl: req.receipt_url,
+      }))
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [requests]);
 
   if (loading) {
     return (
