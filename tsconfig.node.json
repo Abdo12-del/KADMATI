@@ -1,18 +1,21 @@
 {
   "compilerOptions": {
     "composite": true,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
     "skipLibCheck": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "strict": true,
-    "isolatedModules": true,
-    "target": "ES2022",
+    "target": "ES2020",
+    "lib": ["ES2020"],
+    "types": ["node"],
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "lib": ["ES2022"],
-    "types": ["node", "express"],
-    "outDir": "./dist-backend"
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
-  "include": ["backend/**/*.ts"]
+  "include": ["vite.config.ts", "backend/**/*.ts"]
 }
