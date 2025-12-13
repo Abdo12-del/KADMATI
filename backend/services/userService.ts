@@ -1,5 +1,5 @@
 import { User } from '../models/userModel';
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcryptjs'; // Import bcryptjs
 
 let users: User[] = [
   {
@@ -70,9 +70,13 @@ export const userService = {
   },
 
   async createUser(user: Omit<User, 'id' | 'created_at' | 'updated_at'>): Promise<User> {
+    // Ensure password is hashed before storing if it's not already (e.g., from API)
+    const hashedPassword = user.password; // Assume password is already hashed by API layer
+    
     const newUser: User = {
       id: nextUserId++,
       ...user,
+      password: hashedPassword, // Store the (already hashed) password
       favorite_service_ids: [], // Initialize for new users
       created_at: new Date(),
       updated_at: new Date(),

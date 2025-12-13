@@ -2,8 +2,8 @@ import { Router } from 'express';
 import { userService } from '../services/userService';
 import { successResponse, errorResponse } from '../utils/response';
 import { ApiError } from '../utils/errorHandler';
-import { validateUser } from '../utils/validator'; // Added import for validateUser
-// import bcrypt from 'bcryptjs'; // For password hashing - Temporarily commented out
+import { validateUser } from '../utils/validator';
+import bcrypt from 'bcryptjs'; // Import bcryptjs
 
 const router = Router();
 
@@ -61,8 +61,7 @@ router.post('/', async (req, res, next) => {
       throw new ApiError('Password is required', 400, ['Password is required.']);
     }
 
-    // const hashedPassword = await bcrypt.hash(password, 10); // Temporarily commented out
-    const hashedPassword = password; // Store password as plain text for simulation
+    const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
 
     const newUser = await userService.createUser({
       name,
@@ -100,8 +99,7 @@ router.put('/:id', async (req, res, next) => {
     }
 
     if (updates.password) {
-      // updates.password = await bcrypt.hash(updates.password, 10); // Temporarily commented out
-      updates.password = updates.password; // Store password as plain text for simulation
+      updates.password = await bcrypt.hash(updates.password, 10); // Hash the new password
     }
 
     const updatedUser = await userService.updateUser(Number(id), updates);
