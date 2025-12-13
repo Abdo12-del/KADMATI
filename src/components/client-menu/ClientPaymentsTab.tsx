@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState } from 'react'; // Removed useEffect, useCallback, useMemo as they are no longer used
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { TransactionData } from '@/types/app-types.ts';
-import { ConfirmPaymentDialog } from '@/components/ConfirmPaymentDialog'; // Import ConfirmPaymentDialog
-import { useAuth } from '@/hooks/use-auth'; // Import useAuth
+import { ConfirmPaymentDialog } from '@/components/ConfirmPaymentDialog';
+import { useAuth } from '@/hooks/use-auth';
 
 const getStatusBadgeVariant = (status: string) => {
   switch (status) {
@@ -23,7 +23,7 @@ const getStatusBadgeVariant = (status: string) => {
     case 'Rejected':
       return 'destructive';
     case 'Accepted':
-      return 'outline'; // Or another suitable variant
+      return 'outline';
     default:
       return 'outline';
   }
@@ -31,7 +31,8 @@ const getStatusBadgeVariant = (status: string) => {
 
 export const ClientPaymentsTab = () => {
   const { user } = useAuth();
-  const CLIENT_ID = user?.id; // Still useful for conditional rendering if needed, but not for fetching mock data
+  // CLIENT_ID is declared but its value is never read. Removed as it's not used with mock data.
+  // const CLIENT_ID = user?.id; 
 
   // Mock data for transactions
   const [transactions, setTransactions] = useState<TransactionData[]>([
@@ -40,8 +41,8 @@ export const ClientPaymentsTab = () => {
       serviceTitle: 'تصميم شعار احترافي',
       amount: 15000,
       date: '2023-11-01',
-      status: 'Pending',
-      paymentStatus: 'Unpaid',
+      status: 'Pending' as TransactionData['status'], // Explicitly cast to TransactionData['status']
+      paymentStatus: 'Unpaid' as TransactionData['paymentStatus'], // Explicitly cast to TransactionData['paymentStatus']
       method: 'تحويل بنكي',
       paymentReference: undefined,
       receiptUrl: undefined,
@@ -51,8 +52,8 @@ export const ClientPaymentsTab = () => {
       serviceTitle: 'تطوير موقع ويب شخصي',
       amount: 50000,
       date: '2023-10-25',
-      status: 'Payment Pending',
-      paymentStatus: 'Pending Review',
+      status: 'Payment Pending' as TransactionData['status'], // Explicitly cast
+      paymentStatus: 'Pending Review' as TransactionData['paymentStatus'], // Explicitly cast
       method: 'مرجع دفع',
       paymentReference: 'REF123456',
       receiptUrl: 'https://example.com/receipts/receipt-123.pdf',
@@ -62,8 +63,8 @@ export const ClientPaymentsTab = () => {
       serviceTitle: 'كتابة محتوى تسويقي',
       amount: 10000,
       date: '2023-10-15',
-      status: 'Completed',
-      paymentStatus: 'Paid',
+      status: 'Completed' as TransactionData['status'], // Explicitly cast
+      paymentStatus: 'Paid' as TransactionData['paymentStatus'], // Explicitly cast
       method: 'بطاقة ائتمان',
       paymentReference: 'CARD7890',
       receiptUrl: 'https://example.com/receipts/receipt-456.jpg',
@@ -73,8 +74,8 @@ export const ClientPaymentsTab = () => {
       serviceTitle: 'صيانة منزلية',
       amount: 7500,
       date: '2023-09-30',
-      status: 'Cancelled',
-      paymentStatus: 'Rejected',
+      status: 'Cancelled' as TransactionData['status'], // Explicitly cast
+      paymentStatus: 'Rejected' as TransactionData['paymentStatus'], // Explicitly cast
       method: 'نقداً',
       paymentReference: undefined,
       receiptUrl: undefined,
@@ -91,8 +92,8 @@ export const ClientPaymentsTab = () => {
         transaction.id === requestId
           ? {
               ...transaction,
-              status: 'Payment Pending',
-              paymentStatus: 'Pending Review',
+              status: 'Payment Pending' as TransactionData['status'], // Explicitly cast
+              paymentStatus: 'Pending Review' as TransactionData['paymentStatus'], // Explicitly cast
               paymentReference: paymentReference,
               receiptUrl: receiptUrl,
             }
