@@ -1,18 +1,11 @@
 {
+  "extends": "./tsconfig.json",
   "compilerOptions": {
     "composite": true,
-    "skipLibCheck": true,
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "isolatedModules": true,
-    "target": "ES2022",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "lib": ["ES2022"],
-    "types": ["node", "express"],
-    "outDir": "./dist-backend"
+    "tsBuildInfoFile": "./node_modules/.tsbuildinfo/tsconfig.node.tsbuildinfo",
+    "outDir": "dist-backend",
+    "types": ["node", "express", "cors"]
   },
-  "include": ["backend/**/*.ts"]
+  "include": ["backend"],
+  "exclude": ["src", "node_modules", "dist"]
 }
