@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 
-export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
+export const errorHandler = (err: any, _req: Request, res: Response, next: NextFunction) => {
   console.error('API Error caught:', err); // Log the full error object
   console.error('Error stack:', err.stack); // Log the error stack for debugging
 

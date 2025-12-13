@@ -118,8 +118,19 @@ export const validateRequest = (data: any, isUpdate: boolean = false) => {
   if (!isUpdate && !data.description) {
     errors.push('Description is required.');
   }
-  if (data.status && !['pending', 'accepted', 'completed', 'cancelled'].includes(data.status)) {
-    errors.push('Invalid request status. Must be "pending", "accepted", "completed", or "cancelled".');
+  if (data.status && !['pending', 'accepted', 'completed', 'cancelled', 'payment_pending'].includes(data.status)) { // Added 'payment_pending'
+    errors.push('Invalid request status. Must be "pending", "accepted", "completed", "cancelled", or "payment_pending".');
+  }
+
+  // New payment fields validation
+  if (data.payment_status && !['unpaid', 'pending_review', 'paid', 'rejected'].includes(data.payment_status)) {
+    errors.push('Invalid payment status. Must be "unpaid", "pending_review", "paid", or "rejected".');
+  }
+  if (data.payment_reference !== undefined && typeof data.payment_reference !== 'string') {
+    errors.push('Payment reference must be a string.');
+  }
+  if (data.receipt_url !== undefined && typeof data.receipt_url !== 'string') {
+    errors.push('Receipt URL must be a string.');
   }
 
   return errors;

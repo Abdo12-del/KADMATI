@@ -7,23 +7,7 @@ import RequestCard from '@/components/RequestCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth'; // Import useAuth
-
-interface RequestData {
-  id: number;
-  client_id: number;
-  title: string;
-  description: string;
-  status?: 'pending' | 'accepted' | 'completed' | 'cancelled';
-  created_at?: string;
-}
-
-interface RequestCardPropsData {
-  id: string;
-  title: string;
-  description: string;
-  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled';
-  onDelete?: (id: string) => void; // Added onDelete prop
-}
+import { RequestData, RequestCardPropsData } from '@/types/app-types.ts'; // Import RequestData and RequestCardPropsData
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -85,25 +69,63 @@ const MyRequestsPage = () => {
     }
   };
 
+  const handleConfirmPayment = async (requestId: string, paymentReference: string, receiptUrl: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/requests/${requestId}/payment`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          payment_status: 'pending_review',
+          payment_reference: paymentReference,
+          receipt_url: receiptUrl,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'فشل تأكيد الدفع.');
+      }
+
+      toast.success('تم تأكيد الدفع بنجاح! سيتم مراجعة الوصل من قبل مقدم الخدمة.');
+      fetchRequests(); // Re-fetch requests to update the list
+    } catch (error: any) {
+      toast.error(error.message || 'حدث خطأ أثناء تأكيد الدفع.');
+      console.error('Error confirming payment:', error);
+      throw error; // Re-throw to allow dialog to handle error state
+    }
+  };
+
   const mapRequestsToCardProps = (reqs: RequestData[]): RequestCardPropsData[] => {
     const statusMap = {
       'pending': 'Pending',
       'accepted': 'Accepted',
       'completed': 'Completed',
       'cancelled': 'Cancelled',
+      'payment_pending': 'Payment Pending', // New status mapping
     };
+    const paymentStatusMap = {
+      'unpaid': 'Unpaid',
+      'pending_review': 'Pending Review',
+      'paid': 'Paid',
+      'rejected': 'Rejected',
+    };
+
     return reqs.map(req => ({
       id: req.id.toString(),
       title: req.title,
       description: req.description,
       status: statusMap[req.status || 'pending'] as RequestCardPropsData['status'],
+      paymentStatus: paymentStatusMap[req.payment_status || 'unpaid'] as RequestCardPropsData['paymentStatus'],
       onDelete: handleDeleteRequest, // Pass the delete handler
+      onConfirmPayment: handleConfirmPayment, // Pass the confirm payment handler
     }));
   };
 
   const myRequests = useMemo(() => requests.filter(req => req.client_id === CLIENT_ID), [requests, CLIENT_ID]);
 
-  const pendingRequests = useMemo(() => mapRequestsToCardProps(myRequests.filter(req => req.status === 'pending')), [myRequests]);
+  const pendingRequests = useMemo(() => mapRequestsToCardProps(myRequests.filter(req => req.status === 'pending' || req.status === 'payment_pending')), [myRequests]);
   const acceptedServices = useMemo(() => mapRequestsToCardProps(myRequests.filter(req => req.status === 'accepted')), [myRequests]); // Assuming 'offered services' are accepted requests
   const completedRequests = useMemo(() => mapRequestsToCardProps(myRequests.filter(req => req.status === 'completed')), [myRequests]);
 
@@ -138,7 +160,7 @@ const MyRequestsPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {pendingRequests.length > 0 ? (
               pendingRequests.map(request => (
-                <RequestCard key={request.id} request={request} onDelete={handleDeleteRequest} />
+                <RequestCard key={request.id} request={request} onDelete={handleDeleteRequest} onConfirmPayment={handleConfirmPayment} />
               ))
             ) : (
               <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد طلبات حالية.</p>
@@ -150,7 +172,7 @@ const MyRequestsPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {acceptedServices.length > 0 ? (
                 acceptedServices.map(service => (
-                  <RequestCard key={service.id} request={service} onDelete={handleDeleteRequest} />
+                  <RequestCard key={service.id} request={service} onDelete={handleDeleteRequest} onConfirmPayment={handleConfirmPayment} />
                 ))
               ) : (
                 <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لم تقم بتقديم أي خدمات بعد.</p>
@@ -162,7 +184,7 @@ const MyRequestsPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {completedRequests.length > 0 ? (
                 completedRequests.map(request => (
-                  <RequestCard key={request.id} request={request} onDelete={handleDeleteRequest} />
+                  <RequestCard key={request.id} request={request} onDelete={handleDeleteRequest} onConfirmPayment={handleConfirmPayment} />
                 ))
               ) : (
                 <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا يوجد سجل للطلبات المكتملة.</p>

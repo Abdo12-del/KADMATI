@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import { requestService } from '../services/requestService';
-import { successResponse, errorResponse } from '../utils/response';
+import { successResponse } from '../utils/response'; // Removed errorResponse
 import { ApiError } from '../utils/errorHandler';
 import { validateRequest } from '../utils/validator';
 
 const router = Router();
 
 // Get all requests
-router.get('/', async (req, res, next) => {
+router.get('/', async (_req, res, next) => { // Renamed req to _req
   console.log(`[${new Date().toISOString()}] GET /api/requests - Request received.`);
   try {
     const requests = await requestService.getAllRequests();
@@ -78,6 +78,39 @@ router.put('/:id', async (req, res, next) => {
     console.log(`[${new Date().toISOString()}] PUT /api/requests/:id - Request updated successfully for ID: ${id}`);
   } catch (error) {
     console.error(`[${new Date().toISOString()}] PUT /api/requests/:id - Error:`, error);
+    next(error);
+  }
+});
+
+// Update request payment status and details
+router.patch('/:id/payment', async (req, res, next) => {
+  console.log(`[${new Date().toISOString()}] PATCH /api/requests/:id/payment - Request received. Params: ${req.params.id}, Body:`, req.body);
+  try {
+    const { id } = req.params;
+    const { payment_status, payment_reference, receipt_url } = req.body;
+
+    const updates: Partial<Request> = {
+      payment_status: payment_status, // Explicitly assign
+      payment_reference: payment_reference, // Explicitly assign
+      receipt_url: receipt_url, // Explicitly assign
+      status: 'payment_pending', // Automatically set request status to 'payment_pending' when client confirms payment
+    };
+
+    const validationErrors = validateRequest(updates, true);
+    if (validationErrors.length > 0) {
+      console.error(`[${new Date().toISOString()}] PATCH /api/requests/:id/payment - Validation failed:`, validationErrors);
+      throw new ApiError('Validation failed', 400, validationErrors);
+    }
+
+    const updatedRequest = await requestService.updateRequest(Number(id), updates);
+    if (!updatedRequest) {
+      console.log(`[${new Date().toISOString()}] PATCH /api/requests/:id/payment - Request not found for ID: ${id}`);
+      throw new ApiError('Request not found', 404);
+    }
+    successResponse(res, 'Payment details updated successfully', updatedRequest);
+    console.log(`[${new Date().toISOString()}] PATCH /api/requests/:id/payment - Payment details updated successfully for ID: ${id}`);
+  } catch (error) {
+    console.error(`[${new Date().toISOString()}] PATCH /api/requests/:id/payment - Error:`, error);
     next(error);
   }
 });

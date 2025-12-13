@@ -7,7 +7,10 @@ export interface Request {
   location?: string;
   due_date?: string;
   additional_options?: string;
-  status?: 'pending' | 'accepted' | 'completed' | 'cancelled';
+  status?: 'pending' | 'accepted' | 'completed' | 'cancelled' | 'payment_pending'; // Added 'payment_pending' status
+  payment_status?: 'unpaid' | 'pending_review' | 'paid' | 'rejected'; // New field for payment status
+  payment_reference?: string; // New field for payment reference
+  receipt_url?: string; // New field for receipt URL
   created_at?: Date;
   updated_at?: Date;
 }
