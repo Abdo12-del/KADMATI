@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { TransactionData, RequestData } from '@/types/app-types';
+import { TransactionData, RequestData } from '@/types/app-types.ts';
 import { ConfirmPaymentDialog } from '@/components/ConfirmPaymentDialog';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -55,6 +55,7 @@ export const ClientPaymentsTab = () => {
         throw new Error(errorData.message || 'فشل جلب الطلبات.');
       }
       const result = await response.json();
+      // Filter requests by the current client's ID
       const clientRequests = result.data.filter((req: RequestData) => req.client_id === CLIENT_ID);
       setRequests(clientRequests);
     } catch (err: any) {
@@ -89,11 +90,11 @@ export const ClientPaymentsTab = () => {
       }
 
       toast.success('تم تأكيد الدفع بنجاح! سيتم مراجعة الوصل من قبل مقدم الخدمة.');
-      fetchTransactions();
+      fetchTransactions(); // Re-fetch requests to update the list
     } catch (error: any) {
       toast.error(error.message || 'حدث خطأ أثناء تأكيد الدفع.');
       console.error('Error confirming payment:', error);
-      throw error;
+      throw error; // Re-throw to allow dialog to handle error state
     }
   };
 
@@ -116,11 +117,11 @@ export const ClientPaymentsTab = () => {
       .map(req => ({
         id: req.id?.toString() || '',
         serviceTitle: req.title,
-        amount: req.agreed_price || 0, // Use agreed_price
+        amount: 0, // Placeholder: Request model doesn't have price. You might need to fetch service details or add price to request model.
         date: req.created_at ? new Date(req.created_at).toLocaleDateString('ar-EG') : 'غير محدد',
         status: statusMap[req.status || 'pending'] as TransactionData['status'],
         paymentStatus: paymentStatusMap[req.payment_status || 'unpaid'] as TransactionData['paymentStatus'],
-        method: req.payment_reference ? 'مرجع دفع' : 'غير محدد',
+        method: req.payment_reference ? 'مرجع دفع' : 'غير محدد', // Infer method from reference presence
         paymentReference: req.payment_reference,
         receiptUrl: req.receipt_url,
       }))
@@ -178,7 +179,7 @@ export const ClientPaymentsTab = () => {
                     </TableCell>
                     <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">{transaction.paymentReference || 'لا يوجد'}</TableCell>
                     <TableCell className="text-right">
-                      {transaction.status === 'Accepted' && transaction.paymentStatus === 'Unpaid' && (
+                      {transaction.status === 'Pending' && transaction.paymentStatus === 'Unpaid' && (
                         <ConfirmPaymentDialog requestId={transaction.id} onConfirmPayment={handleConfirmPayment} />
                       )}
                       {transaction.receiptUrl && (transaction.paymentStatus === 'Pending Review' || transaction.paymentStatus === 'Paid') && (

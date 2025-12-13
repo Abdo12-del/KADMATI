@@ -3,13 +3,14 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom'; // Re-added Link for quick actions
 import { Package, Star, MessageSquare, DollarSign, CheckCircle, Clock } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
-import { RequestData, RatingData, MessageData, UserData, ServiceData } from '@/types/app-types'; // Import all necessary types
+import { RequestData, RatingData, MessageData, UserData, ServiceData } from '@/types/app-types'; // Import ServiceData
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -21,7 +22,7 @@ const DashboardOverviewPage = () => {
   const [ratings, setRatings] = useState<RatingData[]>([]);
   const [messages, setMessages] = useState<MessageData[]>([]);
   const [allUsers, setAllUsers] = useState<UserData[]>([]);
-  // Removed services state as it's only used for filtering and can be done directly
+  const [services, setServices] = useState<ServiceData[]>([]); // New state for services
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,7 +41,7 @@ const DashboardOverviewPage = () => {
         fetch(`${API_BASE_URL}/api/ratings`),
         fetch(`${API_BASE_URL}/api/messages`),
         fetch(`${API_BASE_URL}/api/users`),
-        fetch(`${API_BASE_URL}/api/services`),
+        fetch(`${API_BASE_URL}/api/services`), // Fetch services
       ]);
 
       if (!requestsResponse.ok) throw new Error('فشل جلب الطلبات.');
@@ -49,24 +50,29 @@ const DashboardOverviewPage = () => {
       if (!usersResponse.ok) throw new Error('فشل جلب المستخدمين.');
       if (!servicesResponse.ok) throw new Error('فشل جلب الخدمات.');
 
-      const requestsResult: { data: RequestData[] } = await requestsResponse.json();
-      const ratingsResult: { data: RatingData[] } = await ratingsResponse.json();
-      const messagesResult: { data: MessageData[] } = await messagesResponse.json();
-      const usersResult: { data: UserData[] } = await usersResponse.json();
-      const servicesResult: { data: ServiceData[] } = await servicesResponse.json();
+      const requestsResult = await requestsResponse.json();
+      const ratingsResult = await ratingsResponse.json();
+      const messagesResult = await messagesResponse.json();
+      const usersResult = await usersResponse.json();
+      const servicesResult = await servicesResponse.json(); // Get services data
 
-      // Filter requests relevant to this provider
-      const providerRequests = requestsResult.data.filter(req => req.assigned_provider_id === PROVIDER_ID);
+      // Filter requests and ratings relevant to this provider
+      const providerServices = servicesResult.data.filter((s: ServiceData) => s.provider_id === PROVIDER_ID);
+      const providerServiceIds = providerServices.map((s: ServiceData) => s.id);
+
+      const providerRequests = requestsResult.data.filter((req: RequestData) =>
+        req.service_id && providerServiceIds.includes(req.service_id)
+      );
+      const providerRatings = ratingsResult.data.filter((r: RatingData) =>
+        providerServiceIds.includes(r.service_id)
+      );
+
       setRequests(providerRequests);
-
-      // Filter ratings for services offered by this provider
-      const providerServiceIds = servicesResult.data.filter(s => s.provider_id === PROVIDER_ID).map(s => s.id);
-      const providerRatings = ratingsResult.data.filter(r => providerServiceIds.includes(r.service_id));
       setRatings(providerRatings);
-      
-      setMessages(messagesResult.data);
+      setMessages(messagesResult.data); // All messages, will filter by receiver_id later
       setAllUsers(usersResult.data);
-      // setServices(servicesResult.data); // Removed from state
+      setServices(providerServices); // Set provider's services
+
     } catch (err: any) {
       setError(err.message);
       toast.error(err.message || 'حدث خطأ أثناء جلب بيانات لوحة التحكم.');
@@ -82,7 +88,7 @@ const DashboardOverviewPage = () => {
   // --- Analytics Calculations ---
   const totalOrders = requests.length;
   const activeOrders = requests.filter(req => req.status === 'pending' || req.status === 'accepted' || req.status === 'payment_pending').length;
-  // Removed completedOrders as it was unused
+  // const completedOrders = requests.filter(req => req.status === 'completed').length; // Removed: 'completedOrders' is declared but its value is never read.
 
   const averageRating = useMemo(() => {
     if (ratings.length === 0) return '0.0';
@@ -95,75 +101,108 @@ const DashboardOverviewPage = () => {
   }, [messages, PROVIDER_ID]);
 
   const totalEarnings = useMemo(() => {
-    const earnings = requests.filter(req => req.status === 'completed' && req.agreed_price !== undefined)
-                              .reduce((sum, req) => sum + (req.agreed_price || 0), 0);
+    const completedRequestsForProvider = requests.filter(req => req.status === 'completed');
+    let earnings = 0;
+    completedRequestsForProvider.forEach(req => {
+      const service = services.find(s => s.id === req.service_id);
+      if (service) {
+        earnings += service.price;
+      }
+    });
     return earnings.toLocaleString('ar-EG', { style: 'currency', currency: 'DZD', minimumFractionDigits: 0 });
-  }, [requests]);
+  }, [requests, services]);
 
-  // --- Dynamic Chart Data ---
-  const getMonthlyData = (requests: RequestData[]) => {
+  // --- Dynamic Performance Data (Sales & Orders) ---
+  const getMonthlyPerformanceData = useMemo(() => {
     const monthlyDataMap = new Map<string, { sales: number; orders: number }>();
+    const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
     const currentYear = new Date().getFullYear();
 
-    for (let i = 0; i < 6; i++) { // Last 6 months
-      const date = new Date(currentYear, new Date().getMonth() - i, 1);
-      const monthName = date.toLocaleDateString('ar-EG', { month: 'short' });
-      monthlyDataMap.set(monthName, { sales: 0, orders: 0 });
+    // Initialize for last 6 months
+    for (let i = 0; i < 6; i++) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const monthName = months[date.getMonth()];
+      const year = date.getFullYear();
+      monthlyDataMap.set(`${monthName} ${year}`, { sales: 0, orders: 0 });
     }
 
     requests.forEach(req => {
       if (req.created_at) {
         const reqDate = new Date(req.created_at);
-        const monthName = reqDate.toLocaleDateString('ar-EG', { month: 'short' });
-        if (monthlyDataMap.has(monthName)) {
-          const data = monthlyDataMap.get(monthName)!;
-          data.orders += 1;
-          if (req.status === 'completed' && req.agreed_price !== undefined) {
-            data.sales += req.agreed_price;
+        if (reqDate.getFullYear() === currentYear || reqDate.getFullYear() === currentYear -1) { // Include current and last year for data
+          const monthName = months[reqDate.getMonth()];
+          const key = `${monthName} ${reqDate.getFullYear()}`;
+          const entry = monthlyDataMap.get(key) || { sales: 0, orders: 0 };
+
+          entry.orders += 1;
+          if (req.status === 'completed') {
+            const service = services.find(s => s.id === req.service_id);
+            if (service) {
+              entry.sales += service.price;
+            }
           }
-          monthlyDataMap.set(monthName, data);
+          monthlyDataMap.set(key, entry);
         }
       }
     });
 
-    return Array.from(monthlyDataMap.entries())
-                .sort((a, b) => new Date(`2000 ${a[0]} 1`).getTime() - new Date(`2000 ${b[0]} 1`).getTime()) // Sort by month
-                .map(([name, data]) => ({ name, ...data }));
-  };
+    // Convert map to array and sort by date
+    const sortedData = Array.from(monthlyDataMap.entries())
+      .map(([key, value]) => ({ name: key.split(' ')[0], ...value }))
+      .sort((a, b) => {
+        const monthA = months.indexOf(a.name);
+        const monthB = months.indexOf(b.name);
+        // Assuming data is for current/last year, simple month sort is fine for 6 months
+        return monthA - monthB;
+      });
+    
+    // Take only the last 6 months for display
+    return sortedData.slice(-6);
+  }, [requests, services]);
 
-  const dynamicPerformanceData = useMemo(() => getMonthlyData(requests), [requests]);
+  // --- Dynamic Orders Breakdown Data ---
+  const ordersBreakdownData = useMemo(() => {
+    const statusCounts = {
+      'pending': 0,
+      'accepted': 0,
+      'completed': 0,
+      'cancelled': 0,
+      'payment_pending': 0,
+    };
 
-  const dynamicOrdersBreakdownData = useMemo(() => {
-    const pendingCount = requests.filter(req => req.status === 'pending').length;
-    const acceptedCount = requests.filter(req => req.status === 'accepted').length;
-    const completedCount = requests.filter(req => req.status === 'completed').length;
-    const cancelledCount = requests.filter(req => req.status === 'cancelled').length;
+    requests.forEach(req => {
+      if (req.status) {
+        statusCounts[req.status] += 1;
+      }
+    });
 
     return [
-      { name: 'معلقة', value: pendingCount, color: 'var(--brand-warning)' },
-      { name: 'مقبولة', value: acceptedCount, color: 'var(--brand-primary)' },
-      { name: 'مكتملة', value: completedCount, color: 'var(--brand-success)' },
-      { name: 'ملغاة', value: cancelledCount, color: 'var(--brand-danger)' },
+      { name: 'معلقة', value: statusCounts.pending + statusCounts.payment_pending, color: 'hsl(var(--brand-warning))' },
+      { name: 'مقبولة', value: statusCounts.accepted, color: 'hsl(var(--brand-primary))' },
+      { name: 'مكتملة', value: statusCounts.completed, color: 'hsl(var(--brand-success))' },
+      { name: 'ملغاة', value: statusCounts.cancelled, color: 'hsl(var(--brand-danger))' },
     ];
   }, [requests]);
+
 
   // --- Tasks List ---
   const recentTasks = useMemo(() => {
     return requests
       .filter(req => req.status === 'pending' || req.status === 'accepted' || req.status === 'payment_pending')
-      .sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime())
-      .slice(0, 3)
+      .sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()) // Sort by most recent
+      .slice(0, 3) // Show up to 3 recent tasks
       .map(req => ({
         id: req.id.toString(),
         title: `الرد على طلب خدمة: ${req.title}`,
-        status: req.status === 'pending' ? 'Pending' : req.status === 'accepted' ? 'Accepted' : 'Payment Pending',
-        dueDate: req.created_at ? new Date(new Date(req.created_at).setDate(new Date(req.created_at).getDate() + 7)).toLocaleDateString('ar-EG') : 'غير محدد',
+        status: req.status === 'pending' ? 'Pending' : req.status === 'payment_pending' ? 'Payment Pending' : 'Accepted',
+        dueDate: req.created_at ? new Date(new Date(req.created_at).setDate(new Date(req.created_at).getDate() + 7)).toLocaleDateString('ar-EG') : 'غير محدد', // Due in 7 days from creation
       }));
   }, [requests]);
 
   // --- Customer Messages ---
   const customerMessages = useMemo(() => {
-    const conversationsMap = new Map<number, MessageData>();
+    const conversationsMap = new Map<number, MessageData>(); // Map client_id to latest message
     messages.forEach(msg => {
       if (msg.receiver_id === PROVIDER_ID && msg.sender_id !== PROVIDER_ID) {
         const existingMsg = conversationsMap.get(msg.sender_id);
@@ -175,7 +214,7 @@ const DashboardOverviewPage = () => {
 
     return Array.from(conversationsMap.values())
       .sort((a, b) => (b.created_at ? new Date(b.created_at).getTime() : 0) - (a.created_at ? new Date(a.created_at).getTime() : 0))
-      .slice(0, 2)
+      .slice(0, 2) // Show up to 2 recent messages
       .map(msg => {
         const customer = allUsers.find(u => u.id === msg.sender_id);
         return {
@@ -213,7 +252,7 @@ const DashboardOverviewPage = () => {
           </CardHeader>
           <CardContent className="p-0">
             <div className="text-3xl font-cairo text-brand-text-dark font-bold">{totalOrders}</div>
-            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">الطلبات التي قبلتها</p>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">+10% عن الشهر الماضي</p>
           </CardContent>
         </Card>
         <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 text-right">
@@ -223,7 +262,7 @@ const DashboardOverviewPage = () => {
           </CardHeader>
           <CardContent className="p-0">
             <div className="text-3xl font-cairo text-brand-text-dark font-bold">{activeOrders}</div>
-            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">معلقة أو مقبولة</p>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">3 طلبات جديدة</p>
           </CardContent>
         </Card>
         <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 text-right">
@@ -233,7 +272,7 @@ const DashboardOverviewPage = () => {
           </CardHeader>
           <CardContent className="p-0">
             <div className="text-3xl font-cairo text-brand-text-dark font-bold">{totalEarnings}</div>
-            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">من الطلبات المكتملة</p>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">+5% هذا الشهر</p>
           </CardContent>
         </Card>
         <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 text-right">
@@ -266,7 +305,7 @@ const DashboardOverviewPage = () => {
           </CardHeader>
           <CardContent className="h-[300px] p-0">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={dynamicPerformanceData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              <LineChart data={getMonthlyPerformanceData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                 <XAxis dataKey="name" tick={{ fill: 'var(--brand-text-muted)', fontFamily: 'var(--font-ibm-plex-arabic)' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: 'var(--brand-text-muted)', fontFamily: 'var(--font-ibm-plex-arabic)' }} axisLine={false} tickLine={false} />
@@ -288,7 +327,7 @@ const DashboardOverviewPage = () => {
           </CardHeader>
           <CardContent className="h-[250px] p-0">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={dynamicOrdersBreakdownData} layout="vertical">
+              <BarChart data={ordersBreakdownData} layout="vertical">
                 <XAxis type="number" hide />
                 <YAxis type="category" dataKey="name" tick={{ fill: 'var(--brand-text-dark)', fontFamily: 'var(--font-ibm-plex-arabic)' }} axisLine={false} tickLine={false} width={80} mirror />
                 <Tooltip contentStyle={{ backgroundColor: 'var(--brand-card-bg)', borderColor: 'var(--border)', borderRadius: '8px', boxShadow: 'var(--shadow-soft)' }} itemStyle={{ fontFamily: 'var(--font-ibm-plex-arabic)', color: 'var(--brand-text-dark)' }} labelStyle={{ fontFamily: 'var(--font-cairo)', color: 'var(--brand-primary)' }} />
@@ -319,9 +358,11 @@ const DashboardOverviewPage = () => {
                         <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">تاريخ الاستحقاق: {task.dueDate}</p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" className="text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic">
-                      عرض
-                    </Button>
+                    <Link to={`/dashboard/orders`}> {/* Link to orders page */}
+                      <Button variant="ghost" size="sm" className="text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic">
+                        عرض
+                      </Button>
+                    </Link>
                   </li>
                 ))
               ) : (
@@ -352,9 +393,11 @@ const DashboardOverviewPage = () => {
                       <p className="font-cairo text-brand-text-dark font-semibold">{msg.customerName}</p>
                       <p className="text-sm text-brand-text-muted font-ibm-plex-arabic line-clamp-1">{msg.message}</p>
                     </div>
-                    <Button variant="ghost" size="sm" className="text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic">
-                      رد
-                    </Button>
+                    <Link to={`/dashboard/messages`}> {/* Link to messages page */}
+                      <Button variant="ghost" size="sm" className="text-brand-primary hover:bg-brand-primary-light/20 rounded-lg font-ibm-plex-arabic">
+                        رد
+                      </Button>
+                    </Link>
                   </li>
                 ))
               ) : (

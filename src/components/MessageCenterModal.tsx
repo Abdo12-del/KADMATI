@@ -1,5 +1,6 @@
 "use client";
 
+// import React, { useState, useEffect, useCallback, useMemo } from 'react'; // Removed
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -35,12 +36,10 @@ interface Conversation {
     id: string;
     sender: 'customer' | 'provider';
     text: string;
-    time: string; // Formatted time string for display
-    createdAt: string; // Original ISO string for sorting
+    time: string;
   }[];
   unreadCount: number;
-  lastMessageTime: string; // Formatted time of the last message
-  lastMessageCreatedAt: string; // Original ISO string of the last message for sorting conversations
+  lastMessageTime: string;
   otherPartyBackendId: number; // Added to identify the other user in backend
 }
 
@@ -131,8 +130,7 @@ export const MessageCenterModal = ({ currentUserId = 'provider', isPage = false 
           messages: [],
           unreadCount: 0,
           lastMessageTime: '',
-          lastMessageCreatedAt: '', // Initialize
-          otherPartyBackendId: otherPartyId,
+          otherPartyBackendId: otherPartyId, // Store other party's backend ID
         });
       }
 
@@ -142,21 +140,16 @@ export const MessageCenterModal = ({ currentUserId = 'provider', isPage = false 
         sender: msg.sender_id === CURRENT_USER_BACKEND_ID ? currentUserId : (currentUserId === 'provider' ? 'customer' : 'provider'),
         text: msg.text,
         time: msg.created_at ? new Date(msg.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '',
-        createdAt: msg.created_at || new Date().toISOString(), // Store original for sorting
       });
-      if (!msg.read && msg.receiver_id === CURRENT_USER_BACKEND_ID) {
+      if (!msg.read && msg.receiver_id === CURRENT_USER_BACKEND_ID) { // Only count unread if current user is the receiver
         conv.unreadCount++;
       }
+      conv.lastMessageTime = msg.created_at ? new Date(msg.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '';
     });
 
-    // Sort messages within each conversation by createdAt, then update last message info
+    // Sort messages within each conversation by time
     convMap.forEach(conv => {
-      conv.messages.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-      const lastMsg = conv.messages[conv.messages.length - 1];
-      if (lastMsg) {
-        conv.lastMessageTime = lastMsg.time;
-        conv.lastMessageCreatedAt = lastMsg.createdAt;
-      }
+      conv.messages.sort((a, b) => new Date(`2000/01/01 ${a.time}`).getTime() - new Date(`2000/01/01 ${b.time}`).getTime());
     });
 
     return Array.from(convMap.values());
@@ -172,12 +165,12 @@ export const MessageCenterModal = ({ currentUserId = 'provider', isPage = false 
       conv.messages.some(msg => msg.text.toLowerCase().includes(searchTerm.toLowerCase()))
     );
     return filtered.sort((a, b) => {
-      // Sort by unread first, then by last message createdAt
+      // Sort by unread first, then by last message time
       if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
       if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
-      // Fallback to sorting by the latest message createdAt if unread counts are the same
-      const timeA = new Date(a.lastMessageCreatedAt).getTime();
-      const timeB = new Date(b.lastMessageCreatedAt).getTime();
+      // Fallback to sorting by the latest message time if unread counts are the same
+      const timeA = a.messages.length > 0 ? new Date(a.messages[a.messages.length - 1].time).getTime() : 0;
+      const timeB = b.messages.length > 0 ? new Date(b.messages[b.messages.length - 1].time).getTime() : 0;
       return timeB - timeA;
     });
   }, [conversations, searchTerm]);
@@ -215,11 +208,11 @@ export const MessageCenterModal = ({ currentUserId = 'provider', isPage = false 
   };
 
   const content = (
-    <div className={cn("flex flex-grow overflow-hidden rtl:flex-row-reverse", isPage ? "h-full" : "")}>
+    <div className={cn("flex flex-grow overflow-hidden rtl:flex-row-reverse", isPage ? "h-[calc(100vh-200px)]" : "")}>
       {/* Conversation List Sidebar */}
       <div className={cn(
         "w-full lg:w-1/3 border-l border-border p-4 flex flex-col flex-shrink-0 rtl:border-r rtl:border-l-0",
-        selectedConversationId && "hidden lg:flex"
+        selectedConversationId && "hidden lg:flex" // Hide on small screens if a chat is selected
       )}>
         <div className="relative mb-4">
           <Input
@@ -273,9 +266,9 @@ export const MessageCenterModal = ({ currentUserId = 'provider', isPage = false 
       <div className={cn(
         "flex-grow flex flex-col",
         !selectedConversationId && "hidden lg:flex items-center justify-center text-brand-text-muted font-ibm-plex-arabic",
-        selectedConversationId && "w-full"
+        selectedConversationId && "w-full" // Take full width on small screens if chat is selected
       )}>
-        {selectedConversation && CURRENT_USER_BACKEND_ID !== undefined ? (
+        {selectedConversation && CURRENT_USER_BACKEND_ID !== undefined ? ( // Ensure CURRENT_USER_BACKEND_ID is defined
           <>
             {/* Chat Window Header */}
             <div className="flex flex-row-reverse items-center border-b border-border pb-4 px-4 pt-0 flex-shrink-0">
@@ -293,7 +286,7 @@ export const MessageCenterModal = ({ currentUserId = 'provider', isPage = false 
               conversation={selectedConversation}
               currentUserId={currentUserId}
               currentBackendUserId={CURRENT_USER_BACKEND_ID}
-              onMessageSent={fetchMessagesAndUsers}
+              onMessageSent={fetchMessagesAndUsers} // Pass the re-fetch callback
             />
           </>
         ) : (
@@ -309,6 +302,9 @@ export const MessageCenterModal = ({ currentUserId = 'provider', isPage = false 
   if (isPage) {
     return (
       <div className="bg-brand-card-bg rounded-2xl shadow-soft p-6 h-full flex flex-col">
+        <div className="flex flex-row-reverse items-center justify-between border-b border-border pb-4 flex-shrink-0">
+          <DialogTitle className="text-3xl font-cairo text-brand-text-dark">مركز الرسائل</DialogTitle>
+        </div>
         {loading ? (
           <div className="flex items-center justify-center h-full text-brand-text-dark font-ibm-plex-arabic">جاري تحميل الرسائل...</div>
         ) : error ? (

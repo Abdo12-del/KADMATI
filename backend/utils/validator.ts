@@ -112,6 +112,11 @@ export const validateRequest = (data: any, isUpdate: boolean = false) => {
   if (!isUpdate && (data.client_id === undefined || data.client_id === null)) {
     errors.push('Client ID is required.');
   }
+  // service_id is optional, so no 'required' check for it
+  if (data.service_id !== undefined && data.service_id !== null && typeof data.service_id !== 'number') {
+    errors.push('Service ID must be a number.');
+  }
+
   if (!isUpdate && !data.title) {
     errors.push('Title is required.');
   }
@@ -131,14 +136,6 @@ export const validateRequest = (data: any, isUpdate: boolean = false) => {
   }
   if (data.receipt_url !== undefined && typeof data.receipt_url !== 'string') {
     errors.push('Receipt URL must be a string.');
-  }
-
-  // New fields for assigned provider and agreed price
-  if (data.assigned_provider_id !== undefined && (typeof data.assigned_provider_id !== 'number' || data.assigned_provider_id <= 0)) {
-    errors.push('Assigned provider ID must be a positive number.');
-  }
-  if (data.agreed_price !== undefined && (typeof data.agreed_price !== 'number' || data.agreed_price < 0)) {
-    errors.push('Agreed price must be a non-negative number.');
   }
 
   return errors;

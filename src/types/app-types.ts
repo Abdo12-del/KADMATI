@@ -2,6 +2,7 @@ export interface UserData {
   id: number;
   name: string;
   email: string;
+  password?: string; // Added for profile updates
   role: 'seeker' | 'provider';
   phone?: string;
   bio?: string;
@@ -29,6 +30,7 @@ export interface ServiceData {
 export interface RequestData {
   id: number;
   client_id: number;
+  service_id?: number; // New field: Optional ID of the service being requested/ordered
   title: string;
   description: string;
   category?: string;
@@ -39,10 +41,18 @@ export interface RequestData {
   payment_status?: 'unpaid' | 'pending_review' | 'paid' | 'rejected';
   payment_reference?: string;
   receipt_url?: string;
-  assigned_provider_id?: number; // New field
-  agreed_price?: number; // New field
   created_at?: string;
   updated_at?: string;
+}
+
+export interface MessageData { // Exported MessageData
+  id: number;
+  sender_id: number;
+  receiver_id: number;
+  conversation_id: string; // Unique ID for conversation pair
+  text: string;
+  read?: boolean;
+  created_at?: string;
 }
 
 export interface RatingData {
@@ -51,17 +61,6 @@ export interface RatingData {
   client_id: number;
   rating: number;
   comment?: string;
-  created_at?: string;
-}
-
-// New interface for Message data
-export interface MessageData {
-  id: number;
-  sender_id: number;
-  receiver_id: number;
-  conversation_id: string; // Unique ID for conversation pair
-  text: string;
-  read?: boolean;
   created_at?: string;
 }
 
@@ -95,15 +94,15 @@ export interface ReviewCardPropsData {
 }
 
 export interface TransactionData {
-  id: string;
-  serviceTitle: string;
-  amount: number;
-  date: string;
-  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled' | 'Payment Pending';
-  paymentStatus: 'Unpaid' | 'Pending Review' | 'Paid' | 'Rejected';
-  method?: string;
-  paymentReference?: string;
-  receiptUrl?: string;
+  id: string; // This will be the request ID
+  serviceTitle: string; // Title of the service requested
+  amount: number; // Price of the service
+  date: string; // Date of the request
+  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled' | 'Payment Pending'; // Request status
+  paymentStatus: 'Unpaid' | 'Pending Review' | 'Paid' | 'Rejected'; // Payment status
+  method?: string; // Payment method (if recorded)
+  paymentReference?: string; // Payment reference
+  receiptUrl?: string; // Receipt URL
 }
 
 export interface RequestCardPropsData {
@@ -116,22 +115,11 @@ export interface RequestCardPropsData {
   onConfirmPayment?: (id: string, paymentReference: string, receiptUrl: string) => Promise<void>;
 }
 
-// Updated ClientOrderCardPropsData to include 'Payment Pending'
-export interface ClientOrderCardPropsData {
+export interface ClientOrderCardPropsData { // Exported ClientOrderCardPropsData
   id: string;
   serviceTitle: string;
   providerName: string;
-  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled' | 'Payment Pending';
-  date: string;
-  price: number;
-}
-
-// Updated OrderCardPropsData to include 'Payment Pending'
-export interface OrderCardPropsData {
-  id: string;
-  serviceTitle: string;
-  customerName: string;
-  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled' | 'Payment Pending';
+  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled';
   date: string;
   price: number;
 }

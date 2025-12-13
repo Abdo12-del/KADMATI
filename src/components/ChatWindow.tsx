@@ -108,7 +108,7 @@ const ChatWindow = ({ conversation, currentUserId, currentBackendUserId, onMessa
           >
             <div
               className={cn(
-                "max-w-[75%] p-3 rounded-xl shadow-sm", // Added shadow-sm and max-w-[75%]
+                "max-w-[70%] p-3 rounded-xl shadow-soft",
                 msg.sender === currentUserId
                   ? 'bg-brand-primary text-white rounded-br-none'
                   : 'bg-brand-background text-brand-text-dark rounded-bl-none'

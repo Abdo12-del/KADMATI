@@ -1,17 +1,19 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+// import Header from '@/components/Header'; // Removed
+// import Footer from '@/components/Footer'; // Removed
 import RequestCard from '@/components/RequestCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { useAuth } from '@/hooks/use-auth';
-import { RequestData, RequestCardPropsData } from '@/types/app-types';
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
+import { RequestData, RequestCardPropsData } from '@/types/app-types.ts'; // Import RequestData and RequestCardPropsData
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const MyRequestsPage = () => {
-  const { user } = useAuth();
-  const CLIENT_ID = user?.id;
+  const { user } = useAuth(); // Get current user from auth context
+  const CLIENT_ID = user?.id; // Use actual client ID
 
   const [requests, setRequests] = useState<RequestData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,7 +35,8 @@ const MyRequestsPage = () => {
         throw new Error(errorData.message || 'فشل جلب الطلبات.');
       }
       const result = await response.json();
-      const clientRequests = result.data.filter((req: RequestData) => req.client_id === CLIENT_ID);
+      // Filter requests by the current client's ID
+      const clientRequests = result.data.filter((req: any) => req.client_id === CLIENT_ID);
       setRequests(clientRequests);
     } catch (err: any) {
       setError(err.message);
@@ -53,9 +56,9 @@ const MyRequestsPage = () => {
         method: 'DELETE',
       });
 
-      if (response.status === 204) {
+      if (response.status === 204) { // 204 No Content is typical for successful DELETE
         toast.success('تم حذف الطلب بنجاح!');
-        fetchRequests();
+        fetchRequests(); // Re-fetch requests to update the list
       } else if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'فشل حذف الطلب.');
@@ -86,11 +89,11 @@ const MyRequestsPage = () => {
       }
 
       toast.success('تم تأكيد الدفع بنجاح! سيتم مراجعة الوصل من قبل مقدم الخدمة.');
-      fetchRequests();
+      fetchRequests(); // Re-fetch requests to update the list
     } catch (error: any) {
       toast.error(error.message || 'حدث خطأ أثناء تأكيد الدفع.');
       console.error('Error confirming payment:', error);
-      throw error;
+      throw error; // Re-throw to allow dialog to handle error state
     }
   };
 
@@ -100,7 +103,7 @@ const MyRequestsPage = () => {
       'accepted': 'Accepted',
       'completed': 'Completed',
       'cancelled': 'Cancelled',
-      'payment_pending': 'Payment Pending',
+      'payment_pending': 'Payment Pending', // New status mapping
     };
     const paymentStatusMap = {
       'unpaid': 'Unpaid',
@@ -115,15 +118,15 @@ const MyRequestsPage = () => {
       description: req.description,
       status: statusMap[req.status || 'pending'] as RequestCardPropsData['status'],
       paymentStatus: paymentStatusMap[req.payment_status || 'unpaid'] as RequestCardPropsData['paymentStatus'],
-      onDelete: handleDeleteRequest,
-      onConfirmPayment: handleConfirmPayment,
+      onDelete: handleDeleteRequest, // Pass the delete handler
+      onConfirmPayment: handleConfirmPayment, // Pass the confirm payment handler
     }));
   };
 
   const myRequests = useMemo(() => requests.filter(req => req.client_id === CLIENT_ID), [requests, CLIENT_ID]);
 
   const pendingRequests = useMemo(() => mapRequestsToCardProps(myRequests.filter(req => req.status === 'pending' || req.status === 'payment_pending')), [myRequests]);
-  const acceptedServices = useMemo(() => mapRequestsToCardProps(myRequests.filter(req => req.status === 'accepted')), [myRequests]);
+  const acceptedServices = useMemo(() => mapRequestsToCardProps(myRequests.filter(req => req.status === 'accepted')), [myRequests]); // Assuming 'offered services' are accepted requests
   const completedRequests = useMemo(() => mapRequestsToCardProps(myRequests.filter(req => req.status === 'completed')), [myRequests]);
 
   if (loading) {
