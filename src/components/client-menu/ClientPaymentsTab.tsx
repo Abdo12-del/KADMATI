@@ -1,23 +1,17 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { TransactionData } from '@/types/app-types.ts';
+import { TransactionData, RequestData, ServiceData } from '@/types/app-types.ts'; // Import RequestData and ServiceData
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus } from 'lucide-react';
-
-// Placeholder data for transactions
-const transactions: TransactionData[] = [
-  { id: 't1', service: 'تصميم شعار احترافي', amount: 15000, date: '2023-11-01', status: 'Completed', method: 'بطاقة ائتمان' },
-  { id: 't2', service: 'تطوير موقع ويب شخصي', amount: 50000, date: '2023-10-25', status: 'Pending', method: 'تحويل بنكي' },
-  { id: 't3', service: 'كتابة محتوى تسويقي', amount: 10000, date: '2023-10-15', status: 'Cancelled', method: 'بطاقة ائتمان' },
-];
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 interface PaymentMethod {
   id: string;
@@ -28,21 +22,115 @@ interface PaymentMethod {
 const getStatusBadgeVariant = (status: string) => {
   switch (status) {
     case 'Completed':
+    case 'Paid':
       return 'default';
     case 'Pending':
+    case 'Pending Review':
+    case 'Payment Pending':
       return 'secondary';
     case 'Cancelled':
+    case 'Rejected':
       return 'destructive';
+    case 'Accepted':
+      return 'outline'; // Or another suitable variant
     default:
       return 'outline';
   }
 };
 
 export const ClientPaymentsTab = () => {
+  const { user } = useAuth();
+  const CLIENT_ID = user?.id;
+
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [isAddMethodDialogOpen, setIsAddMethodDialogOpen] = useState(false);
   const [newMethodType, setNewMethodType] = useState('');
   const [newMethodDetails, setNewMethodDetails] = useState('');
+
+  const [requests, setRequests] = useState<RequestData[]>([]);
+  const [services, setServices] = useState<ServiceData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  const fetchTransactionsData = useCallback(async () => {
+    if (!CLIENT_ID) {
+      setLoading(false);
+      setError('معرف العميل غير متاح. الرجاء تسجيل الدخول كطالب خدمة.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const [requestsResponse, servicesResponse] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/requests`),
+        fetch(`${API_BASE_URL}/api/services`),
+      ]);
+
+      if (!requestsResponse.ok) {
+        const errorData = await requestsResponse.json();
+        throw new Error(errorData.message || 'فشل جلب الطلبات.');
+      }
+      if (!servicesResponse.ok) {
+        const errorData = await servicesResponse.json();
+        throw new Error(errorData.message || 'فشل جلب الخدمات.');
+      }
+
+      const requestsResult: { data: RequestData[] } = await requestsResponse.json();
+      const servicesResult: { data: ServiceData[] } = await servicesResponse.json();
+
+      setRequests(requestsResult.data.filter(req => req.client_id === CLIENT_ID));
+      setServices(servicesResult.data);
+
+    } catch (err: any) {
+      setError(err.message);
+      toast.error(err.message || 'حدث خطأ أثناء جلب بيانات المعاملات.');
+    } finally {
+      setLoading(false);
+    }
+  }, [CLIENT_ID, API_BASE_URL]);
+
+  useEffect(() => {
+    fetchTransactionsData();
+  }, [fetchTransactionsData]);
+
+  const mappedTransactions: TransactionData[] = useMemo(() => {
+    const statusMap = {
+      'pending': 'Pending',
+      'accepted': 'Accepted',
+      'completed': 'Completed',
+      'cancelled': 'Cancelled',
+      'payment_pending': 'Payment Pending',
+    };
+    const paymentStatusMap = {
+      'unpaid': 'Unpaid',
+      'pending_review': 'Pending Review',
+      'paid': 'Paid',
+      'rejected': 'Rejected',
+    };
+
+    return requests.map(req => {
+      // Find the service associated with the request to get its price and title
+      // For now, assuming request title is service title and a dummy price if not found
+      const service = services.find(s => s.title === req.title); // This is a weak link, ideally requests would have service_id
+      const amount = service?.price || 0; // Use service price, or 0 if not found
+
+      return {
+        id: req.id?.toString() || '',
+        serviceTitle: req.title,
+        amount: amount,
+        date: req.created_at ? new Date(req.created_at).toLocaleDateString('ar-EG') : 'غير محدد',
+        status: statusMap[req.status || 'pending'] as TransactionData['status'],
+        paymentStatus: paymentStatusMap[req.payment_status || 'unpaid'] as TransactionData['paymentStatus'],
+        method: req.payment_reference ? 'مرجع دفع' : 'غير محدد', // Placeholder for method
+        paymentReference: req.payment_reference,
+        receiptUrl: req.receipt_url,
+      };
+    }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Sort by most recent
+  }, [requests, services]);
+
 
   const handleAddPaymentMethod = () => {
     if (!newMethodType || !newMethodDetails) {
@@ -63,6 +151,18 @@ export const ClientPaymentsTab = () => {
     setIsAddMethodDialogOpen(false);
   };
 
+  if (loading) {
+    return (
+      <p className="text-center py-10 text-brand-text-dark font-ibm-plex-arabic">جاري تحميل بيانات الدفع...</p>
+    );
+  }
+
+  if (error) {
+    return (
+      <p className="text-center py-10 text-brand-danger font-ibm-plex-arabic">خطأ: {error}</p>
+    );
+  }
+
   return (
     <>
       <Card className="bg-brand-card-bg rounded-2xl shadow-soft p-6 mb-6">
@@ -70,7 +170,7 @@ export const ClientPaymentsTab = () => {
           <CardTitle className="font-cairo text-brand-text-dark text-2xl">سجل المعاملات</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {transactions.length > 0 ? (
+          {mappedTransactions.length > 0 ? (
             <Table className="text-right">
               <TableCaption className="font-ibm-plex-arabic text-right">قائمة بجميع معاملاتك السابقة.</TableCaption>
               <TableHeader>
@@ -79,13 +179,14 @@ export const ClientPaymentsTab = () => {
                   <TableHead className="text-brand-text-dark font-semibold font-cairo text-right">المبلغ</TableHead>
                   <TableHead className="text-brand-text-dark font-semibold font-cairo text-right">التاريخ</TableHead>
                   <TableHead className="text-brand-text-dark font-semibold font-cairo text-right">الحالة</TableHead>
-                  <TableHead className="text-brand-text-dark font-semibold font-cairo text-right">طريقة الدفع</TableHead>
+                  <TableHead className="text-brand-text-dark font-semibold font-cairo text-right">حالة الدفع</TableHead>
+                  <TableHead className="text-brand-text-dark font-semibold font-cairo text-right">مرجع الدفع</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {transactions.map(transaction => (
+                {mappedTransactions.map(transaction => (
                   <TableRow key={transaction.id}>
-                    <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">{transaction.service}</TableCell>
+                    <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">{transaction.serviceTitle}</TableCell>
                     <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">{transaction.amount} د.ج</TableCell>
                     <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">{transaction.date}</TableCell>
                     <TableCell className="text-right">
@@ -93,7 +194,12 @@ export const ClientPaymentsTab = () => {
                         {transaction.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">{transaction.method}</TableCell>
+                    <TableCell className="text-right">
+                      <Badge variant={getStatusBadgeVariant(transaction.paymentStatus)} className="rounded-md font-ibm-plex-arabic">
+                        {transaction.paymentStatus}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">{transaction.paymentReference || 'لا يوجد'}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -82,19 +82,22 @@ export interface ReviewCardPropsData {
 }
 
 export interface TransactionData {
-  id: string;
-  service: string;
-  amount: number;
-  date: string;
-  status: 'Completed' | 'Pending' | 'Cancelled';
-  method: string;
+  id: string; // This will be the request ID
+  serviceTitle: string; // Title of the service requested
+  amount: number; // Price of the service
+  date: string; // Date of the request
+  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled' | 'Payment Pending'; // Request status
+  paymentStatus: 'Unpaid' | 'Pending Review' | 'Paid' | 'Rejected'; // Payment status
+  method?: string; // Payment method (if recorded)
+  paymentReference?: string; // Payment reference
+  receiptUrl?: string; // Receipt URL
 }
 
 export interface RequestCardPropsData {
   id: string;
   title: string;
   description: string;
-  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled' | 'Payment Pending'; // Added 'Payment Pending'
+  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled' | 'Payment Pending'; // Updated status
   paymentStatus?: 'Unpaid' | 'Pending Review' | 'Paid' | 'Rejected'; // New field
   onDelete?: (id: string) => void;
   onConfirmPayment?: (id: string, paymentReference: string, receiptUrl: string) => Promise<void>; // New prop
