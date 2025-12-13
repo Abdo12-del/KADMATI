@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Menu, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
-import { UserData } from '@/types/app-types'; // Import UserData
 
 // Import new modular tab components
 import { ClientProfileTab } from '@/components/client-menu/ClientProfileTab.tsx';
@@ -19,20 +18,13 @@ import { ClientSupportTab } from '@/components/client-menu/ClientSupportTab.tsx'
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const ClientGeneralMenuModal = () => {
-  const { user, logout, updateUser } = useAuth();
+  const { user, logout } = useAuth(); // Removed updateUserFavorites
 
-  const handleProfileUpdate = async (updatedFields: Partial<UserData>) => {
-    if (!user) {
-      toast.error('الرجاء تسجيل الدخول لتعديل الملف الشخصي.');
-      return;
-    }
-    try {
-      await updateUser(user.id, updatedFields);
-      // toast.success is handled in useAuth
-    } catch (error) {
-      // toast.error is handled in useAuth
-      console.error('Failed to save profile changes in ClientGeneralMenuModal:', error);
-    }
+  const handleProfileUpdate = (updatedFields: Partial<any>) => {
+    // This would typically involve an API call to update the user profile
+    console.log('Updating profile with:', updatedFields);
+    // For now, just a toast and console log
+    toast.success('تم تحديث الملف الشخصي بنجاح (وظيفة وهمية)!');
   };
 
   return (

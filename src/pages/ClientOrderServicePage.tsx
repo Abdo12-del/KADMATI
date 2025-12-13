@@ -3,30 +3,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useParams, useNavigate } from 'react-router-dom'; // Removed Link
+import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/use-auth';
-
-interface ServiceData {
-  id: number;
-  provider_id: number;
-  title: string;
-  description: string;
-  category: string;
-  price: number;
-  delivery_time?: number;
-  image_url?: string;
-  rating?: number;
-  reviews_count?: number;
-  location?: string;
-  service_level?: string;
-}
-
-interface UserData {
-  id: number;
-  name: string;
-}
+import { ServiceData, UserData } from '@/types/app-types'; // Import ServiceData and UserData
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -86,13 +67,13 @@ const ClientOrderServicePage = () => {
 
     const newRequest = {
       client_id: CLIENT_ID,
-      service_id: service.id, // Link the request to the service ID
       title: `طلب خدمة: ${service.title}`,
       description: `طلب العميل لخدمة: ${service.title} من مقدم الخدمة: ${provider?.name || 'غير معروف'}.`,
       category: service.category,
       location: service.location,
-      // due_date and additional_options can be added if the form allows input
-      status: 'pending', // Default status
+      status: 'accepted', // Automatically accepted when ordering a specific service
+      assigned_provider_id: service.provider_id, // Assign the service's provider
+      agreed_price: service.price, // Set the service's price as agreed price
     };
 
     try {
@@ -183,7 +164,7 @@ const ClientOrderServicePage = () => {
         </Button>
         <Button
           variant="outline"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate(-1)} // Go back to previous page
           className="w-full mt-4 border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg"
         >
           إلغاء

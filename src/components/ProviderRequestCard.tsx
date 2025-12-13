@@ -1,12 +1,15 @@
 "use client";
 
-// import React from 'react'; // Removed
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MapPin, CalendarDays, MessageSquare } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { MapPin, CalendarDays, MessageSquare, CheckCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
 interface ProviderRequestCardProps {
   request: {
@@ -17,14 +20,50 @@ interface ProviderRequestCardProps {
     dateAdded: string;
     dueDate?: string;
     additionalOptions?: string;
-    clientName: string; // For display in details
+    clientName: string;
+    clientId: number; // Added clientId
+    status: 'pending' | 'accepted' | 'completed' | 'cancelled' | 'payment_pending'; // Added status
   };
+  onAcceptRequest: (requestId: string, providerId: number, agreedPrice: number) => Promise<void>; // New prop
+  onRefreshRequests: () => void; // Callback to refresh requests list
 }
 
-const ProviderRequestCard = ({ request }: ProviderRequestCardProps) => {
+const ProviderRequestCard = ({ request, onAcceptRequest, onRefreshRequests }: ProviderRequestCardProps) => {
+  const { user } = useAuth();
+  const PROVIDER_ID = user?.id;
+
+  const [isAcceptDialogOpen, setIsAcceptDialogOpen] = useState(false);
+  const [agreedPrice, setAgreedPrice] = useState<number | ''>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleContactClient = () => {
     toast.info(`سيتم فتح نافذة محادثة مع ${request.clientName} (وظيفة وهمية)!`);
     console.log('Contact client clicked for request:', request.id);
+  };
+
+  const handleAcceptSubmit = async () => {
+    if (!PROVIDER_ID) {
+      toast.error('معرف مقدم الخدمة غير متاح. الرجاء تسجيل الدخول كمقدم خدمة.');
+      return;
+    }
+    if (agreedPrice === '' || Number(agreedPrice) <= 0) {
+      toast.error('الرجاء إدخال سعر متفق عليه صالح.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await onAcceptRequest(request.id, PROVIDER_ID, Number(agreedPrice));
+      toast.success('تم قبول الطلب بنجاح!');
+      setIsAcceptDialogOpen(false);
+      setAgreedPrice('');
+      onRefreshRequests(); // Refresh the list of requests
+    } catch (error: any) {
+      toast.error(error.message || 'فشل قبول الطلب.');
+      console.error('Error accepting request:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -87,9 +126,47 @@ const ProviderRequestCard = ({ request }: ProviderRequestCardProps) => {
               </div>
             </DialogContent>
           </Dialog>
-          <Button onClick={handleContactClient} className="bg-brand-primary hover:bg-brand-primary-dark text-white px-3 py-2 rounded-lg shadow-soft font-ibm-plex-arabic text-sm">
-            الاتصال بالطالب
-          </Button>
+          {request.status === 'pending' && (
+            <Dialog open={isAcceptDialogOpen} onOpenChange={setIsAcceptDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-brand-success hover:bg-brand-success/90 text-white px-3 py-2 rounded-lg shadow-soft font-ibm-plex-arabic text-sm">
+                  <CheckCircle className="ml-2 h-4 w-4" />
+                  قبول الطلب
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px] rounded-2xl shadow-soft bg-brand-card-bg p-6 text-right">
+                <DialogHeader className="pb-4">
+                  <DialogTitle className="text-3xl font-cairo text-brand-text-dark text-center">قبول الطلب</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <p className="text-brand-text-dark font-ibm-plex-arabic">
+                    هل أنت متأكد أنك تريد قبول طلب "{request.title}" من {request.clientName}؟
+                  </p>
+                  <div className="grid gap-2">
+                    <Label htmlFor="agreed-price" className="text-brand-text-dark font-ibm-plex-arabic">السعر المتفق عليه (د.ج)</Label>
+                    <Input
+                      id="agreed-price"
+                      type="number"
+                      placeholder="ادخل السعر المتفق عليه"
+                      required
+                      min="0"
+                      value={agreedPrice}
+                      onChange={(e) => setAgreedPrice(Number(e.target.value))}
+                      className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
+                    />
+                  </div>
+                </div>
+                <DialogFooter className="flex flex-row-reverse justify-start gap-3">
+                  <Button type="submit" onClick={handleAcceptSubmit} disabled={isSubmitting} className="bg-brand-primary hover:bg-brand-primary-dark text-white rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
+                    {isSubmitting ? 'جاري القبول...' : 'تأكيد القبول'}
+                  </Button>
+                  <Button variant="outline" onClick={() => setIsAcceptDialogOpen(false)} disabled={isSubmitting} className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic py-3 text-lg">
+                    إلغاء
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </CardContent>
     </Card>

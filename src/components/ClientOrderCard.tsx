@@ -7,7 +7,7 @@ interface ClientOrderCardProps {
     id: string;
     serviceTitle: string;
     providerName: string;
-    status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled';
+    status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled' | 'Payment Pending'; // Updated status
     date: string;
     price: number;
   };
@@ -24,6 +24,8 @@ const ClientOrderCard = ({ order }: ClientOrderCardProps) => {
         return 'text-brand-success';
       case 'Cancelled':
         return 'text-brand-danger';
+      case 'Payment Pending':
+        return 'text-brand-info'; // New color for payment pending
       default:
         return 'text-brand-text-muted';
     }

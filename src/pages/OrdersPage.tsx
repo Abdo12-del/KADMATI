@@ -1,48 +1,26 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-// import DashboardLayout from '@/components/DashboardLayout'; // Removed
 import OrderCard from '@/components/OrderCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { useAuth } from '@/hooks/use-auth'; // Import useAuth
-
-interface RequestData {
-  id: number;
-  client_id: number;
-  title: string;
-  description: string;
-  category?: string;
-  location?: string;
-  due_date?: string;
-  additional_options?: string;
-  status?: 'pending' | 'accepted' | 'completed' | 'cancelled';
-  created_at?: string;
-  updated_at?: string;
-}
-
-interface UserData {
-  id: number;
-  name: string;
-  email: string;
-  role: 'seeker' | 'provider';
-  avatar_url?: string;
-}
+import { useAuth } from '@/hooks/use-auth';
+import { RequestData, UserData } from '@/types/app-types'; // Import RequestData and UserData
 
 interface OrderCardPropsData {
   id: string;
   serviceTitle: string;
   customerName: string;
-  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled';
+  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled' | 'Payment Pending'; // Updated status
   date: string;
-  price: number; // Placeholder as backend request model doesn't have price
+  price: number;
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const OrdersPage = () => {
-  const { user } = useAuth(); // Get current user from auth context
-  const PROVIDER_ID = user?.id; // Use actual provider ID
+  const { user } = useAuth();
+  const PROVIDER_ID = user?.id;
 
   const [requests, setRequests] = useState<RequestData[]>([]);
   const [users, setUsers] = useState<UserData[]>([]);
@@ -73,13 +51,12 @@ const OrdersPage = () => {
         throw new Error(errorData.message || 'فشل جلب المستخدمين.');
       }
 
-      const requestsResult = await requestsResponse.json();
-      const usersResult = await usersResponse.json();
+      const requestsResult: { data: RequestData[] } = await requestsResponse.json();
+      const usersResult: { data: UserData[] } = await usersResponse.json();
 
-      // Filter requests that are relevant to this provider (e.g., requests for their services)
-      // For now, we'll assume all requests are visible to the provider for simplicity,
-      // but in a real app, this would involve checking service_id or provider_id on the request.
-      setRequests(requestsResult.data);
+      // Filter requests that are assigned to the current provider
+      const providerAssignedRequests = requestsResult.data.filter(req => req.assigned_provider_id === PROVIDER_ID);
+      setRequests(providerAssignedRequests);
       setUsers(usersResult.data);
     } catch (err: any) {
       setError(err.message);
@@ -101,6 +78,7 @@ const OrdersPage = () => {
         'accepted': 'Accepted',
         'completed': 'Completed',
         'cancelled': 'Cancelled',
+        'payment_pending': 'Payment Pending',
       };
       return {
         id: req.id.toString(),
@@ -108,12 +86,12 @@ const OrdersPage = () => {
         customerName: customer?.name || 'عميل غير معروف',
         status: statusMap[req.status || 'pending'] as OrderCardPropsData['status'],
         date: req.created_at ? new Date(req.created_at).toLocaleDateString('ar-EG') : 'غير محدد',
-        price: 150, // Placeholder: Backend request model does not have a price field
+        price: req.agreed_price || 0, // Use agreed_price
       };
     });
   };
 
-  const pendingOrders = useMemo(() => mapRequestsToOrderCards(requests.filter(req => req.status === 'pending')), [requests, users]);
+  const pendingOrders = useMemo(() => mapRequestsToOrderCards(requests.filter(req => req.status === 'pending' || req.status === 'payment_pending')), [requests, users]);
   const acceptedOrders = useMemo(() => mapRequestsToOrderCards(requests.filter(req => req.status === 'accepted')), [requests, users]);
   const completedOrders = useMemo(() => mapRequestsToOrderCards(requests.filter(req => req.status === 'completed')), [requests, users]);
   const cancelledOrders = useMemo(() => mapRequestsToOrderCards(requests.filter(req => req.status === 'cancelled')), [requests, users]);

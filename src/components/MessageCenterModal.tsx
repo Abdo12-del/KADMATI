@@ -1,6 +1,5 @@
 "use client";
 
-// import React, { useState, useEffect, useCallback, useMemo } from 'react'; // Removed
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -208,7 +207,7 @@ export const MessageCenterModal = ({ currentUserId = 'provider', isPage = false 
   };
 
   const content = (
-    <div className={cn("flex flex-grow overflow-hidden rtl:flex-row-reverse", isPage ? "h-[calc(100vh-200px)]" : "")}>
+    <div className={cn("flex flex-grow overflow-hidden rtl:flex-row-reverse", isPage ? "h-full" : "")}> {/* Adjusted height for isPage */}
       {/* Conversation List Sidebar */}
       <div className={cn(
         "w-full lg:w-1/3 border-l border-border p-4 flex flex-col flex-shrink-0 rtl:border-r rtl:border-l-0",
@@ -302,9 +301,7 @@ export const MessageCenterModal = ({ currentUserId = 'provider', isPage = false 
   if (isPage) {
     return (
       <div className="bg-brand-card-bg rounded-2xl shadow-soft p-6 h-full flex flex-col">
-        <div className="flex flex-row-reverse items-center justify-between border-b border-border pb-4 flex-shrink-0">
-          <DialogTitle className="text-3xl font-cairo text-brand-text-dark">مركز الرسائل</DialogTitle>
-        </div>
+        {/* The h1 is now handled by the parent MessageCenterPage */}
         {loading ? (
           <div className="flex items-center justify-center h-full text-brand-text-dark font-ibm-plex-arabic">جاري تحميل الرسائل...</div>
         ) : error ? (
