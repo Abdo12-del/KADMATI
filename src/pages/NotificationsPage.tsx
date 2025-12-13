@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react'; // Removed useMemo
 // import ClientHomeHeader from '@/components/ClientHomeHeader'; // Removed
 // import Footer from '@/components/Footer'; // Removed
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
