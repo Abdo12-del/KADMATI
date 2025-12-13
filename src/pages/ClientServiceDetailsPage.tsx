@@ -14,6 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth'; // Import useAuth
+import { SubmitRatingDialog } from '@/components/SubmitRatingDialog'; // Import SubmitRatingDialog
 
 interface ServiceData {
   id: number;
@@ -491,6 +492,13 @@ const ClientServiceDetailsPage = () => {
                   </DialogContent>
                 </Dialog>
               </div>
+              {isLoggedIn && user?.role === 'seeker' && service.id && service.title && (
+                <SubmitRatingDialog
+                  serviceId={service.id}
+                  serviceTitle={service.title}
+                  onRatingSubmitted={fetchServiceDetails} // Refresh reviews after submission
+                />
+              )}
             </CardContent>
           </Card>
         </div>
