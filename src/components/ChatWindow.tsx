@@ -41,6 +41,8 @@ const ChatWindow = ({ conversation, currentUserId, currentBackendUserId, onMessa
   };
 
   useEffect(() => {
+    // سجل محتوى الرسائل عند تحديث المحادثة
+    console.log("ChatWindow: Conversation prop updated. Messages:", conversation.messages);
     setCurrentMessages(conversation.messages); // تحديث الرسائل عند تغيير المحادثة
     scrollToBottom();
   }, [conversation]);
