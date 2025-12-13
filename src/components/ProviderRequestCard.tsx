@@ -28,8 +28,6 @@ interface ProviderRequestCardProps {
   onRefreshRequests: () => void; // Callback to refresh requests list
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
 const ProviderRequestCard = ({ request, onAcceptRequest, onRefreshRequests }: ProviderRequestCardProps) => {
   const { user } = useAuth();
   const PROVIDER_ID = user?.id;
