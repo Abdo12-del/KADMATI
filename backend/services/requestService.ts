@@ -4,7 +4,6 @@ let requests: Request[] = [
   {
     id: 1,
     client_id: 2, // Laila Seeker
-    service_id: 2, // Linked to 'تطوير موقع ويب شخصي'
     title: 'طلب تصميم موقع شخصي',
     description: 'أحتاج إلى تصميم موقع ويب شخصي لعرض أعمالي الفنية، مع معرض صور ونموذج اتصال.',
     category: 'development',
@@ -12,42 +11,39 @@ let requests: Request[] = [
     due_date: '2024-01-15',
     additional_options: 'تصميم متجاوب مع الجوالات.',
     status: 'pending',
-    payment_status: 'unpaid',
+    payment_status: 'unpaid', // Default for existing
     created_at: new Date('2023-11-01T10:00:00Z'),
     updated_at: new Date('2023-11-01T10:00:00Z'),
   },
   {
     id: 2,
     client_id: 2, // Laila Seeker
-    service_id: 3, // Linked to 'كتابة محتوى تسويقي'
     title: 'طلب كتابة مقال تسويقي',
     description: 'مقال تسويقي عن فوائد استخدام الطاقة المتجددة في المنازل، بطول 1000 كلمة.',
     category: 'writing',
     due_date: '2024-01-10',
     status: 'accepted',
-    payment_status: 'unpaid',
+    payment_status: 'unpaid', // Default for existing
     created_at: new Date('2023-11-05T14:30:00Z'),
     updated_at: new Date('2023-11-06T09:00:00Z'),
   },
   {
     id: 3,
     client_id: 2, // Laila Seeker
-    service_id: 1, // Linked to 'تصميم شعار احترافي'
     title: 'تصميم شعار لشركة ناشئة',
     description: 'شعار احترافي لشركة تقنية جديدة، أرغب في تصميم عصري وبسيط.',
     category: 'design',
     status: 'completed',
-    payment_status: 'paid',
+    payment_status: 'paid', // Default for existing
     created_at: new Date('2023-10-20T11:00:00Z'),
     updated_at: new Date('2023-10-25T16:00:00Z'),
   },
 ];
 
-// Ensure all existing requests have default payment_status and service_id if not present
+// Ensure all existing requests have default payment_status
 requests = requests.map(req => ({
   ...req,
   payment_status: req.payment_status || 'unpaid',
-  // service_id: req.service_id || undefined, // Keep existing service_id or undefined
 }));
 
 let nextRequestId = requests.length > 0 ? Math.max(...requests.map(r => r.id || 0)) + 1 : 1;

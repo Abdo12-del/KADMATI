@@ -2,7 +2,6 @@ export interface UserData {
   id: number;
   name: string;
   email: string;
-  password?: string; // Added for profile updates
   role: 'seeker' | 'provider';
   phone?: string;
   bio?: string;
@@ -30,29 +29,18 @@ export interface ServiceData {
 export interface RequestData {
   id: number;
   client_id: number;
-  service_id?: number; // New field: Optional ID of the service being requested/ordered
   title: string;
   description: string;
   category?: string;
   location?: string;
   due_date?: string;
   additional_options?: string;
-  status?: 'pending' | 'accepted' | 'completed' | 'cancelled' | 'payment_pending';
-  payment_status?: 'unpaid' | 'pending_review' | 'paid' | 'rejected';
-  payment_reference?: string;
-  receipt_url?: string;
+  status?: 'pending' | 'accepted' | 'completed' | 'cancelled' | 'payment_pending'; // Added 'payment_pending'
+  payment_status?: 'unpaid' | 'pending_review' | 'paid' | 'rejected'; // New field
+  payment_reference?: string; // New field
+  receipt_url?: string; // New field
   created_at?: string;
   updated_at?: string;
-}
-
-export interface MessageData { // Exported MessageData
-  id: number;
-  sender_id: number;
-  receiver_id: number;
-  conversation_id: string; // Unique ID for conversation pair
-  text: string;
-  read?: boolean;
-  created_at?: string;
 }
 
 export interface RatingData {
@@ -87,7 +75,7 @@ export interface ReviewCardPropsData {
   id: string;
   serviceTitle: string;
   providerName: string;
-  providerAvatarUrl?: string;
+  providerAvatarUrl?: string; // Added this field
   rating: number;
   comment?: string;
   date: string;
@@ -109,17 +97,8 @@ export interface RequestCardPropsData {
   id: string;
   title: string;
   description: string;
-  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled' | 'Payment Pending';
-  paymentStatus?: 'Unpaid' | 'Pending Review' | 'Paid' | 'Rejected';
+  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled' | 'Payment Pending'; // Updated status
+  paymentStatus?: 'Unpaid' | 'Pending Review' | 'Paid' | 'Rejected'; // New field
   onDelete?: (id: string) => void;
-  onConfirmPayment?: (id: string, paymentReference: string, receiptUrl: string) => Promise<void>;
-}
-
-export interface ClientOrderCardPropsData { // Exported ClientOrderCardPropsData
-  id: string;
-  serviceTitle: string;
-  providerName: string;
-  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled';
-  date: string;
-  price: number;
+  onConfirmPayment?: (id: string, paymentReference: string, receiptUrl: string) => Promise<void>; // New prop
 }

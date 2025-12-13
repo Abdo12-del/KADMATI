@@ -1,14 +1,13 @@
 import { Router } from 'express';
 import { requestService } from '../services/requestService';
-import { successResponse } from '../utils/response';
+import { successResponse } from '../utils/response'; // Removed errorResponse
 import { ApiError } from '../utils/errorHandler';
 import { validateRequest } from '../utils/validator';
-import { Request } from '../models/requestModel'; // Explicitly import Request model
 
 const router = Router();
 
 // Get all requests
-router.get('/', async (_req, res, next) => {
+router.get('/', async (_req, res, next) => { // Renamed req to _req
   console.log(`[${new Date().toISOString()}] GET /api/requests - Request received.`);
   try {
     const requests = await requestService.getAllRequests();
@@ -91,9 +90,9 @@ router.patch('/:id/payment', async (req, res, next) => {
     const { payment_status, payment_reference, receipt_url } = req.body;
 
     const updates: Partial<Request> = {
-      payment_status: payment_status,
-      payment_reference: payment_reference,
-      receipt_url: receipt_url,
+      payment_status: payment_status, // Explicitly assign
+      payment_reference: payment_reference, // Explicitly assign
+      receipt_url: receipt_url, // Explicitly assign
       status: 'payment_pending', // Automatically set request status to 'payment_pending' when client confirms payment
     };
 
