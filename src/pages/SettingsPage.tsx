@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from 'react';
-// import DashboardLayout from '@/components/DashboardLayout'; // Removed
+// import { useState } from 'react'; // Removed
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';

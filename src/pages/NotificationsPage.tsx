@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react'; // Removed useMemo
 // import ClientHomeHeader from '@/components/ClientHomeHeader'; // Removed
 // import Footer from '@/components/Footer'; // Removed
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -132,191 +132,207 @@ const NotificationsPage = () => {
               title: `طلب خدمة جديد: ${req.title}`,
               description: `من العميل: ${client?.name || 'عميل غير معروف'}`,
               time: new Date(req.created_at || '').toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
-              read: false,
-              link: '/dashboard/orders',
-            });
-          }
-        } else if (CURRENT_USER_ROLE === 'seeker') {
-          // As a seeker, get notified about status updates on their requests
-          if (req.client_id === CURRENT_USER_ID && req.status !== 'pending') { // Assuming 'pending' is initial, other statuses are updates
-            const statusText = req.status === 'accepted' ? 'تم قبول' : req.status === 'completed' ? 'تم إكمال' : 'تم إلغاء';
-            newNotifications.push({
-              id: `req-${req.id}`,
-              type: 'order',
-              title: `${statusText} طلبك: ${req.title}`,
-              description: `حالة الطلب: ${req.status}`,
-              time: new Date(req.updated_at || '').toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
-              read: false,
-              link: '/client-requests', // Link to client's requests page
-            });
-          }
-        }
-      });
-
-      // Process Ratings
-      ratingsData.forEach(rating => {
-        const client = usersData.find(u => u.id === rating.client_id);
-        const service = servicesData.find(s => s.id === rating.service_id);
-
-        if (CURRENT_USER_ROLE === 'provider' && service?.provider_id === CURRENT_USER_ID) {
-          // Provider gets notified of new ratings for their services
-          newNotifications.push({
-            id: `rating-${rating.id}`,
-            type: 'rating',
-            title: `تقييم جديد (${rating.rating} نجوم)`,
-            description: `من ${client?.name || 'عميل غير معروف'} على خدمة: ${service?.title || 'غير معروفة'}.`,
-            time: new Date(rating.created_at || '').toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
             read: false,
-            link: '/dashboard/ratings',
+            link: '/dashboard/orders',
           });
-        } else if (CURRENT_USER_ROLE === 'seeker' && rating.client_id === CURRENT_USER_ID) {
-          // Seeker might get a confirmation of their rating (less common as a notification)
-          // Or a notification if a provider responds to their review (not implemented yet)
-          // For now, we'll skip seeker-side rating notifications to avoid redundancy.
         }
+      } else if (CURRENT_USER_ROLE === 'seeker') {
+        // As a seeker, get notified about status updates on their requests
+        if (req.client_id === CURRENT_USER_ID && req.status !== 'pending') { // Assuming 'pending' is initial, other statuses are updates
+          const statusText = req.status === 'accepted' ? 'تم قبول' : req.status === 'completed' ? 'تم إكمال' : 'تم إلغاء';
+          newNotifications.push({
+            id: `req-${req.id}`,
+            type: 'order',
+            title: `${statusText} طلبك: ${req.title}`,
+            description: `حالة الطلب: ${req.status}`,
+            time: new Date(req.updated_at || '').toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+            read: false,
+            link: '/client-requests', // Link to client's requests page
+          });
+        }
+      }
+    });
+
+    // Process Ratings
+    ratingsData.forEach(rating => {
+      const client = usersData.find(u => u.id === rating.client_id);
+      const service = servicesData.find(s => s.id === rating.service_id);
+
+      if (CURRENT_USER_ROLE === 'provider' && service?.provider_id === CURRENT_USER_ID) {
+        // Provider gets notified of new ratings for their services
+        newNotifications.push({
+          id: `rating-${rating.id}`,
+          type: 'rating',
+          title: `تقييم جديد (${rating.rating} نجوم)`,
+          description: `من ${client?.name || 'عميل غير معروف'} على خدمة: ${service?.title || 'غير معروفة'}.`,
+          time: new Date(rating.created_at || '').toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+          read: false,
+          link: '/dashboard/ratings',
+        });
+      } else if (CURRENT_USER_ROLE === 'seeker' && rating.client_id === CURRENT_USER_ID) {
+        // Seeker might get a confirmation of their rating (less common as a notification)
+        // Or a notification if a provider responds to their review (not implemented yet)
+        // For now, we'll skip seeker-side rating notifications to avoid redundancy.
+      }
+    });
+
+    // Sort notifications by time (most recent first)
+    newNotifications.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+
+    setNotifications(newNotifications);
+
+  } catch (err: any) {
+    setError(err.message);
+    toast.error(err.message || 'حدث خطأ أثناء جلب الإشعارات.');
+  } finally {
+    setLoading(false);
+  }
+}, [CURRENT_USER_ID, CURRENT_USER_ROLE]);
+
+useEffect(() => {
+  fetchNotifications();
+}, [fetchNotifications]);
+
+const handleMarkAsRead = async (id: string) => {
+  const [type, backendId] = id.split('-');
+  try {
+    if (type === 'msg') {
+      const response = await fetch(`${API_BASE_URL}/api/messages/${backendId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ read: true }),
       });
-
-      // Sort notifications by time (most recent first)
-      newNotifications.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
-
-      setNotifications(newNotifications);
-
-    } catch (err: any) {
-      setError(err.message);
-      toast.error(err.message || 'حدث خطأ أثناء جلب الإشعارات.');
-    } finally {
-      setLoading(false);
-    }
-  }, [CURRENT_USER_ID, CURRENT_USER_ROLE]);
-
-  useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
-
-  const handleMarkAsRead = async (id: string) => {
-    const [type, backendId] = id.split('-');
-    try {
-      if (type === 'msg') {
-        const response = await fetch(`${API_BASE_URL}/api/messages/${backendId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ read: true }),
-        });
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'فشل تحديث الرسالة.');
-        }
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'فشل تحديث الرسالة.');
       }
-      // For requests/ratings, you'd need a 'read' status in their models/APIs
-      // For now, we'll just update frontend state for other types
-      setNotifications(prev =>
-        prev.map(notif => (notif.id === id ? { ...notif, read: true } : notif))
-      );
-      toast.success('تم تمييز الإشعار كمقروء.');
+    }
+    // For requests/ratings, you'd need a 'read' status in their models/APIs
+    // For now, we'll just update frontend state for other types
+    setNotifications(prev =>
+      prev.map(notif => (notif.id === id ? { ...notif, read: true } : notif))
+    );
+    toast.success('تم تمييز الإشعار كمقروء.');
+    fetchNotifications(); // Re-fetch to ensure consistency
+  } catch (err: any) {
+    toast.error('فشل تمييز الإشعار كمقروء: ' + err.message);
+  }
+};
+
+const handleDelete = async (id: string) => {
+  const [type, backendId] = id.split('-');
+  try {
+    let response;
+    if (type === 'msg') {
+      response = await fetch(`${API_BASE_URL}/api/messages/${backendId}`, {
+        method: 'DELETE',
+      });
+    } else if (type === 'req') {
+      response = await fetch(`${API_BASE_URL}/api/requests/${backendId}`, {
+        method: 'DELETE',
+      });
+    } else if (type === 'rating') {
+      response = await fetch(`${API_BASE_URL}/api/ratings/${backendId}`, {
+        method: 'DELETE',
+      });
+    } else {
+      // For 'system' or 'general' notifications, we might just remove them from frontend state
+      setNotifications(prev => prev.filter(notif => notif.id !== id));
+      toast.success('تم حذف الإشعار.');
+      return;
+    }
+
+    // Check for 204 No Content explicitly
+    if (response && response.status === 204) {
+      toast.success('تم حذف الإشعار.');
       fetchNotifications(); // Re-fetch to ensure consistency
-    } catch (err: any) {
-      toast.error('فشل تمييز الإشعار كمقروء: ' + err.message);
+    } else if (response && !response.ok) {
+      const errorData = await response.json(); // Only try to parse JSON if not 204 and not ok
+      throw new Error(errorData.message || 'فشل حذف الإشعار.');
+    } else if (response) {
+      // If it's ok but not 204, it might have a body, but we don't expect one for DELETE
+      toast.success('تم حذف الإشعار.');
+      fetchNotifications(); // Re-fetch to ensure consistency
     }
-  };
+  } catch (err: any) {
+    toast.error('فشل حذف الإشعار: ' + err.message);
+  }
+};
 
-  const handleDelete = async (id: string) => {
-    const [type, backendId] = id.split('-');
-    try {
-      let response;
-      if (type === 'msg') {
-        response = await fetch(`${API_BASE_URL}/api/messages/${backendId}`, {
-          method: 'DELETE',
-        });
-      } else if (type === 'req') {
-        response = await fetch(`${API_BASE_URL}/api/requests/${backendId}`, {
-          method: 'DELETE',
-        });
-      } else if (type === 'rating') {
-        response = await fetch(`${API_BASE_URL}/api/ratings/${backendId}`, {
-          method: 'DELETE',
-        });
-      } else {
-        // For 'system' or 'general' notifications, we might just remove them from frontend state
-        setNotifications(prev => prev.filter(notif => notif.id !== id));
-        toast.success('تم حذف الإشعار.');
-        return;
-      }
+const filterNotificationsByType = (type: 'all' | Notification['type']) => {
+  let filtered = notifications;
 
-      // Check for 204 No Content explicitly
-      if (response && response.status === 204) {
-        toast.success('تم حذف الإشعار.');
-        fetchNotifications(); // Re-fetch to ensure consistency
-      } else if (response && !response.ok) {
-        const errorData = await response.json(); // Only try to parse JSON if not 204 and not ok
-        throw new Error(errorData.message || 'فشل حذف الإشعار.');
-      } else if (response) {
-        // If it's ok but not 204, it might have a body, but we don't expect one for DELETE
-        toast.success('تم حذف الإشعار.');
-        fetchNotifications(); // Re-fetch to ensure consistency
-      }
-    } catch (err: any) {
-      toast.error('فشل حذف الإشعار: ' + err.message);
-    }
-  };
-
-  const filterNotificationsByType = (type: 'all' | Notification['type']) => {
-    let filtered = notifications;
-
-    if (type !== 'all') {
-      filtered = filtered.filter(notif => notif.type === type);
-    }
-
-    if (searchTerm) {
-      filtered = filtered.filter(notif =>
-        notif.title.toLowerCase().includes(searchTerm.toLowerCase()) || notif.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    return filtered;
-  };
-
-  if (loading) {
-    return (
-      <div className="text-center py-10 text-brand-text-dark font-ibm-plex-arabic">
-        جاري تحميل الإشعارات...
-      </div>
-    );
+  if (type !== 'all') {
+    filtered = filtered.filter(notif => notif.type === type);
   }
 
-  if (error) {
-    return (
-      <div className="text-center py-10 text-brand-danger font-ibm-plex-arabic">
-        خطأ: {error}
-      </div>
+  if (searchTerm) {
+    filtered = filtered.filter(notif =>
+      notif.title.toLowerCase().includes(searchTerm.toLowerCase()) || notif.description.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }
+  return filtered;
+};
 
+if (loading) {
   return (
-    <>
-      <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">الإشعارات</h1>
+    <div className="text-center py-10 text-brand-text-dark font-ibm-plex-arabic">
+      جاري تحميل الإشعارات...
+    </div>
+  );
+}
 
-      <div className="mb-8 relative max-w-lg">
-        <Input
-          placeholder="بحث في الإشعارات..."
-          className="w-full pr-10 rounded-xl shadow-soft bg-brand-card-bg border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-brand-text-muted" />
-      </div>
+if (error) {
+  return (
+    <div className="text-center py-10 text-brand-danger font-ibm-plex-arabic">
+      خطأ: {error}
+    </div>
+  );
+}
 
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 bg-brand-background rounded-xl shadow-soft p-2">
-          <TabsTrigger value="all" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">الكل</TabsTrigger>
-          <TabsTrigger value="order" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">الطلبات</TabsTrigger>
-          <TabsTrigger value="message" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">الرسائل</TabsTrigger>
-          <TabsTrigger value="rating" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">التقييمات</TabsTrigger>
-          <TabsTrigger value="system" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">النظام</TabsTrigger>
-        </TabsList>
+return (
+  <>
+    <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">الإشعارات</h1>
 
-        <TabsContent value="all" className="mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {filterNotificationsByType('all').length > 0 ? (
-              filterNotificationsByType('all').map(notif => (
+    <div className="mb-8 relative max-w-lg">
+      <Input
+        placeholder="بحث في الإشعارات..."
+        className="w-full pr-10 rounded-xl shadow-soft bg-brand-card-bg border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
+      <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-brand-text-muted" />
+    </div>
+
+    <Tabs defaultValue="all" className="w-full">
+      <TabsList className="grid w-full grid-cols-5 bg-brand-background rounded-xl shadow-soft p-2">
+        <TabsTrigger value="all" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">الكل</TabsTrigger>
+        <TabsTrigger value="order" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">الطلبات</TabsTrigger>
+        <TabsTrigger value="message" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">الرسائل</TabsTrigger>
+        <TabsTrigger value="rating" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">التقييمات</TabsTrigger>
+        <TabsTrigger value="system" className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg font-ibm-plex-arabic text-brand-text-dark data-[state=active]:shadow-soft-inset transition-all duration-200">النظام</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="all" className="mt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {filterNotificationsByType('all').length > 0 ? (
+            filterNotificationsByType('all').map(notif => (
+              <NotificationCard
+                key={notif.id}
+                notification={notif}
+                onMarkAsRead={handleMarkAsRead}
+                onDelete={handleDelete}
+              />
+            ))
+          ) : (
+            <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد إشعارات.</p>
+          )}
+        </div>
+      </TabsContent>
+      <TabsContent value="order" className="mt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {filterNotificationsByType('order').length > 0 ? (
+            filterNotificationsByType('order').map(notif => (
                 <NotificationCard
                   key={notif.id}
                   notification={notif}
@@ -325,77 +341,61 @@ const NotificationsPage = () => {
                 />
               ))
             ) : (
-              <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد إشعارات.</p>
+              <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد إشعارات طلبات.</p>
             )}
           </div>
         </TabsContent>
-        <TabsContent value="order" className="mt-6">
+        <TabsContent value="message" className="mt-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {filterNotificationsByType('order').length > 0 ? (
-              filterNotificationsByType('order').map(notif => (
-                  <NotificationCard
-                    key={notif.id}
-                    notification={notif}
-                    onMarkAsRead={handleMarkAsRead}
-                    onDelete={handleDelete}
-                  />
-                ))
-              ) : (
-                <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد إشعارات طلبات.</p>
-              )}
-            </div>
-          </TabsContent>
-          <TabsContent value="message" className="mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {filterNotificationsByType('message').length > 0 ? (
-                filterNotificationsByType('message').map(notif => (
-                  <NotificationCard
-                    key={notif.id}
-                    notification={notif}
-                    onMarkAsRead={handleMarkAsRead}
-                    onDelete={handleDelete}
-                  />
-                ))
-              ) : (
-                <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد إشعارات رسائل.</p>
-              )}
-            </div>
-          </TabsContent>
-          <TabsContent value="rating" className="mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {filterNotificationsByType('rating').length > 0 ? (
-                filterNotificationsByType('rating').map(notif => (
-                  <NotificationCard
-                    key={notif.id}
-                    notification={notif}
-                    onMarkAsRead={handleMarkAsRead}
-                    onDelete={handleDelete}
-                  />
-                ))
-              ) : (
-                <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد إشعارات تقييمات.</p>
-              )}
-            </div>
-          </TabsContent>
-          <TabsContent value="system" className="mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {filterNotificationsByType('system').length > 0 ? (
-                filterNotificationsByType('system').map(notif => (
-                  <NotificationCard
-                    key={notif.id}
-                    notification={notif}
-                    onMarkAsRead={handleMarkAsRead}
-                    onDelete={handleDelete}
-                  />
-                ))
-              ) : (
-                <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد إشعارات نظام.</p>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
-    </>
-  );
+            {filterNotificationsByType('message').length > 0 ? (
+              filterNotificationsByType('message').map(notif => (
+                <NotificationCard
+                  key={notif.id}
+                  notification={notif}
+                  onMarkAsRead={handleMarkAsRead}
+                  onDelete={handleDelete}
+                />
+              ))
+            ) : (
+              <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد إشعارات رسائل.</p>
+            )}
+          </div>
+        </TabsContent>
+        <TabsContent value="rating" className="mt-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {filterNotificationsByType('rating').length > 0 ? (
+              filterNotificationsByType('rating').map(notif => (
+                <NotificationCard
+                  key={notif.id}
+                  notification={notif}
+                  onMarkAsRead={handleMarkAsRead}
+                  onDelete={handleDelete}
+                />
+              ))
+            ) : (
+              <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد إشعارات تقييمات.</p>
+            )}
+          </div>
+        </TabsContent>
+        <TabsContent value="system" className="mt-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {filterNotificationsByType('system').length > 0 ? (
+              filterNotificationsByType('system').map(notif => (
+                <NotificationCard
+                  key={notif.id}
+                  notification={notif}
+                  onMarkAsRead={handleMarkAsRead}
+                  onDelete={handleDelete}
+                />
+              ))
+            ) : (
+              <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد إشعارات نظام.</p>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
+  </>
+);
 };
 
 export default NotificationsPage;
