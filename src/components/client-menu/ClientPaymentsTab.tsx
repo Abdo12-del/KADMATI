@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { TransactionData, RequestData, ServiceData } from '@/types/app-types.ts';
+import { TransactionData } from '@/types/app-types.ts';
 import { ConfirmPaymentDialog } from '@/components/ConfirmPaymentDialog'; // Import ConfirmPaymentDialog
 import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 
@@ -31,118 +31,80 @@ const getStatusBadgeVariant = (status: string) => {
 
 export const ClientPaymentsTab = () => {
   const { user } = useAuth();
-  const CLIENT_ID = user?.id;
+  const CLIENT_ID = user?.id; // Still useful for conditional rendering if needed, but not for fetching mock data
 
-  const [requests, setRequests] = useState<RequestData[]>([]);
-  const [services, setServices] = useState<ServiceData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Mock data for transactions
+  const [transactions, setTransactions] = useState<TransactionData[]>([
+    {
+      id: 'req-1',
+      serviceTitle: 'تصميم شعار احترافي',
+      amount: 15000,
+      date: '2023-11-01',
+      status: 'Pending',
+      paymentStatus: 'Unpaid',
+      method: 'تحويل بنكي',
+      paymentReference: undefined,
+      receiptUrl: undefined,
+    },
+    {
+      id: 'req-2',
+      serviceTitle: 'تطوير موقع ويب شخصي',
+      amount: 50000,
+      date: '2023-10-25',
+      status: 'Payment Pending',
+      paymentStatus: 'Pending Review',
+      method: 'مرجع دفع',
+      paymentReference: 'REF123456',
+      receiptUrl: 'https://example.com/receipts/receipt-123.pdf',
+    },
+    {
+      id: 'req-3',
+      serviceTitle: 'كتابة محتوى تسويقي',
+      amount: 10000,
+      date: '2023-10-15',
+      status: 'Completed',
+      paymentStatus: 'Paid',
+      method: 'بطاقة ائتمان',
+      paymentReference: 'CARD7890',
+      receiptUrl: 'https://example.com/receipts/receipt-456.jpg',
+    },
+    {
+      id: 'req-4',
+      serviceTitle: 'صيانة منزلية',
+      amount: 7500,
+      date: '2023-09-30',
+      status: 'Cancelled',
+      paymentStatus: 'Rejected',
+      method: 'نقداً',
+      paymentReference: undefined,
+      receiptUrl: undefined,
+    },
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())); // Sort by most recent
 
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
-  const fetchTransactionsData = useCallback(async () => {
-    if (!CLIENT_ID) {
-      setLoading(false);
-      setError('معرف العميل غير متاح. الرجاء تسجيل الدخول كطالب خدمة.');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    try {
-      const [requestsResponse, servicesResponse] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/requests`),
-        fetch(`${API_BASE_URL}/api/services`),
-      ]);
-
-      if (!requestsResponse.ok) {
-        const errorData = await requestsResponse.json();
-        throw new Error(errorData.message || 'فشل جلب الطلبات.');
-      }
-      if (!servicesResponse.ok) {
-        const errorData = await servicesResponse.json();
-        throw new Error(errorData.message || 'فشل جلب الخدمات.');
-      }
-
-      const requestsResult: { data: RequestData[] } = await requestsResponse.json();
-      const servicesResult: { data: ServiceData[] } = await servicesResponse.json();
-
-      setRequests(requestsResult.data.filter(req => req.client_id === CLIENT_ID));
-      setServices(servicesResult.data);
-
-    } catch (err: any) {
-      setError(err.message);
-      toast.error(err.message || 'حدث خطأ أثناء جلب بيانات المعاملات.');
-    } finally {
-      setLoading(false);
-    }
-  }, [CLIENT_ID, API_BASE_URL]);
-
-  useEffect(() => {
-    fetchTransactionsData();
-  }, [fetchTransactionsData]);
-
+  // Mock handleConfirmPayment function
   const handleConfirmPayment = async (requestId: string, paymentReference: string, receiptUrl: string) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/requests/${requestId}/payment`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          payment_status: 'pending_review',
-          payment_reference: paymentReference,
-          receipt_url: receiptUrl,
-        }),
-      });
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'فشل تأكيد الدفع.');
-      }
-
-      toast.success('تم تأكيد الدفع بنجاح! سيتم مراجعة الوصل من قبل مقدم الخدمة.');
-      fetchTransactionsData(); // Re-fetch requests to update the list
-    } catch (error: any) {
-      toast.error(error.message || 'حدث خطأ أثناء تأكيد الدفع.');
-      console.error('Error confirming payment:', error);
-      throw error; // Re-throw to allow dialog to handle error state
-    }
+    setTransactions(prevTransactions =>
+      prevTransactions.map(transaction =>
+        transaction.id === requestId
+          ? {
+              ...transaction,
+              status: 'Payment Pending',
+              paymentStatus: 'Pending Review',
+              paymentReference: paymentReference,
+              receiptUrl: receiptUrl,
+            }
+          : transaction
+      )
+    );
+    toast.success('تم تأكيد الدفع بنجاح! سيتم مراجعة الوصل من قبل مقدم الخدمة (محاكاة).');
   };
 
-  const mappedTransactions: TransactionData[] = useMemo(() => {
-    const statusMap = {
-      'pending': 'Pending',
-      'accepted': 'Accepted',
-      'completed': 'Completed',
-      'cancelled': 'Cancelled',
-      'payment_pending': 'Payment Pending',
-    };
-    const paymentStatusMap = {
-      'unpaid': 'Unpaid',
-      'pending_review': 'Pending Review',
-      'paid': 'Paid',
-      'rejected': 'Rejected',
-    };
-
-    return requests.map(req => {
-      const service = services.find(s => s.title === req.title);
-      const amount = service?.price || 0;
-
-      return {
-        id: req.id?.toString() || '',
-        serviceTitle: req.title,
-        amount: amount,
-        date: req.created_at ? new Date(req.created_at).toLocaleDateString('ar-EG') : 'غير محدد',
-        status: statusMap[req.status || 'pending'] as TransactionData['status'],
-        paymentStatus: paymentStatusMap[req.payment_status || 'unpaid'] as TransactionData['paymentStatus'],
-        method: req.payment_reference ? 'مرجع دفع' : 'غير محدد',
-        paymentReference: req.payment_reference,
-        receiptUrl: req.receipt_url,
-      };
-    }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [requests, services]);
-
+  // No loading or error states needed for mock data
+  const loading = false;
+  const error = null;
 
   if (loading) {
     return (
@@ -163,7 +125,7 @@ export const ClientPaymentsTab = () => {
           <CardTitle className="font-cairo text-brand-text-dark text-2xl">سجل المعاملات</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          {mappedTransactions.length > 0 ? (
+          {transactions.length > 0 ? (
             <Table className="text-right">
               <TableCaption className="font-ibm-plex-arabic text-right">قائمة بجميع معاملاتك السابقة.</TableCaption>
               <TableHeader>
@@ -174,11 +136,11 @@ export const ClientPaymentsTab = () => {
                   <TableHead className="text-brand-text-dark font-semibold font-cairo text-right">الحالة</TableHead>
                   <TableHead className="text-brand-text-dark font-semibold font-cairo text-right">حالة الدفع</TableHead>
                   <TableHead className="text-brand-text-dark font-semibold font-cairo text-right">مرجع الدفع</TableHead>
-                  <TableHead className="text-brand-text-dark font-semibold font-cairo text-right">الإجراء</TableHead> {/* New column for action button */}
+                  <TableHead className="text-brand-text-dark font-semibold font-cairo text-right">الإجراء</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mappedTransactions.map(transaction => (
+                {transactions.map(transaction => (
                   <TableRow key={transaction.id}>
                     <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">{transaction.serviceTitle}</TableCell>
                     <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">{transaction.amount} د.ج</TableCell>
