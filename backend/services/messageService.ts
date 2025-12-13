@@ -1,8 +1,8 @@
 import { Message } from '../models/messageModel';
 
-let messages: Message[] = []; // تم إفراغ قائمة الرسائل بالكامل
+let messages: Message[] = []; // تم إفراغ قائمة الرسائل
 
-let nextMessageId = 1; // إعادة تعيين المعرف ليبدأ من 1
+let nextMessageId = messages.length > 0 ? Math.max(...messages.map(m => m.id || 0)) + 1 : 1;
 
 export const messageService = {
   async getAllMessages(): Promise<Message[]> {
