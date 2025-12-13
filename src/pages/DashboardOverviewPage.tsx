@@ -11,22 +11,6 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { RequestData, RatingData, MessageData, UserData, ServiceData } from '@/types/app-types'; // Import all necessary types
 
-const performanceData = [
-  { name: 'يناير', sales: 4000, orders: 2400 },
-  { name: 'فبراير', sales: 3000, orders: 1398 },
-  { name: 'مارس', sales: 2000, orders: 9800 },
-  { name: 'أبريل', sales: 2780, orders: 3908 },
-  { name: 'مايو', sales: 1890, orders: 4800 },
-  { name: 'يونيو', sales: 2390, orders: 3800 },
-];
-
-const ordersBreakdownData = [
-  { name: 'معلقة', value: 15, color: 'var(--brand-warning)' },
-  { name: 'مقبولة', value: 30, color: 'var(--brand-primary)' },
-  { name: 'مكتملة', value: 55, color: 'var(--brand-success)' },
-  { name: 'ملغاة', value: 10, color: 'var(--brand-danger)' },
-];
-
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const DashboardOverviewPage = () => {
@@ -37,7 +21,7 @@ const DashboardOverviewPage = () => {
   const [ratings, setRatings] = useState<RatingData[]>([]);
   const [messages, setMessages] = useState<MessageData[]>([]);
   const [allUsers, setAllUsers] = useState<UserData[]>([]);
-  const [services, setServices] = useState<ServiceData[]>([]); // Fetch services to link ratings
+  // Removed services state as it's only used for filtering and can be done directly
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -82,7 +66,7 @@ const DashboardOverviewPage = () => {
       
       setMessages(messagesResult.data);
       setAllUsers(usersResult.data);
-      setServices(servicesResult.data); // Store all services for linking
+      // setServices(servicesResult.data); // Removed from state
     } catch (err: any) {
       setError(err.message);
       toast.error(err.message || 'حدث خطأ أثناء جلب بيانات لوحة التحكم.');
@@ -98,7 +82,7 @@ const DashboardOverviewPage = () => {
   // --- Analytics Calculations ---
   const totalOrders = requests.length;
   const activeOrders = requests.filter(req => req.status === 'pending' || req.status === 'accepted' || req.status === 'payment_pending').length;
-  const completedOrders = requests.filter(req => req.status === 'completed').length;
+  // Removed completedOrders as it was unused
 
   const averageRating = useMemo(() => {
     if (ratings.length === 0) return '0.0';

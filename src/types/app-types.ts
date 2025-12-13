@@ -54,6 +54,17 @@ export interface RatingData {
   created_at?: string;
 }
 
+// New interface for Message data
+export interface MessageData {
+  id: number;
+  sender_id: number;
+  receiver_id: number;
+  conversation_id: string; // Unique ID for conversation pair
+  text: string;
+  read?: boolean;
+  created_at?: string;
+}
+
 export interface ProviderCardPropsData {
   id: string;
   name: string;
@@ -103,4 +114,24 @@ export interface RequestCardPropsData {
   paymentStatus?: 'Unpaid' | 'Pending Review' | 'Paid' | 'Rejected';
   onDelete?: (id: string) => void;
   onConfirmPayment?: (id: string, paymentReference: string, receiptUrl: string) => Promise<void>;
+}
+
+// Updated ClientOrderCardPropsData to include 'Payment Pending'
+export interface ClientOrderCardPropsData {
+  id: string;
+  serviceTitle: string;
+  providerName: string;
+  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled' | 'Payment Pending';
+  date: string;
+  price: number;
+}
+
+// Updated OrderCardPropsData to include 'Payment Pending'
+export interface OrderCardPropsData {
+  id: string;
+  serviceTitle: string;
+  customerName: string;
+  status: 'Pending' | 'Accepted' | 'Completed' | 'Cancelled' | 'Payment Pending';
+  date: string;
+  price: number;
 }
