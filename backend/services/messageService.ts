@@ -1,6 +1,6 @@
 import { Message } from '../models/messageModel';
 
-let messages: Message[] = []; // Changed to an empty array
+let messages: Message[] = []; // هذه هي القائمة الفارغة
 
 let nextMessageId = messages.length > 0 ? Math.max(...messages.map(m => m.id || 0)) + 1 : 1;
 

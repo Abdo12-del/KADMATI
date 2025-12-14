@@ -32,6 +32,7 @@ import ClientHomePage from "./pages/ClientHomePage";
 import ClientServiceDetailsPage from "./pages/ClientServiceDetailsPage";
 import ClientCreateRequestPage from "./pages/ClientCreateRequestPage";
 import ClientOrderServicePage from "./pages/ClientOrderServicePage";
+import ClientServicesListPage from "./pages/ClientServicesListPage"; // Import the new page
 
 // Other existing routes
 import MyRequestsPage from "./pages/MyRequestsPage";
@@ -63,6 +64,7 @@ const App = () => (
             {/* Client Home Protected Routes */}
             <Route element={<ProtectedRoute allowedRoles={['seeker']} layout="client-home" />}>
               <Route path="/client-home" element={<ClientHomePage />} />
+              <Route path="/client-home/services" element={<ClientServicesListPage />} /> {/* New route for category filtered services */}
               <Route path="/client-home/services/:id" element={<ClientServiceDetailsPage />} />
               <Route path="/client-home/create-request" element={<ClientCreateRequestPage />} />
               <Route path="/client-home/order-service/:id" element={<ClientOrderServicePage />} />
