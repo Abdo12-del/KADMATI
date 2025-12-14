@@ -6,7 +6,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import {
   Sparkles, Wrench, BookOpen, Palette, Truck, Scissors, LayoutList, Home, Car, Utensils, Monitor, HeartHandshake,
-  Zap, Droplet, Hammer, Fan, Leaf, Camera, PartyPopper, Scale // Changed Faucet to Droplet
+  Zap, Droplet, Hammer, Fan, Leaf, Camera, PartyPopper, Scale
 } from 'lucide-react';
 
 // دالة مساعدة للحصول على مكون أيقونة Lucide
@@ -39,7 +39,7 @@ const serviceCategories = [
   { id: 'cleaning', name: 'نظافة', icon: 'Sparkles' },
   { id: 'home_maintenance', name: 'صيانة منزلية', icon: 'Wrench' },
   { id: 'electricity', name: 'كهرباء', icon: 'Zap' },
-  { id: 'plumbing', name: 'سباكة', icon: 'Droplet' }, {/* Changed Faucet to Droplet */}
+  { id: 'plumbing', name: 'سباكة', icon: 'Droplet' }, // Changed Faucet to Droplet
   { id: 'carpentry', name: 'نجارة', icon: 'Hammer' },
   { id: 'ac_repair', name: 'تكييف', icon: 'Fan' },
   { id: 'gardening', name: 'حدائق', icon: 'Leaf' },
