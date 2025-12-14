@@ -1,6 +1,5 @@
 "use client";
 
-// import React, { useState, useEffect, useCallback, useMemo } from 'react'; // Removed
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, Package, MessageSquare, CreditCard, Settings, Info, Star } from 'lucide-react';
@@ -229,11 +228,15 @@ export const NotificationsDropdown = () => {
     const [type, backendId] = id.split('-');
     try {
       if (type === 'msg') {
-        await fetch(`${API_BASE_URL}/api/messages/${backendId}`, {
+        const response = await fetch(`${API_BASE_URL}/api/messages/${backendId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ read: true }),
         });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'فشل تحديث الرسالة.');
+        }
       }
       // For requests/ratings, you'd need a 'read' status in their models/APIs
       // For now, we'll just update frontend state for other types
