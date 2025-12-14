@@ -1,8 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react'; // Removed useMemo
-// import ClientHomeHeader from '@/components/ClientHomeHeader'; // Removed
-// import Footer from '@/components/Footer'; // Removed
+import { useState, useEffect, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NotificationCard } from '@/components/notifications/NotificationCard.tsx';
 import { Input } from '@/components/ui/input';

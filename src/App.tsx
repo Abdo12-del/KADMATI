@@ -70,7 +70,7 @@ const App = () => (
               <Route path="/client-home/order-service/:id" element={<ClientOrderServicePage />} />
               <Route path="/client-profile" element={<ProfilePage />} />
               <Route path="/client-settings" element={<SettingsPage />} />
-              <Route path="/client-notifications" element={<NotificationsPage />} />
+              <Route path="/client-notifications" element={<NotificationsPage />} /> {/* Unified client notifications route */}
               <Route path="/client-requests" element={<MyRequestsPage />} />
             </Route>
 
@@ -89,7 +89,7 @@ const App = () => (
               <Route path="/dashboard/settings" element={<SettingsPage />} />
               <Route path="/dashboard/support" element={<SupportCenterPage />} />
               <Route path="/provider-profile" element={<ProfilePage />} />
-              <Route path="/provider-notifications" element={<NotificationsPage />} />
+              <Route path="/dashboard/notifications" element={<NotificationsPage />} /> {/* Unified provider notifications route */}
             </Route>
 
             {/* Generic/Unprotected Routes that might use Auth Context for conditional rendering */}

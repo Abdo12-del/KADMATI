@@ -320,7 +320,7 @@ export const NotificationsDropdown = () => {
         </ScrollArea>
         <DropdownMenuSeparator className="bg-border" />
         <DropdownMenuItem asChild className="p-2">
-          <Link to="/notifications" className="w-full text-center text-brand-primary hover:text-brand-primary-dark font-ibm-plex-arabic rounded-lg block">
+          <Link to={CURRENT_USER_ROLE === 'provider' ? '/dashboard/notifications' : '/client-notifications'} className="w-full text-center text-brand-primary hover:text-brand-primary-dark font-ibm-plex-arabic rounded-lg block">
             عرض كل الإشعارات
           </Link>
         </DropdownMenuItem>
