@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
 import { Bell, Package, MessageSquare, CreditCard, Settings, Info, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -89,6 +89,7 @@ export const NotificationsDropdown = () => {
   const { user } = useAuth(); // Get current user from auth context
   const CURRENT_USER_ID = user?.id; // Use actual current user ID
   const CURRENT_USER_ROLE = user?.role; // Use actual current user role
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -243,8 +244,9 @@ export const NotificationsDropdown = () => {
       setNotifications(prev =>
         prev.map(notif => (notif.id === id ? { ...notif, read: true } : notif))
       );
-      toast.success('تم تمييز الإشعار كمقروء.');
-      fetchNotifications(); // Re-fetch to ensure consistency
+      // No toast.success here, as navigation will happen immediately after
+      // and the target page might show its own success/loading state.
+      // Also, no fetchNotifications() here to avoid re-render interruption.
     } catch (err: any) {
       toast.error('فشل تمييز الإشعار كمقروء: ' + err.message);
     }
@@ -296,22 +298,25 @@ export const NotificationsDropdown = () => {
             notifications.map((notification) => (
               <DropdownMenuItem
                 key={notification.id}
-                // onClick={() => handleMarkAsRead(notification.id)} // Mark as read on click
+                onSelect={() => { // Use onSelect for DropdownMenuItem
+                  handleMarkAsRead(notification.id); // Mark as read
+                  if (notification.link) {
+                    navigate(notification.link); // Navigate programmatically
+                  }
+                }}
                 className={cn(
                   "flex items-center space-x-3 rtl:space-x-reverse p-3 rounded-lg cursor-pointer hover:bg-brand-background transition-colors duration-200 text-right",
                   !notification.read && "font-semibold bg-brand-primary-light/10"
                 )}
               >
-                <Link to={notification.link || '#'} className="flex items-center space-x-3 rtl:space-x-reverse w-full" onClick={() => handleMarkAsRead(notification.id)}>
-                  <div className="flex-shrink-0">
-                    {getNotificationIcon(notification.type)}
-                  </div>
-                  <div className="flex-grow">
-                    <p className="text-sm text-brand-text-dark font-ibm-plex-arabic">{notification.title}</p>
-                    <p className="text-xs text-brand-text-muted font-ibm-plex-arabic line-clamp-1">{notification.description}</p>
-                    <p className="text-xs text-brand-text-muted font-ibm-plex-arabic mt-1">{notification.time}</p>
-                  </div>
-                </Link>
+                <div className="flex-shrink-0">
+                  {getNotificationIcon(notification.type)}
+                </div>
+                <div className="flex-grow">
+                  <p className="text-sm text-brand-text-dark font-ibm-plex-arabic">{notification.title}</p>
+                  <p className="text-xs text-brand-text-muted font-ibm-plex-arabic line-clamp-1">{notification.description}</p>
+                  <p className="text-xs text-brand-text-muted font-ibm-plex-arabic mt-1">{notification.time}</p>
+                </div>
               </DropdownMenuItem>
             ))
           ) : (

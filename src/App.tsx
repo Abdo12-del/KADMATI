@@ -72,6 +72,7 @@ const App = () => (
               <Route path="/client-settings" element={<SettingsPage />} />
               <Route path="/client-notifications" element={<NotificationsPage />} /> {/* Unified client notifications route */}
               <Route path="/client-requests" element={<MyRequestsPage />} />
+              <Route path="/client-messages" element={<MessageCenterPage />} /> {/* New route for client messages */}
             </Route>
 
             {/* Service Provider Dashboard Protected Routes */}

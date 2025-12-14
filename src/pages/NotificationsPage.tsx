@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth'; // Import useAuth
+import { Link } from 'react-router-dom'; // Import Link
 
 interface BackendMessage {
   id: number;
@@ -211,7 +212,7 @@ const handleMarkAsRead = async (id: string) => {
       prev.map(notif => (notif.id === id ? { ...notif, read: true } : notif))
     );
     toast.success('تم تمييز الإشعار كمقروء.');
-    fetchNotifications(); // Re-fetch to ensure consistency
+    // No fetchNotifications() here to avoid re-render interruption for navigation
   } catch (err: any) {
     toast.error('فشل تمييز الإشعار كمقروء: ' + err.message);
   }
@@ -315,12 +316,13 @@ return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filterNotificationsByType('all').length > 0 ? (
             filterNotificationsByType('all').map(notif => (
-              <NotificationCard
-                key={notif.id}
-                notification={notif}
-                onMarkAsRead={handleMarkAsRead}
-                onDelete={handleDelete}
-              />
+              <Link key={notif.id} to={notif.link || '#'} onClick={() => handleMarkAsRead(notif.id)} className="block">
+                <NotificationCard
+                  notification={notif}
+                  onMarkAsRead={handleMarkAsRead}
+                  onDelete={handleDelete}
+                />
+              </Link>
             ))
           ) : (
             <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد إشعارات.</p>
@@ -331,67 +333,71 @@ return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filterNotificationsByType('order').length > 0 ? (
             filterNotificationsByType('order').map(notif => (
+              <Link key={notif.id} to={notif.link || '#'} onClick={() => handleMarkAsRead(notif.id)} className="block">
                 <NotificationCard
-                  key={notif.id}
                   notification={notif}
                   onMarkAsRead={handleMarkAsRead}
                   onDelete={handleDelete}
                 />
-              ))
-            ) : (
-              <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد إشعارات طلبات.</p>
-            )}
-          </div>
-        </TabsContent>
-        <TabsContent value="message" className="mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {filterNotificationsByType('message').length > 0 ? (
-              filterNotificationsByType('message').map(notif => (
+              </Link>
+            ))
+          ) : (
+            <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد إشعارات طلبات.</p>
+          )}
+        </div>
+      </TabsContent>
+      <TabsContent value="message" className="mt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {filterNotificationsByType('message').length > 0 ? (
+            filterNotificationsByType('message').map(notif => (
+              <Link key={notif.id} to={notif.link || '#'} onClick={() => handleMarkAsRead(notif.id)} className="block">
                 <NotificationCard
-                  key={notif.id}
                   notification={notif}
                   onMarkAsRead={handleMarkAsRead}
                   onDelete={handleDelete}
                 />
-              ))
-            ) : (
-              <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد إشعارات رسائل.</p>
-            )}
-          </div>
-        </TabsContent>
-        <TabsContent value="rating" className="mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {filterNotificationsByType('rating').length > 0 ? (
-              filterNotificationsByType('rating').map(notif => (
+              </Link>
+            ))
+          ) : (
+            <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد إشعارات رسائل.</p>
+          )}
+        </div>
+      </TabsContent>
+      <TabsContent value="rating" className="mt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {filterNotificationsByType('rating').length > 0 ? (
+            filterNotificationsByType('rating').map(notif => (
+              <Link key={notif.id} to={notif.link || '#'} onClick={() => handleMarkAsRead(notif.id)} className="block">
                 <NotificationCard
-                  key={notif.id}
                   notification={notif}
                   onMarkAsRead={handleMarkAsRead}
                   onDelete={handleDelete}
                 />
-              ))
-            ) : (
-              <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد إشعارات تقييمات.</p>
-            )}
-          </div>
-        </TabsContent>
-        <TabsContent value="system" className="mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {filterNotificationsByType('system').length > 0 ? (
-              filterNotificationsByType('system').map(notif => (
+              </Link>
+            ))
+          ) : (
+            <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد إشعارات تقييمات.</p>
+          )}
+        </div>
+      </TabsContent>
+      <TabsContent value="system" className="mt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {filterNotificationsByType('system').length > 0 ? (
+            filterNotificationsByType('system').map(notif => (
+              <Link key={notif.id} to={notif.link || '#'} onClick={() => handleMarkAsRead(notif.id)} className="block">
                 <NotificationCard
-                  key={notif.id}
                   notification={notif}
                   onMarkAsRead={handleMarkAsRead}
                   onDelete={handleDelete}
                 />
-              ))
-            ) : (
-              <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد إشعارات نظام.</p>
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
+              </Link>
+            ))
+          ) : (
+            <p className="text-brand-text-muted col-span-full font-ibm-plex-arabic text-right">لا توجد إشعارات نظام.</p>
+          )}
+        </div>
+      </TabsContent>
+    </Tabs>
   </>
 );
 };
