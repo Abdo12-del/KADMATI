@@ -13,6 +13,23 @@ import { RequestData, UserData } from '@/types/app-types'; // Import RequestData
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+const categoryNamesMap: { [key: string]: string } = {
+  'cleaning': 'نظافة',
+  'home_maintenance': 'صيانة منزلية',
+  'electricity': 'كهرباء',
+  'plumbing': 'سباكة',
+  'carpentry': 'نجارة',
+  'ac_repair': 'تكييف',
+  'gardening': 'حدائق',
+  'furniture_moving': 'نقل أثاث',
+  'beauty': 'تجميل',
+  'private_tutoring': 'تعليم خاص',
+  'photography': 'تصوير',
+  'event_planning': 'تنظيم فعاليات',
+  'car_wash': 'غسيل سيارات',
+  'legal_consulting': 'استشارات قانونية',
+};
+
 export const ProviderReverseRequestsModal = () => {
   const { user } = useAuth();
   const PROVIDER_ID = user?.id;
@@ -25,7 +42,7 @@ export const ProviderReverseRequestsModal = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const categories = ['design', 'development', 'writing', 'marketing', 'consulting', 'maintenance']; // Match backend categories
+  const categories = Object.keys(categoryNamesMap); // Use keys from the map for categories
   const locations = ['الرياض', 'جدة', 'الدمام', 'مكة المكرمة', 'الخبر']; // Example locations
 
   const fetchAllData = useCallback(async () => {
@@ -180,7 +197,7 @@ export const ProviderReverseRequestsModal = () => {
             <SelectContent className="rounded-xl shadow-soft bg-brand-card-bg font-ibm-plex-arabic text-right">
               <SelectItem value="all">كل الفئات</SelectItem>
               {categories.map(cat => (
-                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                <SelectItem key={cat} value={cat}>{categoryNamesMap[cat] || cat}</SelectItem>
               ))}
             </SelectContent>
           </Select>

@@ -6,7 +6,7 @@ let requests: Request[] = [
     client_id: 2, // Laila Seeker
     title: 'طلب تصميم موقع شخصي',
     description: 'أحتاج إلى تصميم موقع ويب شخصي لعرض أعمالي الفنية، مع معرض صور ونموذج اتصال.',
-    category: 'development',
+    category: 'photography', // Changed from 'development'
     location: 'الرياض',
     due_date: '2024-01-15',
     additional_options: 'تصميم متجاوب مع الجوالات.',
@@ -22,7 +22,7 @@ let requests: Request[] = [
     client_id: 2, // Laila Seeker
     title: 'طلب كتابة مقال تسويقي',
     description: 'مقال تسويقي عن فوائد استخدام الطاقة المتجددة في المنازل، بطول 1000 كلمة.',
-    category: 'writing',
+    category: 'private_tutoring', // Changed from 'writing'
     due_date: '2024-01-10',
     status: 'accepted',
     payment_status: 'unpaid',
@@ -36,7 +36,7 @@ let requests: Request[] = [
     client_id: 2, // Laila Seeker
     title: 'تصميم شعار لشركة ناشئة',
     description: 'شعار احترافي لشركة تقنية جديدة، أرغب في تصميم عصري وبسيط.',
-    category: 'design',
+    category: 'cleaning', // Changed from 'design'
     status: 'completed',
     payment_status: 'paid',
     assigned_provider_id: 1, // Completed by Ahmed Provider
@@ -47,9 +47,9 @@ let requests: Request[] = [
   {
     id: 4,
     client_id: 2, // Laila Seeker
-    title: 'طلب صيانة منزلية',
+    title: 'طلب صيانة كهربائية',
     description: 'أحتاج فني صيانة لإصلاح بعض الأعطال الكهربائية في المنزل.',
-    category: 'maintenance',
+    category: 'electricity', // Changed from 'maintenance'
     location: 'جدة',
     due_date: '2024-02-01',
     status: 'pending',
@@ -64,7 +64,7 @@ let requests: Request[] = [
     client_id: 2, // Laila Seeker
     title: 'طلب تصميم هوية بصرية',
     description: 'تصميم هوية بصرية كاملة لعلامة تجارية جديدة تشمل الشعار، الألوان، والخطوط.',
-    category: 'design',
+    category: 'plumbing', // Changed from 'design'
     status: 'accepted',
     payment_status: 'unpaid',
     assigned_provider_id: 1, // Accepted by Ahmed Provider

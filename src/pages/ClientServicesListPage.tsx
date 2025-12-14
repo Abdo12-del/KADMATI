@@ -11,6 +11,24 @@ import { ServiceData, UserData } from '@/types/app-types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+// Map category IDs to Arabic names for display
+const categoryNamesMap: { [key: string]: string } = {
+  'cleaning': 'نظافة',
+  'home_maintenance': 'صيانة منزلية',
+  'electricity': 'كهرباء',
+  'plumbing': 'سباكة',
+  'carpentry': 'نجارة',
+  'ac_repair': 'تكييف',
+  'gardening': 'حدائق',
+  'furniture_moving': 'نقل أثاث',
+  'beauty': 'تجميل',
+  'private_tutoring': 'تعليم خاص',
+  'photography': 'تصوير',
+  'event_planning': 'تنظيم فعاليات',
+  'car_wash': 'غسيل سيارات',
+  'legal_consulting': 'استشارات قانونية',
+};
+
 const ClientServicesListPage = () => {
   const { user } = useAuth();
   const CLIENT_ID = user?.id;
@@ -88,6 +106,8 @@ const ClientServicesListPage = () => {
       });
   }, [services, users, searchTerm, categoryFilter]);
 
+  const displayCategoryName = categoryFilter ? categoryNamesMap[categoryFilter] || categoryFilter : 'جميع الخدمات';
+
   if (loading) {
     return (
       <div className="text-center text-brand-text-dark font-ibm-plex-arabic">
@@ -107,7 +127,7 @@ const ClientServicesListPage = () => {
   return (
     <>
       <h1 className="text-4xl font-cairo text-brand-text-dark mb-10 text-right">
-        {categoryFilter ? `خدمات في فئة: ${categoryFilter}` : 'جميع الخدمات'}
+        {displayCategoryName}
       </h1>
 
       <section className="mb-8">

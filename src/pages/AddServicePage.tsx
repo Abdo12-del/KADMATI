@@ -113,11 +113,20 @@ const AddServicePage = () => {
                 <SelectValue placeholder="اختر فئة الخدمة" />
               </SelectTrigger>
               <SelectContent className="rounded-xl shadow-soft bg-brand-card-bg font-ibm-plex-arabic text-right">
-                <SelectItem value="design">تصميم</SelectItem>
-                <SelectItem value="development">تطوير</SelectItem>
-                <SelectItem value="writing">كتابة ومحتوى</SelectItem>
-                <SelectItem value="marketing">تسويق</SelectItem>
-                <SelectItem value="consulting">استشارات</SelectItem>
+                <SelectItem value="cleaning">نظافة</SelectItem>
+                <SelectItem value="home_maintenance">صيانة منزلية</SelectItem>
+                <SelectItem value="electricity">كهرباء</SelectItem>
+                <SelectItem value="plumbing">سباكة</SelectItem>
+                <SelectItem value="carpentry">نجارة</SelectItem>
+                <SelectItem value="ac_repair">تكييف</SelectItem>
+                <SelectItem value="gardening">حدائق</SelectItem>
+                <SelectItem value="furniture_moving">نقل أثاث</SelectItem>
+                <SelectItem value="beauty">تجميل</SelectItem>
+                <SelectItem value="private_tutoring">تعليم خاص</SelectItem>
+                <SelectItem value="photography">تصوير</SelectItem>
+                <SelectItem value="event_planning">تنظيم فعاليات</SelectItem>
+                <SelectItem value="car_wash">غسيل سيارات</SelectItem>
+                <SelectItem value="legal_consulting">استشارات قانونية</SelectItem>
               </SelectContent>
             </Select>
           </div>

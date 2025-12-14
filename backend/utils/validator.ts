@@ -82,6 +82,12 @@ export const validateUser = (data: any, isUpdate: boolean = false) => {
   return errors;
 };
 
+const validServiceCategories = [
+  'cleaning', 'home_maintenance', 'electricity', 'plumbing', 'carpentry',
+  'ac_repair', 'gardening', 'furniture_moving', 'beauty', 'private_tutoring',
+  'photography', 'event_planning', 'car_wash', 'legal_consulting'
+];
+
 export const validateService = (data: any, isUpdate: boolean = false) => {
   const errors: string[] = [];
 
@@ -96,6 +102,8 @@ export const validateService = (data: any, isUpdate: boolean = false) => {
   }
   if (!isUpdate && !data.category) {
     errors.push('Category is required.');
+  } else if (data.category && !validServiceCategories.includes(data.category)) {
+    errors.push(`Invalid category. Must be one of: ${validServiceCategories.join(', ')}.`);
   }
   if (!isUpdate && (data.price === undefined || data.price === null)) {
     errors.push('Price is required.');
@@ -120,6 +128,9 @@ export const validateRequest = (data: any, isUpdate: boolean = false) => {
   }
   if (data.status && !['pending', 'accepted', 'completed', 'cancelled', 'payment_pending'].includes(data.status)) {
     errors.push('Invalid request status. Must be "pending", "accepted", "completed", "cancelled", or "payment_pending".');
+  }
+  if (data.category && !validServiceCategories.includes(data.category)) { // Validate request category too
+    errors.push(`Invalid request category. Must be one of: ${validServiceCategories.join(', ')}.`);
   }
 
   // New payment fields validation

@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth'; // Import useAuth
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'; // Import Select components
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -21,6 +22,7 @@ const ClientCreateRequestPage = () => {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [category, setCategory] = useState(''); // New state for category
   const [location, setLocation] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [additionalOptions, setAdditionalOptions] = useState('');
@@ -33,13 +35,19 @@ const ClientCreateRequestPage = () => {
       return;
     }
 
+    if (!title || !description || !category) { // Category is now required
+      toast.error('الرجاء ملء جميع الحقول المطلوبة (العنوان، الوصف، الفئة).');
+      return;
+    }
+
     // Here you would typically send this data to a backend API
-    console.log({ title, description, location, dueDate, additionalOptions });
+    console.log({ title, description, category, location, dueDate, additionalOptions });
 
     const newRequest = {
       client_id: CLIENT_ID,
       title,
       description,
+      category, // Include category in the request
       location,
       due_date: dueDate,
       additional_options: additionalOptions,
@@ -100,6 +108,30 @@ const ClientCreateRequestPage = () => {
               onChange={(e) => setDescription(e.target.value)}
               className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
             />
+          </div>
+          <div>
+            <Label htmlFor="request-category" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">الفئة</Label>
+            <Select value={category} onValueChange={setCategory} required>
+              <SelectTrigger id="request-category" className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right">
+                <SelectValue placeholder="اختر فئة الطلب" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl shadow-soft bg-brand-card-bg font-ibm-plex-arabic text-right">
+                <SelectItem value="cleaning">نظافة</SelectItem>
+                <SelectItem value="home_maintenance">صيانة منزلية</SelectItem>
+                <SelectItem value="electricity">كهرباء</SelectItem>
+                <SelectItem value="plumbing">سباكة</SelectItem>
+                <SelectItem value="carpentry">نجارة</SelectItem>
+                <SelectItem value="ac_repair">تكييف</SelectItem>
+                <SelectItem value="gardening">حدائق</SelectItem>
+                <SelectItem value="furniture_moving">نقل أثاث</SelectItem>
+                <SelectItem value="beauty">تجميل</SelectItem>
+                <SelectItem value="private_tutoring">تعليم خاص</SelectItem>
+                <SelectItem value="photography">تصوير</SelectItem>
+                <SelectItem value="event_planning">تنظيم فعاليات</SelectItem>
+                <SelectItem value="car_wash">غسيل سيارات</SelectItem>
+                <SelectItem value="legal_consulting">استشارات قانونية</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label htmlFor="request-location" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">الموقع (اختياري)</Label>

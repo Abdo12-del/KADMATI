@@ -36,7 +36,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const ClientHomePage = () => {
   const { user } = useAuth(); // Get current user from auth context
-  const CLIENT_ID = user?.id; // Use actual client ID
+  const CLIENT_ID = user?.id;
 
   const [services, setServices] = useState<ServiceData[]>([]);
   const [users, setUsers] = useState<UserData[]>([]);

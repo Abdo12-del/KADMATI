@@ -4,7 +4,10 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
-import { Sparkles, Wrench, BookOpen, Palette, Truck, Scissors, LayoutList, Home, Car, Utensils, Monitor, HeartHandshake } from 'lucide-react';
+import {
+  Sparkles, Wrench, BookOpen, Palette, Truck, Scissors, LayoutList, Home, Car, Utensils, Monitor, HeartHandshake,
+  Zap, Droplet, Hammer, Fan, Leaf, Camera, PartyPopper, Scale // Changed Faucet to Droplet
+} from 'lucide-react';
 
 // دالة مساعدة للحصول على مكون أيقونة Lucide
 const getIconComponent = (iconName: string) => {
@@ -20,22 +23,33 @@ const getIconComponent = (iconName: string) => {
     Utensils: Utensils,
     Monitor: Monitor,
     HeartHandshake: HeartHandshake,
+    Zap: Zap, // كهرباء
+    Droplet: Droplet, // سباكة (تم التغيير من Faucet)
+    Hammer: Hammer, // نجارة
+    Fan: Fan, // تكييف
+    Leaf: Leaf, // حدائق
+    Camera: Camera, // تصوير
+    PartyPopper: PartyPopper, // تنظيم فعاليات
+    Scale: Scale, // استشارات قانونية
   };
   return icons[iconName] || LayoutList; // افتراضيًا LayoutList إذا لم يتم العثور على الأيقونة
 };
 
 const serviceCategories = [
-  { id: 'cat1', name: 'نظافة', icon: 'Sparkles' },
-  { id: 'cat2', name: 'صيانة', icon: 'Wrench' },
-  { id: 'cat3', name: 'تعليم', icon: 'BookOpen' },
-  { id: 'cat4', name: 'تصميم', icon: 'Palette' },
-  { id: 'cat5', name: 'نقل', icon: 'Truck' },
-  { id: 'cat6', name: 'جمال', icon: 'Scissors' },
-  { id: 'cat7', name: 'منزل', icon: 'Home' },
-  { id: 'cat8', name: 'سيارات', icon: 'Car' },
-  { id: 'cat9', name: 'طعام', icon: 'Utensils' },
-  { id: 'cat10', name: 'تقنية', icon: 'Monitor' },
-  { id: 'cat11', name: 'استشارات', icon: 'HeartHandshake' },
+  { id: 'cleaning', name: 'نظافة', icon: 'Sparkles' },
+  { id: 'home_maintenance', name: 'صيانة منزلية', icon: 'Wrench' },
+  { id: 'electricity', name: 'كهرباء', icon: 'Zap' },
+  { id: 'plumbing', name: 'سباكة', icon: 'Droplet' }, {/* Changed Faucet to Droplet */}
+  { id: 'carpentry', name: 'نجارة', icon: 'Hammer' },
+  { id: 'ac_repair', name: 'تكييف', icon: 'Fan' },
+  { id: 'gardening', name: 'حدائق', icon: 'Leaf' },
+  { id: 'furniture_moving', name: 'نقل أثاث', icon: 'Truck' },
+  { id: 'beauty', name: 'تجميل', icon: 'Scissors' },
+  { id: 'private_tutoring', name: 'تعليم خاص', icon: 'BookOpen' },
+  { id: 'photography', name: 'تصوير', icon: 'Camera' },
+  { id: 'event_planning', name: 'تنظيم فعاليات', icon: 'PartyPopper' },
+  { id: 'car_wash', name: 'غسيل سيارات', icon: 'Car' },
+  { id: 'legal_consulting', name: 'استشارات قانونية', icon: 'Scale' },
 ];
 
 export const ClientHomeCategoryScroll = () => {
