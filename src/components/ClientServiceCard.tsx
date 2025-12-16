@@ -1,11 +1,10 @@
 "use client";
 
-// import React from 'react'; // Removed
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Star, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { formatNumberArabic, formatCurrencyArabic } from '@/lib/number-formatter'; // Import formatters
+import { formatNumberArabic, formatCurrencyArabic } from '@/lib/number-formatter';
 
 interface ClientServiceCardProps {
   service: {
@@ -50,19 +49,20 @@ const ClientServiceCard = ({ service }: ClientServiceCardProps) => {
         </div>
         <div className="flex justify-between items-center pt-4">
           <span className="text-brand-primary font-bold text-xl font-cairo">{formatCurrencyArabic(service.price)}</span>
-          <div className="flex gap-2"> {/* تم إضافة div لتجميع الأزرار */}
+          <div className="flex gap-2">
             <Link to={`/client-home/services/${service.id}`}>
               <Button variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 px-3 py-2 rounded-lg shadow-soft font-ibm-plex-arabic text-sm">
                 عرض التفاصيل
               </Button>
             </Link>
-            <Link to={`/client-home/order-service/${service.id}`}> {/* Updated link */}
+            <Link to={`/client-home/order-service/${service.id}`}>
               <Button className="bg-brand-primary hover:bg-brand-primary-dark text-white px-3 py-2 rounded-lg shadow-soft font-ibm-plex-arabic text-sm">
                 اطلب الخدمة
               </Button>
             </Link>
           </div>
-        </CardContent>
+        </div>
+      </CardContent>
     </Card>
   );
 };
