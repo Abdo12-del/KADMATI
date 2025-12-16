@@ -6,27 +6,53 @@ let users: User[] = [
     id: 1,
     name: 'أحمد مقدم',
     email: 'ahmed.provider@example.com',
-    password: '$2a$10$abcdefghijklmnopqrstuvwxyza1234567890123456789012345678901234567890', // Hashed 'password123'
+    password: 'password123', // Store plain text password for simulation
     role: 'provider',
     phone: '+966501234567',
     bio: 'مصمم جرافيك بخبرة 5 سنوات في تصميم الشعارات والهويات البصرية.',
     avatar_url: 'https://api.dicebear.com/7.x/initials/svg?seed=AP',
     favorite_service_ids: [], // Initialize for existing users
-    created_at: new Date(),
-    updated_at: new Date(),
+    created_at: new Date('2023-01-01T00:00:00Z'),
+    updated_at: new Date('2023-01-01T00:00:00Z'),
   },
   {
     id: 2,
     name: 'ليلى طالبة',
     email: 'layla.seeker@example.com',
-    password: '$2a$10$abcdefghijklmnopqrstuvwxyza1234567890123456789012345678901234567890', // Hashed 'password123'
+    password: 'password123', // Store plain text password for simulation
     role: 'seeker',
     phone: '+966557654321',
     bio: 'أبحث عن خدمات تصميم وتطوير لمشروعي الجديد.',
     avatar_url: 'https://api.dicebear.com/7.x/initials/svg?seed=LS',
-    favorite_service_ids: [], // Initialize for existing users
-    created_at: new Date(),
-    updated_at: new Date(),
+    favorite_service_ids: [1, 3], // Laila's favorite services
+    created_at: new Date('2023-01-01T00:00:00Z'),
+    updated_at: new Date('2023-01-01T00:00:00Z'),
+  },
+  {
+    id: 3,
+    name: 'خالد عميل',
+    email: 'khalid.client@example.com',
+    password: 'password123',
+    role: 'seeker',
+    phone: '+966512345678',
+    bio: 'أحتاج لخدمات صيانة منزلية بشكل دوري.',
+    avatar_url: 'https://api.dicebear.com/7.x/initials/svg?seed=KC',
+    favorite_service_ids: [],
+    created_at: new Date('2023-02-10T00:00:00Z'),
+    updated_at: new Date('2023-02-10T00:00:00Z'),
+  },
+  {
+    id: 4,
+    name: 'فاطمة مقدمة',
+    email: 'fatima.provider@example.com',
+    password: 'password123',
+    role: 'provider',
+    phone: '+966598765432',
+    bio: 'متخصصة في خدمات التنظيف العميق للمنازل والمكاتب.',
+    avatar_url: 'https://api.dicebear.com/7.x/initials/svg?seed=FP',
+    favorite_service_ids: [],
+    created_at: new Date('2023-03-05T00:00:00Z'),
+    updated_at: new Date('2023-03-05T00:00:00Z'),
   },
 ];
 

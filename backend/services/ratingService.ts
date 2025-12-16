@@ -7,7 +7,7 @@ let ratings: Rating[] = [
     client_id: 2, // Laila Seeker
     rating: 5,
     comment: 'خدمة ممتازة وشعار رائع، أنصح به بشدة!',
-    created_at: new Date('22023-10-20T15:00:00Z'),
+    created_at: new Date('2023-10-20T15:00:00Z'),
   },
   {
     id: 2,
@@ -16,6 +16,30 @@ let ratings: Rating[] = [
     rating: 4,
     comment: 'محتوى جيد جداً وسرعة في التنفيذ، شكراً.',
     created_at: new Date('2023-11-01T11:00:00Z'),
+  },
+  {
+    id: 3,
+    service_id: 1, // Professional Logo Design
+    client_id: 2, // Laila Seeker
+    rating: 4,
+    comment: 'تصميم إبداعي، لكن استغرق وقتاً أطول قليلاً من المتوقع.',
+    created_at: new Date('2023-11-15T09:00:00Z'),
+  },
+  {
+    id: 4,
+    service_id: 2, // Personal Website Development
+    client_id: 2, // Laila Seeker
+    rating: 5,
+    comment: 'موقع رائع وتصميم احترافي، سعيد جداً بالنتيجة.',
+    created_at: new Date('2023-12-01T14:00:00Z'),
+  },
+  {
+    id: 5,
+    service_id: 5, // Visual Identity Design
+    client_id: 2, // Laila Seeker
+    rating: 3,
+    comment: 'الهوية البصرية جيدة، لكن كان هناك بعض التأخير في التسليم.',
+    created_at: new Date('2023-12-20T10:00:00Z'),
   },
 ];
 
