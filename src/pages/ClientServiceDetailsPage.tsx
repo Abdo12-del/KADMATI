@@ -15,6 +15,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 import { SubmitRatingDialog } from '@/components/SubmitRatingDialog'; // Import SubmitRatingDialog
+import { formatNumberArabic, formatCurrencyArabic } from '@/lib/number-formatter'; // Import formatters
 
 interface ServiceData {
   id: number;
@@ -418,7 +419,7 @@ const ClientServiceDetailsPage = () => {
                 <div className="flex flex-row-reverse items-center">
                   <span className="font-semibold ml-2">المدة:</span>
                   <Clock className="h-5 w-5 text-brand-primary" />
-                  <span className="font-ibm-plex-arabic">{service.delivery_time || 'غير محدد'} أيام</span>
+                  <span className="font-ibm-plex-arabic">{formatNumberArabic(service.delivery_time)} أيام</span>
                 </div>
                 <div className="flex flex-row-reverse items-center">
                   <span className="font-semibold ml-2">الموقع:</span>
@@ -464,11 +465,11 @@ const ClientServiceDetailsPage = () => {
                 <div className="text-right">
                   <p className="font-cairo text-xl text-brand-text-dark font-semibold">{provider.name}</p>
                   <div className="flex items-center justify-end text-sm text-brand-text-muted font-ibm-plex-arabic">
-                    <span className="ml-1">({service.rating || 0})</span>
+                    <span className="ml-1">({formatNumberArabic(service.rating)})</span>
                     {renderStars(service.rating || 0)}
                   </div>
                   <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">
-                    {service.reviews_count || 0} خدمة مكتملة
+                    {formatNumberArabic(service.reviews_count)} خدمة مكتملة
                   </p>
                 </div>
               </div>
@@ -490,10 +491,10 @@ const ClientServiceDetailsPage = () => {
                     <h3 className="text-2xl font-cairo text-brand-text-dark">{provider.name}</h3>
                     <div className="flex items-center mt-2">
                       {renderStars(service.rating || 0)}
-                      <span className="mr-2 text-brand-text-muted font-ibm-plex-arabic">({service.reviews_count || 0} تقييم)</span>
+                      <span className="mr-2 text-brand-text-muted font-ibm-plex-arabic">({formatNumberArabic(service.reviews_count)} تقييم)</span>
                     </div>
                     <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">
-                      {service.reviews_count || 0} خدمة مكتملة
+                      {formatNumberArabic(service.reviews_count)} خدمة مكتملة
                     </p>
                   </div>
                   <Separator className="my-4 bg-border" />
@@ -520,10 +521,10 @@ const ClientServiceDetailsPage = () => {
             </CardHeader>
             <CardContent className="p-0">
               <div className="flex items-center justify-end mb-4">
-                <span className="text-4xl font-cairo text-brand-primary font-bold ml-3">{service.rating || 0}</span>
+                <span className="text-4xl font-cairo text-brand-primary font-bold ml-3">{formatNumberArabic(parseFloat(service.rating?.toFixed(1) || '0.0'))}</span>
                 <div className="flex flex-col items-end">
                   {renderStars(service.rating || 0)}
-                  <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">بناءً على {mappedReviews.length} مراجعة</p>
+                  <p className="text-sm text-brand-text-muted font-ibm-plex-arabic">بناءً على {formatNumberArabic(mappedReviews.length)} مراجعة</p>
                 </div>
               </div>
               <div className="space-y-4">
@@ -549,7 +550,7 @@ const ClientServiceDetailsPage = () => {
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-xl shadow-soft font-ibm-plex-arabic py-2 px-4">
-                        قراءة كل المراجعات ({mappedReviews.length})
+                        قراءة كل المراجعات ({formatNumberArabic(mappedReviews.length)})
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[700px] h-[80vh] flex flex-col rounded-2xl shadow-soft bg-brand-card-bg p-6 text-right">
@@ -593,7 +594,7 @@ const ClientServiceDetailsPage = () => {
             <CardContent className="space-y-6 p-0">
               <div className="flex justify-between items-center text-xl font-bold text-brand-text-dark font-cairo">
                 <span>السعر الأساسي:</span>
-                <span className="text-brand-primary">{service.price} د.ج</span>
+                <span className="text-brand-primary">{formatCurrencyArabic(service.price)}</span>
               </div>
               
               {/* Placeholder for service options */}

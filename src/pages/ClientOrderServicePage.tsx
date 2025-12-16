@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/use-auth';
 import { ServiceData, UserData } from '@/types/app-types'; // Import ServiceData and UserData
+import { formatCurrencyArabic, formatNumberArabic } from '@/lib/number-formatter'; // Import formatters
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -141,11 +142,11 @@ const ClientOrderServicePage = () => {
         <div className="space-y-4 text-brand-text-dark font-ibm-plex-arabic">
           <div className="flex justify-between items-center">
             <span className="font-semibold">السعر الأساسي:</span>
-            <span className="text-brand-primary font-bold text-xl">{service.price} د.ج</span>
+            <span className="text-brand-primary font-bold text-xl">{formatCurrencyArabic(service.price)}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="font-semibold">مدة التسليم المتوقعة:</span>
-            <span>{service.delivery_time || 'غير محدد'} أيام</span>
+            <span>{formatNumberArabic(service.delivery_time)} أيام</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="font-semibold">الموقع:</span>

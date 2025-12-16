@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { RequestData, RatingData, MessageData, UserData, ServiceData } from '@/types/app-types'; // Import all necessary types
+import { formatNumberArabic, formatCurrencyArabic } from '@/lib/number-formatter'; // Import formatters
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -97,7 +98,7 @@ const DashboardOverviewPage = () => {
   const totalEarnings = useMemo(() => {
     const earnings = requests.filter(req => req.status === 'completed' && req.agreed_price !== undefined)
                               .reduce((sum, req) => sum + (req.agreed_price || 0), 0);
-    return earnings.toLocaleString('ar-EG', { style: 'currency', currency: 'DZD', minimumFractionDigits: 0 });
+    return formatCurrencyArabic(earnings); // Use formatter
   }, [requests]);
 
   // --- Dynamic Chart Data ---
@@ -212,7 +213,7 @@ const DashboardOverviewPage = () => {
             <Package className="h-6 w-6 text-brand-primary" />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-3xl font-cairo text-brand-text-dark font-bold">{totalOrders}</div>
+            <div className="text-3xl font-cairo text-brand-text-dark font-bold">{formatNumberArabic(totalOrders)}</div>
             <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">الطلبات التي قبلتها</p>
           </CardContent>
         </Card>
@@ -222,7 +223,7 @@ const DashboardOverviewPage = () => {
             <Clock className="h-6 w-6 text-brand-warning" />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-3xl font-cairo text-brand-text-dark font-bold">{activeOrders}</div>
+            <div className="text-3xl font-cairo text-brand-text-dark font-bold">{formatNumberArabic(activeOrders)}</div>
             <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">معلقة أو مقبولة</p>
           </CardContent>
         </Card>
@@ -242,8 +243,8 @@ const DashboardOverviewPage = () => {
             <Star className="h-6 w-6 text-yellow-500" />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-3xl font-cairo text-brand-text-dark font-bold">{averageRating}</div>
-            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">من {ratings.length} تقييم</p>
+            <div className="text-3xl font-cairo text-brand-text-dark font-bold">{formatNumberArabic(parseFloat(averageRating))}</div>
+            <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">من {formatNumberArabic(ratings.length)} تقييم</p>
           </CardContent>
         </Card>
         <Card className="bg-brand-card-bg rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 p-6 text-right">
@@ -252,7 +253,7 @@ const DashboardOverviewPage = () => {
             <MessageSquare className="h-6 w-6 text-brand-info" />
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-3xl font-cairo text-brand-text-dark font-bold">{newMessagesCount}</div>
+            <div className="text-3xl font-cairo text-brand-text-dark font-bold">{formatNumberArabic(newMessagesCount)}</div>
             <p className="text-sm text-brand-text-muted font-ibm-plex-arabic mt-1">في انتظار الرد</p>
           </CardContent>
         </Card>
@@ -269,8 +270,8 @@ const DashboardOverviewPage = () => {
               <LineChart data={dynamicPerformanceData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                 <XAxis dataKey="name" tick={{ fill: 'var(--brand-text-muted)', fontFamily: 'var(--font-ibm-plex-arabic)' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: 'var(--brand-text-muted)', fontFamily: 'var(--font-ibm-plex-arabic)' }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ backgroundColor: 'var(--brand-card-bg)', borderColor: 'var(--border)', borderRadius: '8px', boxShadow: 'var(--shadow-soft)' }} itemStyle={{ fontFamily: 'var(--font-ibm-plex-arabic)', color: 'var(--brand-text-dark)' }} labelStyle={{ fontFamily: 'var(--font-cairo)', color: 'var(--brand-primary)' }} />
+                <YAxis tickFormatter={(value) => formatNumberArabic(value)} tick={{ fill: 'var(--brand-text-muted)', fontFamily: 'var(--font-ibm-plex-arabic)' }} axisLine={false} tickLine={false} />
+                <Tooltip formatter={(value: number, name: string) => [name === 'المبيعات' ? formatCurrencyArabic(value) : formatNumberArabic(value), name]} contentStyle={{ backgroundColor: 'var(--brand-card-bg)', borderColor: 'var(--border)', borderRadius: '8px', boxShadow: 'var(--shadow-soft)' }} itemStyle={{ fontFamily: 'var(--font-ibm-plex-arabic)', color: 'var(--brand-text-dark)' }} labelStyle={{ fontFamily: 'var(--font-cairo)', color: 'var(--brand-primary)' }} />
                 <Legend wrapperStyle={{ fontFamily: 'var(--font-ibm-plex-arabic)', direction: 'rtl', right: 0 }} />
                 <Line type="monotone" dataKey="sales" stroke="var(--brand-primary)" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} name="المبيعات" />
                 <Line type="monotone" dataKey="orders" stroke="var(--brand-warning)" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} name="الطلبات" />
@@ -291,7 +292,7 @@ const DashboardOverviewPage = () => {
               <BarChart data={dynamicOrdersBreakdownData} layout="vertical">
                 <XAxis type="number" hide />
                 <YAxis type="category" dataKey="name" tick={{ fill: 'var(--brand-text-dark)', fontFamily: 'var(--font-ibm-plex-arabic)' }} axisLine={false} tickLine={false} width={80} mirror />
-                <Tooltip contentStyle={{ backgroundColor: 'var(--brand-card-bg)', borderColor: 'var(--border)', borderRadius: '8px', boxShadow: 'var(--shadow-soft)' }} itemStyle={{ fontFamily: 'var(--font-ibm-plex-arabic)', color: 'var(--brand-text-dark)' }} labelStyle={{ fontFamily: 'var(--font-cairo)', color: 'var(--brand-primary)' }} />
+                <Tooltip formatter={(value: number) => formatNumberArabic(value)} contentStyle={{ backgroundColor: 'var(--brand-card-bg)', borderColor: 'var(--border)', borderRadius: '8px', boxShadow: 'var(--shadow-soft)' }} itemStyle={{ fontFamily: 'var(--font-ibm-plex-arabic)', color: 'var(--brand-text-dark)' }} labelStyle={{ fontFamily: 'var(--font-cairo)', color: 'var(--brand-primary)' }} />
                 <Bar dataKey="value" fill="var(--color)" radius={[0, 10, 10, 0]} />
               </BarChart>
             </ResponsiveContainer>

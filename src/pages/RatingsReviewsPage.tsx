@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth'; // Import useAuth
+import { formatNumberArabic } from '@/lib/number-formatter'; // Import formatter
 
 interface RatingData {
   id: number;

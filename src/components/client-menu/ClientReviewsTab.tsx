@@ -8,6 +8,7 @@ import { Star, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { ReviewCardPropsData, ServiceData, UserData, RatingData } from '@/types/app-types.ts';
+import { formatNumberArabic } from '@/lib/number-formatter'; // Import formatter
 
 // Helper for stars
 const renderStars = (rating: number) => {

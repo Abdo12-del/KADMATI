@@ -11,13 +11,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth'; // Import useAuth
+import { formatNumberArabic } from '@/lib/number-formatter'; // Import formatter
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const AddServicePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth(); // Get current user from auth context
-  const PROVIDER_ID = user?.id; // Use actual provider ID
+  const PROVIDER_ID = user?.id;
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');

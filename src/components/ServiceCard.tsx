@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Star } from 'lucide-react';
+import { formatNumberArabic, formatCurrencyArabic } from '@/lib/number-formatter'; // Import formatters
 
 interface ServiceCardProps {
   service: {
@@ -35,13 +36,13 @@ const ServiceCard = ({ service }: ServiceCardProps) => {
         <CardTitle className="text-lg font-cairo text-brand-text-dark">{service.title}</CardTitle>
         <div className="flex justify-end items-center text-sm text-brand-text-muted">
           {renderStars(service.rating)}
-          <span className="mr-1 font-ibm-plex-arabic">({service.rating})</span>
+          <span className="mr-1 font-ibm-plex-arabic">({formatNumberArabic(service.rating)})</span>
         </div>
       </CardHeader>
       <CardContent className="p-4 pt-0 space-y-3 text-right">
         <p className="text-sm text-brand-text-muted line-clamp-2 font-ibm-plex-arabic">{service.description}</p>
         <div className="flex justify-between items-center pt-2">
-          <span className="text-brand-primary font-bold text-xl font-cairo">{service.price} د.ج</span>
+          <span className="text-brand-primary font-bold text-xl font-cairo">{formatCurrencyArabic(service.price)}</span>
           <Link to={`/dashboard/services/edit/${service.id}`}>
             <Button className="bg-brand-primary hover:bg-brand-primary-dark text-white px-5 py-2 rounded-lg shadow-soft font-ibm-plex-arabic">
               تعديل الخدمة

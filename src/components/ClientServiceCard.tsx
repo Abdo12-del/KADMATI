@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Star, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { formatNumberArabic, formatCurrencyArabic } from '@/lib/number-formatter'; // Import formatters
 
 interface ClientServiceCardProps {
   service: {
@@ -44,11 +45,11 @@ const ClientServiceCard = ({ service }: ClientServiceCardProps) => {
           <MapPin className="h-4 w-4 mr-1 text-brand-primary" />
         </div>
         <div className="flex items-center justify-end text-sm text-yellow-500">
-          <span className="ml-1 text-brand-text-muted font-ibm-plex-arabic">({service.rating})</span>
+          <span className="ml-1 text-brand-text-muted font-ibm-plex-arabic">({formatNumberArabic(service.rating)})</span>
           {renderStars(service.rating)}
         </div>
         <div className="flex justify-between items-center pt-4">
-          <span className="text-brand-primary font-bold text-xl font-cairo">{service.price} د.ج</span>
+          <span className="text-brand-primary font-bold text-xl font-cairo">{formatCurrencyArabic(service.price)}</span>
           <div className="flex gap-2"> {/* تم إضافة div لتجميع الأزرار */}
             <Link to={`/client-home/services/${service.id}`}>
               <Button variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 px-3 py-2 rounded-lg shadow-soft font-ibm-plex-arabic text-sm">
@@ -61,8 +62,7 @@ const ClientServiceCard = ({ service }: ClientServiceCardProps) => {
               </Button>
             </Link>
           </div>
-        </div>
-      </CardContent>
+        </CardContent>
     </Card>
   );
 };

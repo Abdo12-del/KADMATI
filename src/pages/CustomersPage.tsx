@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth'; // Import useAuth
+import { formatNumberArabic } from '@/lib/number-formatter'; // Import formatter
 
 interface UserData {
   id: number;
@@ -21,7 +22,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const CustomersPage = () => {
   const { user } = useAuth(); // Get current user from auth context
-  const PROVIDER_ID = user?.id; // Use actual provider ID
+  const PROVIDER_ID = user?.id;
 
   const [users, setUsers] = useState<UserData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');

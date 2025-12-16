@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 import { Search, Plus } from 'lucide-react';
 import { toast } from 'sonner'; // Import toast for notifications
 import { useAuth } from '@/hooks/use-auth'; // Import useAuth
+import { formatNumberArabic } from '@/lib/number-formatter'; // Import formatter
 
 interface Service {
   id: string;
@@ -27,7 +28,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const MyServicesListPage = () => {
   const { user } = useAuth(); // Get current user from auth context
-  const PROVIDER_ID = user?.id; // Use actual provider ID
+  const PROVIDER_ID = user?.id;
 
   const [services, setServices] = useState<Service[]>([]);
   const [searchTerm, setSearchTerm] = useState('');

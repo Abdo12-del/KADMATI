@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { TransactionData, RequestData } from '@/types/app-types';
 import { ConfirmPaymentDialog } from '@/components/ConfirmPaymentDialog';
 import { useAuth } from '@/hooks/use-auth';
+import { formatCurrencyArabic } from '@/lib/number-formatter'; // Import formatter
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -164,7 +165,7 @@ export const ClientPaymentsTab = () => {
                 {transactions.map(transaction => (
                   <TableRow key={transaction.id}>
                     <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">{transaction.serviceTitle}</TableCell>
-                    <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">{transaction.amount} د.ج</TableCell>
+                    <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">{formatCurrencyArabic(transaction.amount)}</TableCell>
                     <TableCell className="font-ibm-plex-arabic text-brand-text-dark text-right">{transaction.date}</TableCell>
                     <TableCell className="text-right">
                       <Badge variant={getStatusBadgeVariant(transaction.status)} className="rounded-md font-ibm-plex-arabic">

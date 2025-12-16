@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Star, Briefcase } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { formatNumberArabic } from '@/lib/number-formatter'; // Import formatter
 
 interface ProviderCardProps {
   provider: {
@@ -39,14 +40,14 @@ const ProviderCard = ({ provider }: ProviderCardProps) => {
         <div>
           <CardTitle className="text-lg font-cairo text-brand-text-dark">{provider.name}</CardTitle>
           <div className="flex items-center justify-end text-sm text-brand-text-muted font-ibm-plex-arabic">
-            <span className="ml-1">({provider.rating})</span>
+            <span className="ml-1">({formatNumberArabic(provider.rating)})</span>
             {renderStars(provider.rating)}
           </div>
         </div>
       </CardHeader>
       <CardContent className="p-4 pt-0 space-y-3 text-right">
         <p className="text-sm text-brand-text-muted flex flex-row-reverse items-center font-ibm-plex-arabic">
-          <span className="mr-2">عدد الخدمات: <span className="font-semibold">{provider.serviceCount}</span></span>
+          <span className="mr-2">عدد الخدمات: <span className="font-semibold">{formatNumberArabic(provider.serviceCount)}</span></span>
           <Briefcase className="h-4 w-4 text-brand-primary" />
         </p>
         <Link to={`/provider/${provider.id}`}> {/* Placeholder link to provider profile */}

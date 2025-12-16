@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
+import { formatNumberArabic } from '@/lib/number-formatter'; // Import formatter
 
 interface SubmitRatingDialogProps {
   serviceId: number;
