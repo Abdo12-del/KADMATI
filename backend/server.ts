@@ -13,13 +13,13 @@ import authRoutes from './api/auth';
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
   // Application specific logging, throwing an error, or other logic here
-  // process.exit(1); // Comment out exit for now to keep server running for more debugging
+  process.exit(1); // Ensure process exits on unhandled rejections
 });
 
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error);
   // Application specific logging, throwing an error, or other logic here
-  // process.exit(1); // Comment out exit for now to keep server running for more debugging
+  process.exit(1); // Ensure process exits on uncaught exceptions
 });
 
 const app = express();
@@ -37,6 +37,11 @@ app.use(express.json());
 // Basic route for testing
 app.get('/', (req, res) => {
   res.send('Backend API is running!');
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // API Routes - Now re-enabled for simulation
