@@ -65,14 +65,14 @@ users = users.map(user => ({
 let nextUserId = users.length > 0 ? Math.max(...users.map(u => u.id || 0)) + 1 : 1;
 
 export const userService = {
-  async getAllUsers(): Promise<Omit<User, 'password'>[]> { // Changed return type to omit password
+  async getAllUsers(): Promise<Omit<User, 'password'>[]> {
     return users.map(user => {
       const { password, ...userWithoutPassword } = user;
       return userWithoutPassword;
     });
   },
 
-  async getUserById(id: number): Promise<Omit<User, 'password'> | undefined> { // Changed return type to omit password
+  async getUserById(id: number): Promise<Omit<User, 'password'> | undefined> {
     const user = users.find(u => u.id === id);
     if (user) {
       const { password, ...userWithoutPassword } = user;
@@ -81,7 +81,7 @@ export const userService = {
     return undefined;
   },
 
-  async getUserByEmail(email: string): Promise<Omit<User, 'password'> | undefined> { // Changed return type to omit password
+  async getUserByEmail(email: string): Promise<Omit<User, 'password'> | undefined> {
     const user = users.find(u => u.email === email);
     if (user) {
       const { password, ...userWithoutPassword } = user;
@@ -90,12 +90,11 @@ export const userService = {
     return undefined;
   },
 
-  // New method to get user by email including password for authentication
-  async getUserByEmailWithPassword(email: string): Promise<User | undefined> { // This method should return the full User object
+  async getUserByEmailWithPassword(email: string): Promise<User | undefined> {
     return users.find(u => u.email === email);
   },
 
-  async createUser(user: Omit<User, 'id' | 'created_at' | 'updated_at'>): Promise<Omit<User, 'password'>> { // Changed return type to omit password
+  async createUser(user: Omit<User, 'id' | 'created_at' | 'updated_at'>): Promise<Omit<User, 'password'>> {
     const newUser: User = {
       id: nextUserId++,
       ...user,
@@ -108,7 +107,7 @@ export const userService = {
     return userWithoutPassword;
   },
 
-  async updateUser(id: number, updates: Partial<Omit<User, 'id' | 'created_at' | 'updated_at'>>): Promise<Omit<User, 'password'> | undefined> { // Changed return type to omit password
+  async updateUser(id: number, updates: Partial<Omit<User, 'id' | 'created_at' | 'updated_at'>>): Promise<Omit<User, 'password'> | undefined> {
     const index = users.findIndex(u => u.id === id);
     if (index !== -1) {
       const updatedUser = {
