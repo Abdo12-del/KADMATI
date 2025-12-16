@@ -14,6 +14,8 @@ export default defineConfig(() => ({
         // rewrite: (path) => path.replace(/^\/api/, ''), // No rewrite needed as backend routes already include /api
       },
     },
+    // Add allowedHosts to prevent blocked requests from ngrok
+    allowedHosts: ["unwidened-lorette-unlively.ngrok-free.dev"],
   },
   plugins: [dyadComponentTagger(), react()],
   resolve: {
