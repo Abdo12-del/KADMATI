@@ -211,8 +211,7 @@ const handleMarkAsRead = async (id: string) => {
     setNotifications(prev =>
       prev.map(notif => (notif.id === id ? { ...notif, read: true } : notif))
     );
-    toast.success('تم تمييز الإشعار كمقروء.');
-    // No fetchNotifications() here to avoid re-render interruption for navigation
+    // Removed toast.success and fetchNotifications() to allow navigation to proceed
   } catch (err: any) {
     toast.error('فشل تمييز الإشعار كمقروء: ' + err.message);
   }

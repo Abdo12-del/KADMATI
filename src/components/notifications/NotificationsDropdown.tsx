@@ -244,9 +244,7 @@ export const NotificationsDropdown = () => {
       setNotifications(prev =>
         prev.map(notif => (notif.id === id ? { ...notif, read: true } : notif))
       );
-      // No toast.success here, as navigation will happen immediately after
-      // and the target page might show its own success/loading state.
-      // Also, no fetchNotifications() here to avoid re-render interruption.
+      // Removed toast.success and fetchNotifications() to allow navigation to proceed
     } catch (err: any) {
       toast.error('فشل تمييز الإشعار كمقروء: ' + err.message);
     }

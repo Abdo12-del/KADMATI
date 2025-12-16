@@ -16,7 +16,7 @@ interface Notification {
 
 interface NotificationCardProps {
   notification: Notification;
-  onMarkAsRead?: (id: string) => void;
+  onMarkAsRead?: (id: string) => void; // Keep for direct marking if needed, but not used for navigation
   onDelete?: (id: string) => void;
 }
 
@@ -58,26 +58,18 @@ export const NotificationCard = ({ notification, onMarkAsRead, onDelete }: Notif
           </div>
         </div>
         <div className="flex justify-end gap-2 mt-4">
-          {!notification.read && (
+          {/* Removed "Mark as Read" button as it's handled by the parent Link/DropdownMenuItem */}
+          {onDelete && (
             <Button
-              variant="outline"
+              variant="destructive"
               size="sm"
-              onClick={() => onMarkAsRead?.(notification.id)}
-              className="border-brand-primary text-brand-primary hover:bg-brand-primary-light/20 rounded-lg shadow-soft font-ibm-plex-arabic"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(notification.id); }} // Prevent link navigation
+              className="bg-brand-danger hover:bg-brand-danger/90 text-white rounded-lg shadow-soft font-ibm-plex-arabic"
             >
-              <CheckCircle className="ml-2 h-4 w-4" />
-              تمييز كمقروء
+              <Trash2 className="ml-2 h-4 w-4" />
+              حذف
             </Button>
           )}
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => onDelete?.(notification.id)}
-            className="bg-brand-danger hover:bg-brand-danger/90 text-white rounded-lg shadow-soft font-ibm-plex-arabic"
-          >
-            <Trash2 className="ml-2 h-4 w-4" />
-            حذف
-          </Button>
         </div>
       </CardContent>
     </Card>
