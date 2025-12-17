@@ -1,4 +1,4 @@
-import { RequestData, RatingData, ServiceData, UserData } from '@/types/app-types';
+import { RequestData, RatingData, ServiceData, UserData, MessageData } from '@/types/app-types';
 
 // Mock Users
 export const mockUsers: UserData[] = [
@@ -21,6 +21,16 @@ export const mockUsers: UserData[] = [
     bio: 'أبحث عن خدمات تصميم وتطوير لمشروعي الجديد.',
     avatar_url: 'https://api.dicebear.com/7.x/initials/svg?seed=LS',
     favorite_service_ids: [1, 3], // Laila likes service 1 and 3
+  },
+  {
+    id: 3,
+    name: 'خالد عميل',
+    email: 'khalid.client@example.com',
+    role: 'seeker',
+    phone: '+966509876543',
+    bio: 'أبحث عن خدمات منزلية متنوعة.',
+    avatar_url: 'https://api.dicebear.com/7.x/initials/svg?seed=KC',
+    favorite_service_ids: [],
   },
 ];
 
@@ -157,5 +167,54 @@ export const mockRatings: RatingData[] = [
     rating: 4,
     comment: 'محتوى جيد جداً وسرعة في التنفيذ، شكراً.',
     created_at: new Date('2023-11-20T11:00:00Z').toISOString(),
+  },
+];
+
+// Mock Messages
+export const mockMessages: MessageData[] = [
+  {
+    id: 1,
+    sender_id: 2, // Laila Seeker
+    receiver_id: 1, // Ahmed Provider
+    conversation_id: 'conv-2-1',
+    text: 'مرحباً أحمد، هل يمكنك البدء في تصميم الشعار قريباً؟',
+    read: false,
+    created_at: new Date('2023-12-01T10:00:00Z').toISOString(),
+  },
+  {
+    id: 2,
+    sender_id: 1, // Ahmed Provider
+    receiver_id: 2, // Laila Seeker
+    conversation_id: 'conv-2-1',
+    text: 'أهلاً ليلى، نعم سأبدأ العمل عليه اليوم. سأرسل لك المسودة الأولى غداً.',
+    read: true,
+    created_at: new Date('2023-12-01T10:15:00Z').toISOString(),
+  },
+  {
+    id: 3,
+    sender_id: 2, // Laila Seeker
+    receiver_id: 1, // Ahmed Provider
+    conversation_id: 'conv-2-1',
+    text: 'رائع، شكراً لك!',
+    read: false,
+    created_at: new Date('2023-12-01T10:30:00Z').toISOString(),
+  },
+  {
+    id: 4,
+    sender_id: 3, // Khalid Client
+    receiver_id: 1, // Ahmed Provider
+    conversation_id: 'conv-3-1',
+    text: 'مرحباً، هل تقدمون خدمات صيانة التكييف؟',
+    read: false,
+    created_at: new Date('2023-12-02T11:00:00Z').toISOString(),
+  },
+  {
+    id: 5,
+    sender_id: 1, // Ahmed Provider
+    receiver_id: 3, // Khalid Client
+    conversation_id: 'conv-3-1',
+    text: 'أهلاً بك خالد، نعم نقدم خدمات صيانة التكييف. ما هي المشكلة التي تواجهها؟',
+    read: true,
+    created_at: new Date('2023-12-02T11:10:00Z').toISOString(),
   },
 ];

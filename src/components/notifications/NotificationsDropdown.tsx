@@ -15,45 +15,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth'; // Import useAuth
-
-interface BackendMessage {
-  id: number;
-  sender_id: number;
-  receiver_id: number;
-  conversation_id: string;
-  text: string;
-  read?: boolean;
-  created_at?: string;
-}
-
-interface BackendRequest {
-  id: number;
-  client_id: number;
-  title: string;
-  status?: 'pending' | 'accepted' | 'completed' | 'cancelled';
-  created_at?: string;
-  updated_at?: string; // Added for seeker notifications
-}
-
-interface BackendRating {
-  id: number;
-  service_id: number;
-  client_id: number;
-  rating: number;
-  comment?: string;
-  created_at?: string;
-}
-
-interface BackendUser {
-  id: number;
-  name: string;
-}
-
-interface BackendService {
-  id: number;
-  title: string;
-  provider_id: number; // Added provider_id
-}
+import { mockMessages, mockRequests, mockRatings, mockUsers, mockServices } from '@/lib/mock-data'; // Import mock data
 
 interface Notification {
   id: string;
@@ -83,7 +45,7 @@ const getNotificationIcon = (type: Notification['type']) => {
   }
 };
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+// Removed API_BASE_URL as it's no longer needed
 
 export const NotificationsDropdown = () => {
   const { user } = useAuth(); // Get current user from auth context
@@ -105,25 +67,14 @@ export const NotificationsDropdown = () => {
     setLoading(true);
     setError(null);
     try {
-      const [messagesResponse, requestsResponse, ratingsResponse, usersResponse, servicesResponse] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/messages`),
-        fetch(`${API_BASE_URL}/api/requests`),
-        fetch(`${API_BASE_URL}/api/ratings`),
-        fetch(`${API_BASE_URL}/api/users`),
-        fetch(`${API_BASE_URL}/api/services`),
-      ]);
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      if (!messagesResponse.ok) throw new Error('فشل جلب الرسائل.');
-      if (!requestsResponse.ok) throw new Error('فشل جلب الطلبات.');
-      if (!ratingsResponse.ok) throw new Error('فشل جلب التقييمات.');
-      if (!usersResponse.ok) throw new Error('فشل جلب المستخدمين.');
-      if (!servicesResponse.ok) throw new Error('فشل جلب الخدمات.');
-
-      const messagesData: BackendMessage[] = (await messagesResponse.json()).data;
-      const requestsData: BackendRequest[] = (await requestsResponse.json()).data;
-      const ratingsData: BackendRating[] = (await ratingsResponse.json()).data;
-      const usersData: BackendUser[] = (await usersResponse.json()).data;
-      const servicesData: BackendService[] = (await servicesResponse.json()).data;
+      const messagesData = mockMessages;
+      const requestsData = mockRequests;
+      const ratingsData = mockRatings;
+      const usersData = mockUsers;
+      const servicesData = mockServices;
 
       const newNotifications: Notification[] = [];
 
@@ -228,19 +179,10 @@ export const NotificationsDropdown = () => {
   const handleMarkAsRead = async (id: string) => {
     const [type, backendId] = id.split('-');
     try {
-      if (type === 'msg') {
-        const response = await fetch(`${API_BASE_URL}/api/messages/${backendId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ read: true }),
-        });
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'فشل تحديث الرسالة.');
-        }
-      }
-      // For requests/ratings, you'd need a 'read' status in their models/APIs
-      // For now, we'll just update frontend state for other types
+      // Simulate marking as read
+      await new Promise(resolve => setTimeout(resolve, 200)); // Simulate network delay
+
+      // For mock data, just update the frontend state
       setNotifications(prev =>
         prev.map(notif => (notif.id === id ? { ...notif, read: true } : notif))
       );

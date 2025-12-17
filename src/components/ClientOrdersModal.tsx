@@ -9,6 +9,7 @@ import { ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth'; // Import useAuth
 import { RequestData, UserData } from '@/types/app-types'; // Import RequestData and UserData
+import { mockRequests, mockUsers } from '@/lib/mock-data'; // Import mock data
 
 interface ClientOrderCardPropsData {
   id: string;
@@ -19,7 +20,7 @@ interface ClientOrderCardPropsData {
   price: number;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+// Removed API_BASE_URL as it's no longer needed
 
 const ClientOrdersModal = () => {
   const { user } = useAuth();
@@ -40,25 +41,13 @@ const ClientOrdersModal = () => {
     setLoading(true);
     setError(null);
     try {
-      const [requestsResponse, usersResponse] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/requests`),
-        fetch(`${API_BASE_URL}/api/users`),
-      ]);
+      // Simulate API call with mock data
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
 
-      if (!requestsResponse.ok) {
-        const errorData = await requestsResponse.json();
-        throw new Error(errorData.message || 'فشل جلب الطلبات.');
-      }
-      if (!usersResponse.ok) {
-        const errorData = await usersResponse.json();
-        throw new Error(errorData.message || 'فشل جلب المستخدمين.');
-      }
+      const clientRequests = mockRequests.filter((req: RequestData) => req.client_id === CLIENT_ID);
+      setRequests(clientRequests);
+      setUsers(mockUsers); // Use mock users
 
-      const requestsResult: { data: RequestData[] } = await requestsResponse.json();
-      const usersResult: { data: UserData[] } = await usersResponse.json();
-
-      setRequests(requestsResult.data);
-      setUsers(usersResult.data);
     } catch (err: any) {
       setError(err.message);
       toast.error(err.message || 'حدث خطأ أثناء جلب طلباتك.');

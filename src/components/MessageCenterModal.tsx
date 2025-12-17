@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import ChatWindow from '@/components/ChatWindow';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth'; // Import useAuth
+import { mockMessages, mockUsers } from '@/lib/mock-data'; // Import mock data
 
 interface MessageData {
   id: number;
@@ -47,7 +48,7 @@ interface MessageCenterModalProps {
   isPage?: boolean; // New prop to indicate if it's rendered as a full page
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+// Removed API_BASE_URL as it's no longer needed
 
 export const MessageCenterModal = ({ currentUserId = 'provider', isPage = false }: MessageCenterModalProps) => {
   const { user } = useAuth(); // Get current user from auth context
@@ -71,25 +72,12 @@ export const MessageCenterModal = ({ currentUserId = 'provider', isPage = false 
     setLoading(true);
     setError(null);
     try {
-      const [messagesResponse, usersResponse] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/messages`),
-        fetch(`${API_BASE_URL}/api/users`),
-      ]);
+      // Simulate API call with mock data
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
 
-      if (!messagesResponse.ok) {
-        const errorData = await messagesResponse.json();
-        throw new Error(errorData.message || 'فشل جلب الرسائل.');
-      }
-      if (!usersResponse.ok) {
-        const errorData = await usersResponse.json();
-        throw new Error(errorData.message || 'فشل جلب المستخدمين.');
-      }
+      setAllMessages(mockMessages);
+      setAllUsers(mockUsers);
 
-      const messagesResult = await messagesResponse.json();
-      const usersResult = await usersResponse.json();
-
-      setAllMessages(messagesResult.data);
-      setAllUsers(usersResult.data);
     } catch (err: any) {
       setError(err.message);
       toast.error(err.message || 'حدث خطأ أثناء جلب البيانات.');
@@ -187,11 +175,16 @@ export const MessageCenterModal = ({ currentUserId = 'provider', isPage = false 
 
     for (const msg of messagesToMarkAsRead) {
       try {
-        await fetch(`${API_BASE_URL}/api/messages/${msg.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ read: true }),
-        });
+        // Simulate marking as read
+        await new Promise(resolve => setTimeout(resolve, 100));
+        // In a real app, this would be an API call:
+        // await fetch(`${API_BASE_URL}/api/messages/${msg.id}`, {
+        //   method: 'PUT',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify({ read: true }),
+        // });
+        // Update mock data state directly for simulation
+        setAllMessages(prev => prev.map(m => m.id === msg.id ? { ...m, read: true } : m));
       } catch (err) {
         console.error('Failed to mark message as read:', err);
         toast.error('فشل تحديث حالة قراءة الرسالة.');
