@@ -9,9 +9,8 @@ import { toast } from 'sonner';
 import { TransactionData, RequestData } from '@/types/app-types';
 import { ConfirmPaymentDialog } from '@/components/ConfirmPaymentDialog';
 import { useAuth } from '@/hooks/use-auth';
-import { formatCurrencyArabic } from '@/lib/number-formatter'; // Import formatter
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { formatCurrencyArabic } from '@/lib/number-formatter';
+import { mockRequests } from '@/lib/mock-data'; // Import mock data
 
 const getStatusBadgeVariant = (status: string) => {
   switch (status) {
@@ -50,13 +49,9 @@ export const ClientPaymentsTab = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/requests`);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'فشل جلب الطلبات.');
-      }
-      const result = await response.json();
-      const clientRequests = result.data.filter((req: RequestData) => req.client_id === CLIENT_ID);
+      // Simulate API call with mock data
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+      const clientRequests = mockRequests.filter((req: RequestData) => req.client_id === CLIENT_ID);
       setRequests(clientRequests);
     } catch (err: any) {
       setError(err.message);
@@ -72,25 +67,26 @@ export const ClientPaymentsTab = () => {
 
   const handleConfirmPayment = async (requestId: string, paymentReference: string, receiptUrl: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/requests/${requestId}/payment`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          payment_status: 'pending_review',
-          payment_reference: paymentReference,
-          receipt_url: receiptUrl,
-        }),
-      });
+      // Simulate API call for payment confirmation
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'فشل تأكيد الدفع.');
-      }
+      // Update mock data (in a real app, this would be a backend call)
+      setRequests(prevRequests =>
+        prevRequests.map(req =>
+          req.id.toString() === requestId
+            ? {
+                ...req,
+                payment_status: 'pending_review',
+                payment_reference: paymentReference,
+                receipt_url: receiptUrl,
+                status: 'payment_pending', // Update request status as well
+              }
+            : req
+        )
+      );
 
       toast.success('تم تأكيد الدفع بنجاح! سيتم مراجعة الوصل من قبل مقدم الخدمة.');
-      fetchTransactions();
+      fetchTransactions(); // Re-fetch to update the list
     } catch (error: any) {
       toast.error(error.message || 'حدث خطأ أثناء تأكيد الدفع.');
       console.error('Error confirming payment:', error);
@@ -117,7 +113,7 @@ export const ClientPaymentsTab = () => {
       .map(req => ({
         id: req.id?.toString() || '',
         serviceTitle: req.title,
-        amount: req.agreed_price || 0, // Use agreed_price
+        amount: req.agreed_price || 0,
         date: req.created_at ? new Date(req.created_at).toLocaleDateString('ar-EG') : 'غير محدد',
         status: statusMap[req.status || 'pending'] as TransactionData['status'],
         paymentStatus: paymentStatusMap[req.payment_status || 'unpaid'] as TransactionData['paymentStatus'],

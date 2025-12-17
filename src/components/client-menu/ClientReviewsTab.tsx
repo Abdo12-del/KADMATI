@@ -8,7 +8,8 @@ import { Star, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { ReviewCardPropsData, ServiceData, UserData, RatingData } from '@/types/app-types.ts';
-import { formatNumberArabic } from '@/lib/number-formatter'; // Import formatter
+import { formatNumberArabic } from '@/lib/number-formatter';
+import { mockRatings, mockServices, mockUsers } from '@/lib/mock-data'; // Import mock data
 
 // Helper for stars
 const renderStars = (rating: number) => {
@@ -24,11 +25,7 @@ const renderStars = (rating: number) => {
   );
 };
 
-interface ClientReviewsTabProps {
-  API_BASE_URL: string;
-}
-
-export const ClientReviewsTab = ({ API_BASE_URL }: ClientReviewsTabProps) => {
+export const ClientReviewsTab = () => {
   const { user } = useAuth();
   const CLIENT_ID = user?.id;
 
@@ -48,25 +45,13 @@ export const ClientReviewsTab = ({ API_BASE_URL }: ClientReviewsTabProps) => {
     setLoading(true);
     setError(null);
     try {
-      const [ratingsResponse, servicesResponse, usersResponse] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/ratings`),
-        fetch(`${API_BASE_URL}/api/services`),
-        fetch(`${API_BASE_URL}/api/users`),
-      ]);
+      // Simulate API call with mock data
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
 
-      if (!ratingsResponse.ok) throw new Error('فشل جلب التقييمات.');
-      if (!servicesResponse.ok) throw new Error('فشل جلب الخدمات.');
-      if (!usersResponse.ok) throw new Error('فشل جلب المستخدمين.');
-
-      const ratingsResult: { data: RatingData[] } = await ratingsResponse.json();
-      const servicesResult: { data: ServiceData[] } = await servicesResponse.json();
-      const usersResult: { data: UserData[] } = await usersResponse.json();
-
-      // Filter ratings to only include those made by the current client
-      const clientRatings = ratingsResult.data.filter(r => r.client_id === CLIENT_ID);
+      const clientRatings = mockRatings.filter(r => r.client_id === CLIENT_ID);
       setRatings(clientRatings);
-      setServices(servicesResult.data);
-      setProviders(usersResult.data.filter(u => u.role === 'provider')); // Only store providers
+      setServices(mockServices);
+      setProviders(mockUsers.filter(u => u.role === 'provider'));
 
     } catch (err: any) {
       setError(err.message);
@@ -74,7 +59,7 @@ export const ClientReviewsTab = ({ API_BASE_URL }: ClientReviewsTabProps) => {
     } finally {
       setLoading(false);
     }
-  }, [CLIENT_ID, API_BASE_URL]);
+  }, [CLIENT_ID]);
 
   useEffect(() => {
     fetchReviewsData();
@@ -105,17 +90,14 @@ export const ClientReviewsTab = ({ API_BASE_URL }: ClientReviewsTabProps) => {
 
   const handleDeleteReview = async (reviewId: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/ratings/${reviewId}`, {
-        method: 'DELETE',
-      });
+      // Simulate API call for deletion
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
 
-      if (response.status === 204) { // 204 No Content is typical for successful DELETE
-        toast.success('تم حذف التقييم بنجاح!');
-        fetchReviewsData(); // Re-fetch reviews to update the list
-      } else if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'فشل حذف التقييم.');
-      }
+      // Update mock data (in a real app, this would be a backend call)
+      setRatings(prevRatings => prevRatings.filter(r => r.id?.toString() !== reviewId));
+
+      toast.success('تم حذف التقييم بنجاح!');
+      fetchReviewsData(); // Re-fetch reviews to update the list
     } catch (error: any) {
       toast.error(error.message || 'حدث خطأ أثناء حذف التقييم.');
       console.error('Error deleting review:', error);

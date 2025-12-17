@@ -1,20 +1,19 @@
 "use client";
 
-// import React, { useState, useEffect, useCallback, useMemo } from 'react'; // Removed
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import ClientServiceCard from '@/components/ClientServiceCard';
 import ProviderCard from '@/components/ProviderCard';
-// import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Removed
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { ServiceData, UserData, ClientServiceCardPropsData, ProviderCardPropsData } from '@/types/app-types.ts';
+import { mockServices, mockUsers } from '@/lib/mock-data'; // Import mock data
 
 interface ClientFavoritesTabProps {
-  API_BASE_URL: string;
+  // API_BASE_URL: string; // Removed as mock data is used
 }
 
-export const ClientFavoritesTab = ({ API_BASE_URL }: ClientFavoritesTabProps) => {
-  const { user } = useAuth();
+export const ClientFavoritesTab = () => {
+  const { user, updateUserFavorites } = useAuth(); // Keep updateUserFavorites for simulated interaction
   const [favoriteServices, setFavoriteServices] = useState<ServiceData[]>([]);
   const [allUsers, setAllUsers] = useState<UserData[]>([]);
   const [loadingFavorites, setLoadingFavorites] = useState(true);
@@ -30,20 +29,13 @@ export const ClientFavoritesTab = ({ API_BASE_URL }: ClientFavoritesTabProps) =>
     setLoadingFavorites(true);
     setErrorFavorites(null);
     try {
-      const [servicesResponse, usersResponse] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/services`),
-        fetch(`${API_BASE_URL}/api/users`),
-      ]);
+      // Simulate API call with mock data
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
 
-      if (!servicesResponse.ok) throw new Error('فشل جلب الخدمات.');
-      if (!usersResponse.ok) throw new Error('فشل جلب المستخدمين.');
-
-      const servicesData: ServiceData[] = (await servicesResponse.json()).data;
-      const usersData: UserData[] = (await usersResponse.json()).data;
-      setAllUsers(usersData);
+      setAllUsers(mockUsers);
 
       const userFavorites = user.favorite_service_ids || [];
-      const fetchedFavoriteServices = servicesData.filter(service => userFavorites.includes(service.id!));
+      const fetchedFavoriteServices = mockServices.filter(service => userFavorites.includes(service.id!));
       setFavoriteServices(fetchedFavoriteServices);
 
     } catch (err: any) {
@@ -52,7 +44,7 @@ export const ClientFavoritesTab = ({ API_BASE_URL }: ClientFavoritesTabProps) =>
     } finally {
       setLoadingFavorites(false);
     }
-  }, [user, API_BASE_URL]);
+  }, [user]); // Depend on user to update favorites
 
   useEffect(() => {
     fetchFavoriteServices();

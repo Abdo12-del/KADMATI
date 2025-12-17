@@ -15,10 +15,10 @@ import { ClientPaymentsTab } from '@/components/client-menu/ClientPaymentsTab.ts
 import { ClientReviewsTab } from '@/components/client-menu/ClientReviewsTab.tsx';
 import { ClientSupportTab } from '@/components/client-menu/ClientSupportTab.tsx';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+// Removed API_BASE_URL as it's no longer needed by the child tabs
 
 export const ClientGeneralMenuModal = () => {
-  const { user, logout } = useAuth(); // Removed updateUserFavorites
+  const { user, logout } = useAuth();
 
   const handleProfileUpdate = (updatedFields: Partial<any>) => {
     // This would typically involve an API call to update the user profile
@@ -59,7 +59,7 @@ export const ClientGeneralMenuModal = () => {
             </TabsContent>
 
             <TabsContent value="favorites" className="mt-0">
-              <ClientFavoritesTab API_BASE_URL={API_BASE_URL} />
+              <ClientFavoritesTab />
             </TabsContent>
 
             <TabsContent value="payments" className="mt-0">
@@ -67,7 +67,7 @@ export const ClientGeneralMenuModal = () => {
             </TabsContent>
 
             <TabsContent value="reviews" className="mt-0">
-              <ClientReviewsTab API_BASE_URL={API_BASE_URL} />
+              <ClientReviewsTab />
             </TabsContent>
 
             <TabsContent value="support" className="mt-0">
