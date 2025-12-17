@@ -5,8 +5,8 @@ import path from "path";
 
 export default defineConfig(() => ({
   server: {
-    host: "::",
-    port: 8080,
+    // host: "::", // Removed to allow dynamic host/port
+    // port: 8080, // Removed to allow dynamic host/port
     proxy: {
       '/api': {
         target: 'http://localhost:3000',
