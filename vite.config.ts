@@ -5,8 +5,8 @@ import path from "path";
 
 export default defineConfig(() => ({
   server: {
-    // host: "::", // Removed to allow dynamic host/port
-    // port: 8080, // Removed to allow dynamic host/port
+    host: "0.0.0.0", // Explicitly set host to listen on all network interfaces
+    // port: 8080, // Removed to allow dynamic host/port, or set by package.json
     proxy: {
       '/api': {
         target: 'http://localhost:3000',
