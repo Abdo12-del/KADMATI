@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth'; // Import useAuth
-import { formatNumberArabic } from '@/lib/number-formatter'; // Import formatter
 
 interface UserData {
   id: number;

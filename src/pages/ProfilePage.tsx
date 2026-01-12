@@ -9,7 +9,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { formatNumberArabic } from '@/lib/number-formatter'; // Import formatter
 
 const ProfilePage = () => {
   // Placeholder user data - will be replaced by actual data from auth context

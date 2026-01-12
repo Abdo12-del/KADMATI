@@ -8,7 +8,6 @@ import { Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { ServiceData, UserData } from '@/types/app-types';
-import { formatNumberArabic } from '@/lib/number-formatter'; // Import formatter
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 

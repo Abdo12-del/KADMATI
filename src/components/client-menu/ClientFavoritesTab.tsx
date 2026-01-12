@@ -8,12 +8,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { ServiceData, UserData, ClientServiceCardPropsData, ProviderCardPropsData } from '@/types/app-types.ts';
 import { mockServices, mockUsers } from '@/lib/mock-data'; // Import mock data
 
-interface ClientFavoritesTabProps {
-  // API_BASE_URL: string; // Removed as mock data is used
-}
-
 export const ClientFavoritesTab = () => {
-  const { user, updateUserFavorites } = useAuth(); // Keep updateUserFavorites for simulated interaction
+  const { user } = useAuth(); // Removed updateUserFavorites as it's not directly used here
   const [favoriteServices, setFavoriteServices] = useState<ServiceData[]>([]);
   const [allUsers, setAllUsers] = useState<UserData[]>([]);
   const [loadingFavorites, setLoadingFavorites] = useState(true);

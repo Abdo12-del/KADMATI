@@ -177,7 +177,7 @@ export const NotificationsDropdown = () => {
 
   // Function to mark a notification as read (this would update backend for messages/requests/ratings)
   const handleMarkAsRead = async (id: string) => {
-    const [type, backendId] = id.split('-');
+    // const [type, backendId] = id.split('-'); // Removed unused variables
     try {
       // Simulate marking as read
       await new Promise(resolve => setTimeout(resolve, 200)); // Simulate network delay

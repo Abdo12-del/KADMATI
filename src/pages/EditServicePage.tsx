@@ -11,7 +11,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useParams, useNavigate } from 'react-router-dom'; // Import useParams, useNavigate
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'; // Import AlertDialog components
-import { formatNumberArabic } from '@/lib/number-formatter'; // Import formatter
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 

@@ -10,7 +10,6 @@ import { Link } from 'react-router-dom';
 import { Search, Plus } from 'lucide-react';
 import { toast } from 'sonner'; // Import toast for notifications
 import { useAuth } from '@/hooks/use-auth'; // Import useAuth
-import { formatNumberArabic } from '@/lib/number-formatter'; // Import formatter
 
 interface Service {
   id: string;

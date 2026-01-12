@@ -8,7 +8,6 @@ import { Star, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { ReviewCardPropsData, ServiceData, UserData, RatingData } from '@/types/app-types.ts';
-import { formatNumberArabic } from '@/lib/number-formatter';
 import { mockRatings, mockServices, mockUsers } from '@/lib/mock-data'; // Import mock data
 
 // Helper for stars

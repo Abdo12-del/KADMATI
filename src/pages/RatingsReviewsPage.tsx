@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth'; // Import useAuth
-import { formatNumberArabic } from '@/lib/number-formatter'; // Import formatter
 
 interface RatingData {
   id: number;
@@ -34,7 +33,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const RatingsReviewsPage = () => {
   const { user } = useAuth(); // Get current user from auth context
-  const PROVIDER_ID = user?.id; // Use actual provider ID
+  const PROVIDER_ID = user?.id;
 
   const [ratings, setRatings] = useState<RatingData[]>([]);
   const [services, setServices] = useState<ServiceData[]>([]);
