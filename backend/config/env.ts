@@ -1,13 +1,10 @@
 import dotenv from 'dotenv';
 import path from 'path';
-import { fileURLToPath } from 'url'; // Import fileURLToPath
 
-// Get the current file's directory name in ES module scope
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Load environment variables from .env file
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+// Load environment variables from .env file located at the project root.
+// process.cwd() returns the current working directory, which is the project root
+// when `npm run start:backend` is executed.
+dotenv.config({ path: path.join(process.cwd(), '.env') });
 
 export const env = {
   DATABASE_URL: process.env.DATABASE_URL || 'sqlite://./backend/db/database.db',
