@@ -5,7 +5,7 @@ import { errorHandler } from './utils/errorHandler';
 import usersRoutes from './api/users'; 
 import servicesRoutes from './api/services'; 
 import requestsRoutes from './api/requests'; 
-import ratingsRoutes from './api/ratings'; 
+import ratingsRoutes from './api/ratings'; // Corrected path
 import messagesRoutes from './api/messages'; 
 import authRoutes from './api/auth'; 
 
