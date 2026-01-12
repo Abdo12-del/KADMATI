@@ -27,7 +27,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+export const AuthProvider = ({ children }: { ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<'seeker' | 'provider' | null>(null);
@@ -45,71 +47,74 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (email === 'ahmed.provider@example.com' && password === 'password123') {
-      const loggedInUser: User = {
-        id: 1,
-        name: 'أحمد مقدم',
-        email: 'ahmed.provider@example.com',
-        role: 'provider',
-        avatar_url: 'https://api.dicebear.com/7.x/initials/svg?seed=AP',
-        favorite_service_ids: [], // Ensure this is initialized
-      };
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'فشل تسجيل الدخول.');
+      }
+
+      const result = await response.json();
+      const loggedInUser: User = result.data;
+
       setUser(loggedInUser);
       setIsLoggedIn(true);
       setUserRole(loggedInUser.role);
       localStorage.setItem('currentUser', JSON.stringify(loggedInUser));
-      toast.success('تم تسجيل الدخول بنجاح (محاكاة)!');
-      navigate('/dashboard');
-    } else if (email === 'layla.seeker@example.com' && password === 'password123') {
-      const loggedInUser: User = {
-        id: 2,
-        name: 'ليلى طالبة',
-        email: 'layla.seeker@example.com',
-        role: 'seeker',
-        avatar_url: 'https://api.dicebear.com/7.x/initials/svg?seed=LS',
-        favorite_service_ids: [], // Ensure this is initialized
-      };
-      setUser(loggedInUser);
-      setIsLoggedIn(true);
-      setUserRole(loggedInUser.role);
-      localStorage.setItem('currentUser', JSON.stringify(loggedInUser));
-      toast.success('تم تسجيل الدخول بنجاح (محاكاة)!');
-      navigate('/client-home');
-    } else {
-      toast.error('فشل تسجيل الدخول (محاكاة): البريد الإلكتروني أو كلمة المرور غير صحيحة.');
-      throw new Error('Invalid credentials');
+      toast.success('تم تسجيل الدخول بنجاح!');
+
+      if (loggedInUser.role === 'provider') {
+        navigate('/dashboard');
+      } else {
+        navigate('/client-home');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'حدث خطأ أثناء تسجيل الدخول.');
+      console.error('Login failed:', error);
+      throw error;
     }
   };
 
   const signup = async (userData: Omit<User, 'id'> & { password: string }) => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
 
-    // Simulate successful signup
-    const newUser: User = {
-      id: Date.now(), // Generate a unique ID
-      name: userData.name,
-      email: userData.email,
-      role: userData.role,
-      phone: userData.phone,
-      bio: userData.bio,
-      avatar_url: userData.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${userData.name.split(' ').map(n => n[0]).join('')}`,
-      favorite_service_ids: [], // Initialize for new users
-    };
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'فشل إنشاء الحساب.');
+      }
 
-    setUser(newUser);
-    setIsLoggedIn(true);
-    setUserRole(newUser.role);
-    localStorage.setItem('currentUser', JSON.stringify(newUser));
-    toast.success('تم إنشاء الحساب وتسجيل الدخول بنجاح (محاكاة)!');
+      const result = await response.json();
+      const newUser: User = result.data;
 
-    if (newUser.role === 'provider') {
-      navigate('/dashboard');
-    } else {
-      navigate('/client-home');
+      setUser(newUser);
+      setIsLoggedIn(true);
+      setUserRole(newUser.role);
+      localStorage.setItem('currentUser', JSON.stringify(newUser));
+      toast.success('تم إنشاء الحساب وتسجيل الدخول بنجاح!');
+
+      if (newUser.role === 'provider') {
+        navigate('/dashboard');
+      } else {
+        navigate('/client-home');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'حدث خطأ أثناء إنشاء الحساب.');
+      console.error('Signup failed:', error);
+      throw error;
     }
   };
 
@@ -128,7 +133,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
     let response;
     let method;
     let url;

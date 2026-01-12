@@ -9,13 +9,13 @@ import { Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 interface SubmitRatingDialogProps {
   serviceId: number;
   serviceTitle: string;
   onRatingSubmitted: () => void; // Callback to refresh reviews in parent
 }
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const SubmitRatingDialog = ({ serviceId, serviceTitle, onRatingSubmitted }: SubmitRatingDialogProps) => {
   const { user } = useAuth();
@@ -94,7 +94,7 @@ export const SubmitRatingDialog = ({ serviceId, serviceTitle, onRatingSubmitted 
                   }`}
                   onClick={() => handleStarClick(i + 1)}
                 />
-              ))}
+              )}
             </div>
           </div>
           <div className="grid gap-2">
