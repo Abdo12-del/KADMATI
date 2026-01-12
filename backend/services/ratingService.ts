@@ -7,7 +7,7 @@ let ratings: Rating[] = [
     client_id: 2, // Laila Seeker
     rating: 5,
     comment: 'خدمة ممتازة وشعار رائع، أنصح به بشدة!',
-    created_at: new Date('22023-10-20T15:00:00Z'),
+    created_at: new Date('2023-10-20T15:00:00Z'),
   },
   {
     id: 2,
