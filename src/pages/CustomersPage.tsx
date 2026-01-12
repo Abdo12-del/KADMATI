@@ -70,7 +70,7 @@ const CustomersPage = () => {
         email: customer.email,
         avatarUrl: customer.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${customer.name.split(' ').map((n: string) => n[0]).join('')}`,
         totalOrders: Math.floor(Math.random() * 5) + 1, // Placeholder: In a real app, this would be calculated from orders
-        lastOrderDate: customer.created_at ? new Date(customer.created_at).toLocaleDateString('ar-EG') : 'غير محدد', // Placeholder
+        lastOrderDate: customer.created_at ? new Date(customer.created_at).toLocaleDateString('en-US') : 'غير محدد', // Placeholder
       }));
   }, [users, searchTerm]);
 

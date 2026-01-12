@@ -111,7 +111,7 @@ const NotificationsPage = () => {
             type: 'message',
             title: `رسالة جديدة من ${sender?.name || 'مستخدم غير معروف'}`,
             description: msg.text,
-            time: new Date(msg.created_at || '').toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+            time: new Date(msg.created_at || '').toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
             read: msg.read || false,
             link: CURRENT_USER_ROLE === 'provider' ? '/dashboard/messages' : '/client-messages', // Link to message center
           });
@@ -130,7 +130,7 @@ const NotificationsPage = () => {
               type: 'order',
               title: `طلب خدمة جديد: ${req.title}`,
               description: `من العميل: ${client?.name || 'عميل غير معروف'}`,
-              time: new Date(req.created_at || '').toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+              time: new Date(req.created_at || '').toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
             read: false,
             link: '/dashboard/orders',
           });
@@ -144,7 +144,7 @@ const NotificationsPage = () => {
             type: 'order',
             title: `${statusText} طلبك: ${req.title}`,
             description: `حالة الطلب: ${req.status}`,
-            time: new Date(req.updated_at || '').toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+            time: new Date(req.updated_at || '').toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
             read: false,
             link: '/client-requests', // Link to client's requests page
           });
@@ -164,7 +164,7 @@ const NotificationsPage = () => {
           type: 'rating',
           title: `تقييم جديد (${rating.rating} نجوم)`,
           description: `من ${client?.name || 'عميل غير معروف'} على خدمة: ${service?.title || 'غير معروفة'}.`,
-          time: new Date(rating.created_at || '').toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+          time: new Date(rating.created_at || '').toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
           read: false,
           link: '/dashboard/ratings',
         });

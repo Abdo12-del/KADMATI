@@ -108,14 +108,14 @@ const DashboardOverviewPage = () => {
 
     for (let i = 0; i < 6; i++) { // Last 6 months
       const date = new Date(currentYear, new Date().getMonth() - i, 1);
-      const monthName = date.toLocaleDateString('ar-EG', { month: 'short' });
+      const monthName = date.toLocaleDateString('en-US', { month: 'short' }); // Use en-US
       monthlyDataMap.set(monthName, { sales: 0, orders: 0 });
     }
 
     requests.forEach(req => {
       if (req.created_at) {
         const reqDate = new Date(req.created_at);
-        const monthName = reqDate.toLocaleDateString('ar-EG', { month: 'short' });
+        const monthName = reqDate.toLocaleDateString('en-US', { month: 'short' }); // Use en-US
         if (monthlyDataMap.has(monthName)) {
           const data = monthlyDataMap.get(monthName)!;
           data.orders += 1;
@@ -158,7 +158,7 @@ const DashboardOverviewPage = () => {
         id: req.id.toString(),
         title: `الرد على طلب خدمة: ${req.title}`,
         status: req.status === 'pending' ? 'Pending' : req.status === 'accepted' ? 'Accepted' : 'Payment Pending',
-        dueDate: req.created_at ? new Date(new Date(req.created_at).setDate(new Date(req.created_at).getDate() + 7)).toLocaleDateString('ar-EG') : 'غير محدد',
+        dueDate: req.created_at ? new Date(new Date(req.created_at).setDate(new Date(req.created_at).getDate() + 7)).toLocaleDateString('en-US') : 'غير محدد', // Use en-US
       }));
   }, [requests]);
 

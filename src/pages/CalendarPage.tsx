@@ -55,7 +55,7 @@ const CalendarPage = () => {
 
         <Card className="bg-brand-card-bg rounded-2xl shadow-soft p-6 text-right">
           <CardHeader className="p-0 pb-4">
-            <CardTitle className="font-cairo text-brand-text-dark text-2xl">أحداث اليوم ({date?.toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long' })})</CardTitle>
+            <CardTitle className="font-cairo text-brand-text-dark text-2xl">أحداث اليوم ({date?.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })})</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {selectedDateEvents.length > 0 ? (

@@ -85,7 +85,7 @@ const OrdersPage = () => {
         serviceTitle: req.title,
         customerName: customer?.name || 'عميل غير معروف',
         status: statusMap[req.status || 'pending'],
-        date: req.created_at ? new Date(req.created_at).toLocaleDateString('ar-EG') : 'غير محدد',
+        date: req.created_at ? new Date(req.created_at).toLocaleDateString('en-US') : 'غير محدد',
         price: req.agreed_price || 0, // Use agreed_price
       };
     });

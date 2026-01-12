@@ -125,7 +125,7 @@ export const ProviderReverseRequestsModal = () => {
           title: request.title,
           description: request.description,
           location: request.location,
-          dateAdded: request.created_at ? new Date(request.created_at).toLocaleDateString('ar-EG') : 'غير محدد',
+          dateAdded: request.created_at ? new Date(request.created_at).toLocaleDateString('en-US') : 'غير محدد',
           dueDate: request.due_date,
           additionalOptions: request.additional_options,
           clientName: client?.name || 'عميل غير معروف',

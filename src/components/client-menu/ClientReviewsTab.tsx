@@ -76,7 +76,7 @@ export const ClientReviewsTab = () => {
         providerAvatarUrl: provider?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${provider?.name.split(' ').map(n => n[0]).join('') || 'UN'}`,
         rating: rating.rating,
         comment: rating.comment,
-        date: rating.created_at ? new Date(rating.created_at).toLocaleDateString('ar-EG') : 'غير محدد',
+        date: rating.created_at ? new Date(rating.created_at).toLocaleDateString('en-US') : 'غير محدد',
       } as ReviewCardPropsData;
     });
   }, [ratings, services, providers]);

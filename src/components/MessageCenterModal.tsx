@@ -126,12 +126,12 @@ export const MessageCenterModal = ({ currentUserId = 'provider', isPage = false 
         id: msg.id.toString(),
         sender: msg.sender_id === CURRENT_USER_BACKEND_ID ? currentUserId : (currentUserId === 'provider' ? 'customer' : 'provider'),
         text: msg.text,
-        time: msg.created_at ? new Date(msg.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '',
+        time: msg.created_at ? new Date(msg.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '',
       });
       if (!msg.read && msg.receiver_id === CURRENT_USER_BACKEND_ID) { // Only count unread if current user is the receiver
         conv.unreadCount++;
       }
-      conv.lastMessageTime = msg.created_at ? new Date(msg.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '';
+      conv.lastMessageTime = msg.created_at ? new Date(msg.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '';
     });
 
     // Sort messages within each conversation by time

@@ -75,7 +75,7 @@ const ClientOrdersModal = () => {
         serviceTitle: req.title,
         providerName: provider?.name || 'مقدم خدمة غير معروف',
         status: statusMap[req.status || 'pending'] as ClientOrderCardPropsData['status'],
-        date: req.created_at ? new Date(req.created_at).toLocaleDateString('ar-EG') : 'غير محدد',
+        date: req.created_at ? new Date(req.created_at).toLocaleDateString('en-US') : 'غير محدد',
         price: req.agreed_price || 0, // Use agreed_price
       };
     });

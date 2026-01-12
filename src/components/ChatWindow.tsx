@@ -54,7 +54,7 @@ const ChatWindow = ({ conversation, currentUserId, currentBackendUserId, onMessa
         id: `temp-${Date.now()}`, // Temporary ID for optimistic UI update
         sender: currentUserId,
         text: newMessageText,
-        time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+        time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
       };
       setCurrentMessages(prevMessages => [...prevMessages, tempMessage]);
       setTimeout(scrollToBottom, 100); // Scroll after optimistic update

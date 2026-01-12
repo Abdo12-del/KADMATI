@@ -106,7 +106,7 @@ const RatingsReviewsPage = () => {
         serviceTitle: service?.title || 'خدمة غير معروفة',
         rating: rating.rating,
         comment: rating.comment,
-        date: rating.created_at ? new Date(rating.created_at).toLocaleDateString('ar-EG') : 'غير محدد',
+        date: rating.created_at ? new Date(rating.created_at).toLocaleDateString('en-US') : 'غير محدد',
         avatarUrl: customer?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${customer?.name?.split(' ').map((n: string) => n[0]).join('') || 'UN'}`,
       };
     });

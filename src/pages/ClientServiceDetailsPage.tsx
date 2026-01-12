@@ -148,7 +148,7 @@ const ClientServiceDetailsPage = () => {
         customerAvatar: customer?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${customer?.name.split(' ').map(n => n[0]).join('') || 'UN'}`,
         rating: review.rating,
         comment: review.comment,
-        date: review.created_at ? new Date(review.created_at).toLocaleDateString('ar-EG') : 'غير محدد',
+        date: review.created_at ? new Date(review.created_at).toLocaleDateString('en-US') : 'غير محدد',
       };
     });
   }, [reviews, reviewCustomers]);
@@ -531,7 +531,7 @@ const ClientServiceDetailsPage = () => {
                 {mappedReviews.slice(0, 2).map(review => ( // Show first 2 reviews
                   <div key={review.id} className="border-b border-border pb-4 last:border-b-0 text-right">
                     <div className="flex flex-row-reverse items-center justify-end mb-2">
-                      <Avatar className="h-10 w-10 ml-3">
+                                            <Avatar className="h-10 w-10 ml-3">
                         <AvatarImage src={review.customerAvatar} alt={review.customerName} />
                         <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{review.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                       </Avatar>
