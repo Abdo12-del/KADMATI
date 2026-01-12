@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth'; // Import useAuth
-import { formatNumberArabic } from '@/lib/number-formatter'; // Import formatter
+// import { formatNumberArabic } from '@/lib/number-formatter'; // Removed unused import
 
 const SignupPage = () => {
   const [stage, setStage] = useState(1);
@@ -101,23 +101,23 @@ const SignupPage = () => {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <Label htmlFor="name" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">الاسم الكامل</Label>
-                  <Input id="name" type="text" placeholder="ادخل اسمك الكامل" required value={name} onChange={(e) => setName(e.target.value)} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                  <Input id="name" type="text" placeholder="ادخل اسمك الكامل" required value={name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
                 </div>
                 <div>
                   <Label htmlFor="email" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">البريد الإلكتروني</Label>
-                  <Input id="email" type="email" placeholder="ادخل بريدك الإلكتروني" required value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                  <Input id="email" type="email" placeholder="ادخل بريدك الإلكتروني" required value={email} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
                 </div>
                 <div>
                   <Label htmlFor="phone" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">رقم الهاتف</Label>
-                  <Input id="phone" type="tel" placeholder={formatNumberArabic(501234567)} required value={phone} onChange={(e) => setPhone(e.target.value)} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                  <Input id="phone" type="tel" placeholder="مثال: 501234567" required value={phone} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPhone(e.target.value)} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
                 </div>
                 <div>
                   <Label htmlFor="password" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">كلمة المرور</Label>
-                  <Input id="password" type="password" placeholder="ادخل كلمة المرور" required value={password} onChange={(e) => setPassword(e.target.value)} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                  <Input id="password" type="password" placeholder="ادخل كلمة المرور" required value={password} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
                 </div>
                 <div>
                   <Label htmlFor="confirm-password" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">تأكيد كلمة المرور</Label>
-                  <Input id="confirm-password" type="password" placeholder="أعد إدخال كلمة المرور" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                  <Input id="confirm-password" type="password" placeholder="أعد إدخال كلمة المرور" required value={confirmPassword} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
                 </div>
 
                 {role === 'provider' && (
@@ -137,11 +137,11 @@ const SignupPage = () => {
                     </div>
                     <div>
                       <Label htmlFor="id-number" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">رقم البطاقة / السجل التجاري</Label>
-                      <Input id="id-number" type="text" placeholder="ادخل الرقم التعريفي" required value={idNumber} onChange={(e) => setIdNumber(e.target.value)} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                      <Input id="id-number" type="text" placeholder="ادخل الرقم التعريفي" required value={idNumber} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIdNumber(e.target.value)} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
                     </div>
                     <div>
                       <Label htmlFor="address" className="text-brand-text-dark font-ibm-plex-arabic mb-2 block">عنوان المكتب أو مكان العمل</Label>
-                      <Input id="address" type="text" placeholder="ادخل العنوان" required value={address} onChange={(e) => setAddress(e.target.value)} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
+                      <Input id="address" type="text" placeholder="ادخل العنوان" required value={address} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddress(e.target.value)} className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right" />
                     </div>
                   </>
                 )}

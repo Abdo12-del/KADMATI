@@ -90,7 +90,7 @@ const AddServicePage = () => {
               placeholder="مثال: تصميم شعار احترافي"
               required
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
               className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
             />
           </div>
@@ -102,7 +102,7 @@ const AddServicePage = () => {
               rows={5}
               required
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
               className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
             />
           </div>
@@ -139,7 +139,7 @@ const AddServicePage = () => {
               required
               min="0"
               value={price}
-              onChange={(e) => setPrice(Number(e.target.value))}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPrice(Number(e.target.value))}
               className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
             />
           </div>
@@ -152,7 +152,7 @@ const AddServicePage = () => {
               required
               min="1"
               value={deliveryTime}
-              onChange={(e) => setDeliveryTime(Number(e.target.value))}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDeliveryTime(Number(e.target.value))}
               className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
             />
           </div>
@@ -163,7 +163,7 @@ const AddServicePage = () => {
               type="text"
               placeholder="مثال: https://example.com/image.jpg"
               value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setImageUrl(e.target.value)}
               className="rounded-xl shadow-soft bg-brand-background border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
             />
           </div>

@@ -1,4 +1,3 @@
-// import React from 'react'; // Removed
 // import Header from '@/components/Header'; // Removed
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

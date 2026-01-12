@@ -68,7 +68,7 @@ const CustomersPage = () => {
         id: customer.id.toString(),
         name: customer.name,
         email: customer.email,
-        avatarUrl: customer.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${customer.name.split(' ').map(n => n[0]).join('')}`,
+        avatarUrl: customer.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${customer.name.split(' ').map((n: string) => n[0]).join('')}`,
         totalOrders: Math.floor(Math.random() * 5) + 1, // Placeholder: In a real app, this would be calculated from orders
         lastOrderDate: customer.created_at ? new Date(customer.created_at).toLocaleDateString('ar-EG') : 'غير محدد', // Placeholder
       }));
@@ -95,7 +95,7 @@ const CustomersPage = () => {
           placeholder="بحث عن عميل..."
           className="w-full pr-10 rounded-xl shadow-soft bg-brand-card-bg border-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 font-ibm-plex-arabic text-right"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
         />
         <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-brand-text-muted" />
       </div>

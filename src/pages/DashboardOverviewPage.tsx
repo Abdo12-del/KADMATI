@@ -183,7 +183,7 @@ const DashboardOverviewPage = () => {
           id: msg.id.toString(),
           customerName: customer?.name || 'عميل غير معروف',
           message: msg.text,
-          avatarUrl: customer?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${customer?.name.split(' ').map(n => n[0]).join('') || 'UN'}`,
+          avatarUrl: customer?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${customer?.name?.split(' ').map((n: string) => n[0]).join('') || 'UN'}`,
         };
       });
   }, [messages, allUsers, PROVIDER_ID]);
@@ -347,7 +347,7 @@ const DashboardOverviewPage = () => {
                   <li key={msg.id} className="flex flex-row-reverse items-center border-b border-border pb-3 last:border-b-0 last:pb-0">
                     <Avatar className="h-10 w-10 ml-3">
                       <AvatarImage src={msg.avatarUrl} alt={msg.customerName} />
-                      <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{msg.customerName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                      <AvatarFallback className="bg-brand-primary-light text-brand-primary font-cairo">{msg.customerName.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
                     </Avatar>
                     <div className="flex-grow text-right">
                       <p className="font-cairo text-brand-text-dark font-semibold">{msg.customerName}</p>

@@ -71,20 +71,20 @@ const OrdersPage = () => {
   }, [fetchAllData]);
 
   const mapRequestsToOrderCards = (reqs: RequestData[]): OrderCardPropsData[] => {
+    const statusMap: { [key in RequestData['status']]: OrderCardPropsData['status'] } = {
+      'pending': 'Pending',
+      'accepted': 'Accepted',
+      'completed': 'Completed',
+      'cancelled': 'Cancelled',
+      'payment_pending': 'Payment Pending',
+    };
     return reqs.map(req => {
       const customer = users.find(user => user.id === req.client_id);
-      const statusMap = {
-        'pending': 'Pending',
-        'accepted': 'Accepted',
-        'completed': 'Completed',
-        'cancelled': 'Cancelled',
-        'payment_pending': 'Payment Pending',
-      };
       return {
         id: req.id.toString(),
         serviceTitle: req.title,
         customerName: customer?.name || 'عميل غير معروف',
-        status: statusMap[req.status || 'pending'] as OrderCardPropsData['status'],
+        status: statusMap[req.status || 'pending'],
         date: req.created_at ? new Date(req.created_at).toLocaleDateString('ar-EG') : 'غير محدد',
         price: req.agreed_price || 0, // Use agreed_price
       };
