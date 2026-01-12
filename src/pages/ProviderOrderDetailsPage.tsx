@@ -10,7 +10,7 @@ import { MapPin, CalendarDays, MessageSquare, CheckCircle, XCircle, ReceiptText 
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { RequestData, UserData } from '@/types/app-types';
-import { mockRequests, mockUsers } from '@/lib/mock-data';
+import { mockUsers } from '@/lib/mock-data'; // Keep mockUsers for client details if not fetched from backend
 import { formatCurrencyArabic } from '@/lib/number-formatter';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
@@ -42,21 +42,29 @@ const ProviderOrderDetailsPage = () => {
     setLoading(true);
     setError(null);
     try {
-      // Simulate fetching request details
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const fetchedRequest = mockRequests.find(req => req.id.toString() === id && req.assigned_provider_id === PROVIDER_ID);
+      // Fetch request details from the backend API
+      const requestResponse = await fetch(`${API_BASE_URL}/api/requests/${id}`);
+      if (!requestResponse.ok) {
+        const errorData = await requestResponse.json();
+        throw new Error(errorData.message || 'فشل جلب تفاصيل الطلب.');
+      }
+      const requestResult = await requestResponse.json();
+      const fetchedRequest: RequestData = requestResult.data;
 
-      if (!fetchedRequest) {
+      // Verify if the fetched request is actually assigned to the current provider
+      if (fetchedRequest.assigned_provider_id !== PROVIDER_ID) {
         throw new Error('الطلب غير موجود أو ليس مخصصًا لك.');
       }
       setRequest(fetchedRequest);
 
-      // Simulate fetching client details
-      const fetchedClient = mockUsers.find(u => u.id === fetchedRequest.client_id);
-      if (!fetchedClient) {
-        throw new Error('معلومات العميل غير متوفرة.');
+      // Fetch client details from the backend API
+      const clientResponse = await fetch(`${API_BASE_URL}/api/users/${fetchedRequest.client_id}`);
+      if (!clientResponse.ok) {
+        const errorData = await clientResponse.json();
+        throw new Error(errorData.message || 'فشل جلب معلومات العميل.');
       }
-      setClient(fetchedClient);
+      const clientResult = await clientResponse.json();
+      setClient(clientResult.data);
 
     } catch (err: any) {
       setError(err.message);
