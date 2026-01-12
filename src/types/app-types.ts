@@ -7,6 +7,8 @@ export interface UserData {
   bio?: string;
   avatar_url?: string;
   favorite_service_ids?: number[];
+  created_at?: string; // Added
+  updated_at?: string; // Added
 }
 
 export interface ServiceData {

@@ -1,6 +1,13 @@
 import { User } from '../models/userModel';
 // import bcrypt from 'bcryptjs'; // Removed as it's not used in the current simulation
 
+const getRecentDate = (daysAgo: number = 0, monthsAgo: number = 0) => {
+  const date = new Date();
+  date.setDate(date.getDate() - daysAgo);
+  date.setMonth(date.getMonth() - monthsAgo);
+  return date;
+};
+
 let users: User[] = [
   {
     id: 1,
@@ -12,8 +19,8 @@ let users: User[] = [
     bio: 'مصمم جرافيك بخبرة 5 سنوات في تصميم الشعارات والهويات البصرية.',
     avatar_url: 'https://api.dicebear.com/7.x/initials/svg?seed=AP',
     favorite_service_ids: [],
-    created_at: new Date(),
-    updated_at: new Date(),
+    created_at: getRecentDate(150),
+    updated_at: getRecentDate(100),
   },
   {
     id: 2,
@@ -25,8 +32,8 @@ let users: User[] = [
     bio: 'أبحث عن خدمات تصميم وتطوير لمشروعي الجديد.',
     avatar_url: 'https://api.dicebear.com/7.x/initials/svg?seed=LS',
     favorite_service_ids: [],
-    created_at: new Date(),
-    updated_at: new Date(),
+    created_at: getRecentDate(180),
+    updated_at: getRecentDate(120),
   },
 ];
 

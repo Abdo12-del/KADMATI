@@ -1,5 +1,12 @@
 import { Service } from '../models/serviceModel';
 
+const getRecentDate = (daysAgo: number = 0, monthsAgo: number = 0) => {
+  const date = new Date();
+  date.setDate(date.getDate() - daysAgo);
+  date.setMonth(date.getMonth() - monthsAgo);
+  return date;
+};
+
 let services: Service[] = [
   {
     id: 1,
@@ -14,8 +21,8 @@ let services: Service[] = [
     reviews_count: 250,
     location: 'الرياض',
     service_level: 'مستوى احترافي',
-    created_at: new Date(),
-    updated_at: new Date(),
+    created_at: getRecentDate(60),
+    updated_at: getRecentDate(5),
   },
   {
     id: 2,
@@ -30,8 +37,8 @@ let services: Service[] = [
     reviews_count: 120,
     location: 'جدة',
     service_level: 'مستوى احترافي',
-    created_at: new Date(),
-    updated_at: new Date(),
+    created_at: getRecentDate(90),
+    updated_at: getRecentDate(10),
   },
   {
     id: 3,
@@ -46,8 +53,8 @@ let services: Service[] = [
     reviews_count: 80,
     location: 'الدمام',
     service_level: 'مستوى متوسط',
-    created_at: new Date(),
-    updated_at: new Date(),
+    created_at: getRecentDate(30),
+    updated_at: getRecentDate(2),
   },
   {
     id: 4,
@@ -62,8 +69,8 @@ let services: Service[] = [
     reviews_count: 60,
     location: 'الرياض',
     service_level: 'مستوى احترافي',
-    created_at: new Date(),
-    updated_at: new Date(),
+    created_at: getRecentDate(120),
+    updated_at: getRecentDate(110),
   },
   {
     id: 5,
@@ -78,8 +85,8 @@ let services: Service[] = [
     reviews_count: 75,
     location: 'جدة',
     service_level: 'مستوى احترافي',
-    created_at: new Date(),
-    updated_at: new Date(),
+    created_at: getRecentDate(70),
+    updated_at: getRecentDate(65),
   },
 ];
 

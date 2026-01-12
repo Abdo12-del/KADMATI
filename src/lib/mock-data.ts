@@ -1,5 +1,13 @@
 import { RequestData, RatingData, ServiceData, UserData, MessageData } from '@/types/app-types';
 
+// Helper to get a date some days/months ago
+const getRecentDate = (daysAgo: number = 0, monthsAgo: number = 0) => {
+  const date = new Date();
+  date.setDate(date.getDate() - daysAgo);
+  date.setMonth(date.getMonth() - monthsAgo);
+  return date.toISOString();
+};
+
 // Mock Users
 export const mockUsers: UserData[] = [
   {
@@ -11,6 +19,8 @@ export const mockUsers: UserData[] = [
     bio: 'مصمم جرافيك بخبرة 5 سنوات في تصميم الشعارات والهويات البصرية.',
     avatar_url: 'https://api.dicebear.com/7.x/initials/svg?seed=AP',
     favorite_service_ids: [],
+    created_at: getRecentDate(150), // ~5 months ago
+    updated_at: getRecentDate(100), // ~3 months ago
   },
   {
     id: 2,
@@ -21,6 +31,8 @@ export const mockUsers: UserData[] = [
     bio: 'أبحث عن خدمات تصميم وتطوير لمشروعي الجديد.',
     avatar_url: 'https://api.dicebear.com/7.x/initials/svg?seed=LS',
     favorite_service_ids: [1, 3], // Laila likes service 1 and 3
+    created_at: getRecentDate(180), // ~6 months ago
+    updated_at: getRecentDate(120), // ~4 months ago
   },
   {
     id: 3,
@@ -31,6 +43,8 @@ export const mockUsers: UserData[] = [
     bio: 'أبحث عن خدمات منزلية متنوعة.',
     avatar_url: 'https://api.dicebear.com/7.x/initials/svg?seed=KC',
     favorite_service_ids: [],
+    created_at: getRecentDate(90), // ~3 months ago
+    updated_at: getRecentDate(30), // ~1 month ago
   },
 ];
 
@@ -49,8 +63,8 @@ export const mockServices: ServiceData[] = [
     reviews_count: 250,
     location: 'الرياض',
     service_level: 'مستوى احترافي',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_at: getRecentDate(60), // 2 months ago
+    updated_at: getRecentDate(5), // 5 days ago
   },
   {
     id: 2,
@@ -65,8 +79,8 @@ export const mockServices: ServiceData[] = [
     reviews_count: 120,
     location: 'جدة',
     service_level: 'مستوى احترافي',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_at: getRecentDate(90), // 3 months ago
+    updated_at: getRecentDate(10), // 10 days ago
   },
   {
     id: 3,
@@ -81,8 +95,8 @@ export const mockServices: ServiceData[] = [
     reviews_count: 80,
     location: 'الدمام',
     service_level: 'مستوى متوسط',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_at: getRecentDate(30), // 1 month ago
+    updated_at: getRecentDate(2), // 2 days ago
   },
 ];
 
@@ -95,13 +109,13 @@ export const mockRequests: RequestData[] = [
     description: 'أحتاج إلى شعار عصري وجذاب لمتجري الإلكتروني الجديد لبيع المنتجات اليدوية.',
     category: 'photography',
     location: 'الرياض',
-    due_date: '2024-01-20',
+    due_date: getRecentDate(-10).split('T')[0], // 10 days in future
     status: 'accepted',
     payment_status: 'unpaid',
     assigned_provider_id: 1, // Ahmed Provider
     agreed_price: 200,
-    created_at: new Date('2023-11-10T10:00:00Z').toISOString(),
-    updated_at: new Date('2023-11-12T11:00:00Z').toISOString(),
+    created_at: getRecentDate(45), // 1.5 months ago
+    updated_at: getRecentDate(30), // 1 month ago
   },
   {
     id: 102,
@@ -109,15 +123,15 @@ export const mockRequests: RequestData[] = [
     title: 'طلب كتابة مقالات للمدونة',
     description: 'أحتاج إلى 5 مقالات حول التسويق الرقمي لمدونتي، كل مقال بطول 800 كلمة.',
     category: 'cleaning',
-    due_date: '2024-01-25',
+    due_date: getRecentDate(-5).split('T')[0], // 5 days in future
     status: 'payment_pending', // Payment pending
     payment_status: 'pending_review',
     payment_reference: 'PAYREF12345',
     receipt_url: 'https://example.com/receipts/receipt123.pdf',
     assigned_provider_id: 1, // Ahmed Provider
     agreed_price: 350,
-    created_at: new Date('2023-11-15T14:00:00Z').toISOString(),
-    updated_at: new Date('2023-11-18T09:00:00Z').toISOString(),
+    created_at: getRecentDate(20), // 20 days ago
+    updated_at: getRecentDate(15), // 15 days ago
   },
   {
     id: 103,
@@ -132,8 +146,8 @@ export const mockRequests: RequestData[] = [
     receipt_url: 'https://example.com/receipts/receipt456.pdf',
     assigned_provider_id: 1, // Ahmed Provider
     agreed_price: 120,
-    created_at: new Date('2023-10-01T08:00:00Z').toISOString(),
-    updated_at: new Date('2023-10-05T17:00:00Z').toISOString(),
+    created_at: getRecentDate(100), // ~3 months ago
+    updated_at: getRecentDate(95), // ~3 months ago
   },
   {
     id: 104,
@@ -145,8 +159,8 @@ export const mockRequests: RequestData[] = [
     payment_status: 'unpaid',
     assigned_provider_id: undefined,
     agreed_price: undefined,
-    created_at: new Date('2023-12-01T11:00:00Z').toISOString(),
-    updated_at: new Date('2023-12-01T11:00:00Z').toISOString(),
+    created_at: getRecentDate(5), // 5 days ago
+    updated_at: getRecentDate(5), // 5 days ago
   },
 ];
 
@@ -158,7 +172,7 @@ export const mockRatings: RatingData[] = [
     client_id: 2, // Laila Seeker
     rating: 5,
     comment: 'خدمة ممتازة وشعار رائع، أنصح به بشدة!',
-    created_at: new Date('2023-11-13T15:00:00Z').toISOString(),
+    created_at: getRecentDate(40), // ~1.3 months ago
   },
   {
     id: 202,
@@ -166,7 +180,7 @@ export const mockRatings: RatingData[] = [
     client_id: 2, // Laila Seeker
     rating: 4,
     comment: 'محتوى جيد جداً وسرعة في التنفيذ، شكراً.',
-    created_at: new Date('2023-11-20T11:00:00Z').toISOString(),
+    created_at: getRecentDate(10), // 10 days ago
   },
 ];
 
@@ -179,7 +193,7 @@ export const mockMessages: MessageData[] = [
     conversation_id: 'conv-2-1',
     text: 'مرحباً أحمد، هل يمكنك البدء في تصميم الشعار قريباً؟',
     read: false,
-    created_at: new Date('2023-12-01T10:00:00Z').toISOString(),
+    created_at: getRecentDate(3), // 3 days ago
   },
   {
     id: 2,
@@ -188,7 +202,7 @@ export const mockMessages: MessageData[] = [
     conversation_id: 'conv-2-1',
     text: 'أهلاً ليلى، نعم سأبدأ العمل عليه اليوم. سأرسل لك المسودة الأولى غداً.',
     read: true,
-    created_at: new Date('2023-12-01T10:15:00Z').toISOString(),
+    created_at: getRecentDate(2), // 2 days ago
   },
   {
     id: 3,
@@ -197,7 +211,7 @@ export const mockMessages: MessageData[] = [
     conversation_id: 'conv-2-1',
     text: 'رائع، شكراً لك!',
     read: false,
-    created_at: new Date('2023-12-01T10:30:00Z').toISOString(),
+    created_at: getRecentDate(1), // 1 day ago
   },
   {
     id: 4,
@@ -206,7 +220,7 @@ export const mockMessages: MessageData[] = [
     conversation_id: 'conv-3-1',
     text: 'مرحباً، هل تقدمون خدمات صيانة التكييف؟',
     read: false,
-    created_at: new Date('2023-12-02T11:00:00Z').toISOString(),
+    created_at: getRecentDate(7), // 7 days ago
   },
   {
     id: 5,
@@ -215,6 +229,6 @@ export const mockMessages: MessageData[] = [
     conversation_id: 'conv-3-1',
     text: 'أهلاً بك خالد، نعم نقدم خدمات صيانة التكييف. ما هي المشكلة التي تواجهها؟',
     read: true,
-    created_at: new Date('2023-12-02T11:10:00Z').toISOString(),
+    created_at: getRecentDate(6), // 6 days ago
   },
 ];

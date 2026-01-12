@@ -19,7 +19,7 @@ interface AuthContextType {
   user: User | null;
   isLoggedIn: boolean;
   userRole: 'seeker' | 'provider' | null;
-  isLoading: boolean; // Added isLoading to context type
+  isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (userData: Omit<User, 'id'> & { password: string }) => Promise<void>;
   logout: () => void;
@@ -28,11 +28,11 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { ReactNode }) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<'seeker' | 'provider' | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // Initialize isLoading to true
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -47,12 +47,12 @@ export const AuthProvider = ({ children }: { ReactNode }) => {
         console.log('AuthProvider: Found user in localStorage:', parsedUser.email);
       } catch (e) {
         console.error('AuthProvider: Failed to parse user from localStorage', e);
-        localStorage.removeItem('currentUser'); // Clear invalid data
+        localStorage.removeItem('currentUser');
       }
     } else {
       console.log('AuthProvider: No user found in localStorage.');
     }
-    setIsLoading(false); // Set isLoading to false after checking localStorage
+    setIsLoading(false);
   }, []);
 
   const login = async (email: string, password: string) => {

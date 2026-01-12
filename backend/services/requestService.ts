@@ -1,5 +1,12 @@
 import { Request } from '../models/requestModel';
 
+const getRecentDate = (daysAgo: number = 0, monthsAgo: number = 0) => {
+  const date = new Date();
+  date.setDate(date.getDate() - daysAgo);
+  date.setMonth(date.getMonth() - monthsAgo);
+  return date;
+};
+
 let requests: Request[] = [
   {
     id: 1,
@@ -8,14 +15,14 @@ let requests: Request[] = [
     description: 'أحتاج إلى تصميم موقع ويب شخصي لعرض أعمالي الفنية، مع معرض صور ونموذج اتصال.',
     category: 'photography', // Changed from 'development'
     location: 'الرياض',
-    due_date: '2024-01-15',
+    due_date: getRecentDate(-10).toISOString().split('T')[0], // 10 days in future
     additional_options: 'تصميم متجاوب مع الجوالات.',
     status: 'pending',
     payment_status: 'unpaid',
     assigned_provider_id: undefined, // Not yet accepted
     agreed_price: undefined,
-    created_at: new Date('2023-11-01T10:00:00Z'),
-    updated_at: new Date('2023-11-01T10:00:00Z'),
+    created_at: getRecentDate(60), // 2 months ago
+    updated_at: getRecentDate(60), // 2 months ago
   },
   {
     id: 2,
@@ -23,13 +30,13 @@ let requests: Request[] = [
     title: 'طلب كتابة مقال تسويقي',
     description: 'مقال تسويقي عن فوائد استخدام الطاقة المتجددة في المنازل، بطول 1000 كلمة.',
     category: 'private_tutoring', // Changed from 'writing'
-    due_date: '2024-01-10',
+    due_date: getRecentDate(-5).toISOString().split('T')[0], // 5 days in future
     status: 'accepted',
     payment_status: 'unpaid',
     assigned_provider_id: 1, // Accepted by Ahmed Provider
     agreed_price: 100, // Agreed price
-    created_at: new Date('2023-11-05T14:30:00Z'),
-    updated_at: new Date('2023-11-06T09:00:00Z'),
+    created_at: getRecentDate(45), // 1.5 months ago
+    updated_at: getRecentDate(40), // 40 days ago
   },
   {
     id: 3,
@@ -41,8 +48,8 @@ let requests: Request[] = [
     payment_status: 'paid',
     assigned_provider_id: 1, // Completed by Ahmed Provider
     agreed_price: 150, // Agreed price
-    created_at: new Date('2023-10-20T11:00:00Z'),
-    updated_at: new Date('2023-10-25T16:00:00Z'),
+    created_at: getRecentDate(90), // 3 months ago
+    updated_at: getRecentDate(85), // 85 days ago
   },
   {
     id: 4,
@@ -51,13 +58,13 @@ let requests: Request[] = [
     description: 'أحتاج فني صيانة لإصلاح بعض الأعطال الكهربائية في المنزل.',
     category: 'electricity', // Changed from 'maintenance'
     location: 'جدة',
-    due_date: '2024-02-01',
+    due_date: getRecentDate(-20).toISOString().split('T')[0], // 20 days in future
     status: 'pending',
     payment_status: 'unpaid',
     assigned_provider_id: undefined,
     agreed_price: undefined,
-    created_at: new Date('2023-12-10T09:00:00Z'),
-    updated_at: new Date('2023-12-10T09:00:00Z'),
+    created_at: getRecentDate(30), // 1 month ago
+    updated_at: getRecentDate(30), // 1 month ago
   },
   {
     id: 5,
@@ -69,8 +76,8 @@ let requests: Request[] = [
     payment_status: 'unpaid',
     assigned_provider_id: 1, // Accepted by Ahmed Provider
     agreed_price: 300,
-    created_at: new Date('2023-12-15T11:00:00Z'),
-    updated_at: new Date('2023-12-16T10:00:00Z'),
+    created_at: getRecentDate(15), // 15 days ago
+    updated_at: getRecentDate(10), // 10 days ago
   },
 ];
 

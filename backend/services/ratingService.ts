@@ -1,5 +1,12 @@
 import { Rating } from '../models/ratingModel';
 
+const getRecentDate = (daysAgo: number = 0, monthsAgo: number = 0) => {
+  const date = new Date();
+  date.setDate(date.getDate() - daysAgo);
+  date.setMonth(date.getMonth() - monthsAgo);
+  return date;
+};
+
 let ratings: Rating[] = [
   {
     id: 1,
@@ -7,7 +14,7 @@ let ratings: Rating[] = [
     client_id: 2, // Laila Seeker
     rating: 5,
     comment: 'خدمة ممتازة وشعار رائع، أنصح به بشدة!',
-    created_at: new Date('2023-10-20T15:00:00Z'),
+    created_at: getRecentDate(40),
   },
   {
     id: 2,
@@ -15,7 +22,7 @@ let ratings: Rating[] = [
     client_id: 2, // Laila Seeker
     rating: 4,
     comment: 'محتوى جيد جداً وسرعة في التنفيذ، شكراً.',
-    created_at: new Date('2023-11-01T11:00:00Z'),
+    created_at: getRecentDate(10),
   },
 ];
 
