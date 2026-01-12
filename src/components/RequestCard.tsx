@@ -5,8 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 import { ConfirmPaymentDialog } from '@/components/ConfirmPaymentDialog'; // Import ConfirmPaymentDialog
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
 interface RequestCardProps {
   request: {
     id: string;

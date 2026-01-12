@@ -8,8 +8,6 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { UploadCloud } from 'lucide-react';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
 interface ConfirmPaymentDialogProps {
   requestId: string;
   onConfirmPayment: (requestId: string, paymentReference: string, receiptUrl: string) => Promise<void>;
