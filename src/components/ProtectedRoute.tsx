@@ -14,7 +14,12 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ allowedRoles, redirectPath = '/login', layout = 'none' }: ProtectedRouteProps) => {
-  const { isLoggedIn, userRole } = useAuth(); // Removed 'user'
+  const { isLoggedIn, userRole, isLoading } = useAuth(); // Get isLoading
+
+  // If authentication state is still loading, render nothing or a loading spinner
+  if (isLoading) {
+    return null; // Or a loading component: <LoadingSpinner />
+  }
 
   if (!isLoggedIn) {
     return <Navigate to={redirectPath} replace />;

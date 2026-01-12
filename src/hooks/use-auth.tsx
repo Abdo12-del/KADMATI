@@ -12,25 +12,27 @@ interface User {
   avatar_url?: string;
   phone?: string;
   bio?: string;
-  favorite_service_ids?: number[]; // Added to User interface
+  favorite_service_ids?: number[];
 }
 
 interface AuthContextType {
   user: User | null;
   isLoggedIn: boolean;
   userRole: 'seeker' | 'provider' | null;
+  isLoading: boolean; // Added isLoading to context type
   login: (email: string, password: string) => Promise<void>;
   signup: (userData: Omit<User, 'id'> & { password: string }) => Promise<void>;
   logout: () => void;
-  updateUserFavorites: (serviceId: number, action: 'add' | 'remove') => Promise<void>; // New function
+  updateUserFavorites: (serviceId: number, action: 'add' | 'remove') => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AuthProvider = ({ children }: { ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<'seeker' | 'provider' | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // Initialize isLoading to true
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,7 +52,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } else {
       console.log('AuthProvider: No user found in localStorage.');
     }
-  }, []); // Empty dependency array means it runs once on mount
+    setIsLoading(false); // Set isLoading to false after checking localStorage
+  }, []);
 
   const login = async (email: string, password: string) => {
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -172,7 +175,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn, userRole, login, signup, logout, updateUserFavorites }}>
+    <AuthContext.Provider value={{ user, isLoggedIn, userRole, isLoading, login, signup, logout, updateUserFavorites }}>
       {children}
     </AuthContext.Provider>
   );
