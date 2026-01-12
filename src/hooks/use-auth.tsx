@@ -34,18 +34,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check for user data in localStorage on mount
+    console.log('AuthProvider: useEffect running on mount.');
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
-      const parsedUser: User = JSON.parse(storedUser);
-      setUser(parsedUser);
-      setIsLoggedIn(true);
-      setUserRole(parsedUser.role);
+      try {
+        const parsedUser: User = JSON.parse(storedUser);
+        setUser(parsedUser);
+        setIsLoggedIn(true);
+        setUserRole(parsedUser.role);
+        console.log('AuthProvider: Found user in localStorage:', parsedUser.email);
+      } catch (e) {
+        console.error('AuthProvider: Failed to parse user from localStorage', e);
+        localStorage.removeItem('currentUser'); // Clear invalid data
+      }
+    } else {
+      console.log('AuthProvider: No user found in localStorage.');
     }
   }, []); // Empty dependency array means it runs once on mount
 
   const login = async (email: string, password: string) => {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
 
     if (email === 'ahmed.provider@example.com' && password === 'password123') {
@@ -55,12 +62,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email: 'ahmed.provider@example.com',
         role: 'provider',
         avatar_url: 'https://api.dicebear.com/7.x/initials/svg?seed=AP',
-        favorite_service_ids: [], // Ensure this is initialized
+        favorite_service_ids: [],
       };
       setUser(loggedInUser);
       setIsLoggedIn(true);
       setUserRole(loggedInUser.role);
       localStorage.setItem('currentUser', JSON.stringify(loggedInUser));
+      console.log('AuthProvider: User logged in and saved to localStorage:', loggedInUser.email);
       toast.success('تم تسجيل الدخول بنجاح (محاكاة)!');
       navigate('/dashboard');
     } else if (email === 'layla.seeker@example.com' && password === 'password123') {
@@ -70,40 +78,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email: 'layla.seeker@example.com',
         role: 'seeker',
         avatar_url: 'https://api.dicebear.com/7.x/initials/svg?seed=LS',
-        favorite_service_ids: [], // Ensure this is initialized
+        favorite_service_ids: [],
       };
       setUser(loggedInUser);
       setIsLoggedIn(true);
       setUserRole(loggedInUser.role);
       localStorage.setItem('currentUser', JSON.stringify(loggedInUser));
+      console.log('AuthProvider: User logged in and saved to localStorage:', loggedInUser.email);
       toast.success('تم تسجيل الدخول بنجاح (محاكاة)!');
       navigate('/client-home');
     } else {
       toast.error('فشل تسجيل الدخول (محاكاة): البريد الإلكتروني أو كلمة المرور غير صحيحة.');
+      console.error('AuthProvider: Login failed for email:', email);
       throw new Error('Invalid credentials');
     }
   };
 
   const signup = async (userData: Omit<User, 'id'> & { password: string }) => {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    // Simulate successful signup
     const newUser: User = {
-      id: Date.now(), // Generate a unique ID
+      id: Date.now(),
       name: userData.name,
       email: userData.email,
       role: userData.role,
       phone: userData.phone,
       bio: userData.bio,
       avatar_url: userData.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${userData.name.split(' ').map(n => n[0]).join('')}`,
-      favorite_service_ids: [], // Initialize for new users
+      favorite_service_ids: [],
     };
 
     setUser(newUser);
     setIsLoggedIn(true);
     setUserRole(newUser.role);
     localStorage.setItem('currentUser', JSON.stringify(newUser));
+    console.log('AuthProvider: User signed up and saved to localStorage:', newUser.email);
     toast.success('تم إنشاء الحساب وتسجيل الدخول بنجاح (محاكاة)!');
 
     if (newUser.role === 'provider') {
@@ -118,6 +127,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoggedIn(false);
     setUserRole(null);
     localStorage.removeItem('currentUser');
+    console.log('AuthProvider: User logged out and removed from localStorage.');
     toast.info('تم تسجيل الخروج.');
     navigate('/login');
   };
@@ -157,6 +167,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     setUser(updatedUser);
     localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+    console.log('AuthProvider: User favorites updated and saved to localStorage.');
     toast.success(`تم ${action === 'add' ? 'إضافة' : 'إزالة'} الخدمة من المفضلة بنجاح!`);
   };
 
