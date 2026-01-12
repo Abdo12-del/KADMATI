@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import { messageService } from '../services/messageService';
-import { successResponse, errorResponse } from '../utils/response';
+import { successResponse, errorResponse as _errorResponse } from '../utils/response';
 import { ApiError } from '../utils/errorHandler';
 import { validateMessage } from '../utils/validator';
 
 const router = Router();
 
 // Get all messages
-router.get('/', async (req, res, next) => {
+router.get('/', async (_req, res, next) => {
   console.log(`[${new Date().toISOString()}] GET /api/messages - Request received.`);
   try {
     const messages = await messageService.getAllMessages();

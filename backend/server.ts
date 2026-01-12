@@ -5,7 +5,7 @@ import { errorHandler } from './utils/errorHandler';
 import usersRoutes from './api/users'; 
 import servicesRoutes from './api/services'; 
 import requestsRoutes from './api/requests'; 
-import ratingsRoutes from './api/ratings'; // Corrected path
+import ratingsRoutes from './api/ratings'; 
 import messagesRoutes from './api/messages'; 
 import authRoutes from './api/auth'; 
 
@@ -25,8 +25,8 @@ process.on('uncaughtException', (error) => {
 const app = express();
 
 // Add a simple logging middleware to see if requests reach Express
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+app.use((_req, _res, next) => {
+  console.log(`[${new Date().toISOString()}] ${_req.method} ${_req.url}`);
   next();
 });
 
@@ -35,12 +35,12 @@ app.use(cors());
 app.use(express.json());
 
 // Basic route for testing
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.send('Backend API is running!');
 });
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (_req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 

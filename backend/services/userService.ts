@@ -1,5 +1,5 @@
 import { User } from '../models/userModel';
-import bcrypt from 'bcryptjs';
+// import bcrypt from 'bcryptjs'; // Removed as it's not used in the current simulation
 
 let users: User[] = [
   {
@@ -11,7 +11,7 @@ let users: User[] = [
     phone: '+966501234567',
     bio: 'مصمم جرافيك بخبرة 5 سنوات في تصميم الشعارات والهويات البصرية.',
     avatar_url: 'https://api.dicebear.com/7.x/initials/svg?seed=AP',
-    favorite_service_ids: [], // Initialize for existing users
+    favorite_service_ids: [],
     created_at: new Date(),
     updated_at: new Date(),
   },
@@ -24,7 +24,7 @@ let users: User[] = [
     phone: '+966557654321',
     bio: 'أبحث عن خدمات تصميم وتطوير لمشروعي الجديد.',
     avatar_url: 'https://api.dicebear.com/7.x/initials/svg?seed=LS',
-    favorite_service_ids: [], // Initialize for existing users
+    favorite_service_ids: [],
     created_at: new Date(),
     updated_at: new Date(),
   },

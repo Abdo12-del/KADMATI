@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { userService } from '../services/userService';
-import { successResponse, errorResponse } from '../utils/response';
+import { successResponse, errorResponse as _errorResponse } from '../utils/response';
 import { ApiError } from '../utils/errorHandler';
 
 const router = Router();

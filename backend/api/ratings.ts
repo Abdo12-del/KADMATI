@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import { ratingService } from '../services/ratingService';
-import { successResponse, errorResponse } from '../utils/response';
+import { successResponse, errorResponse as _errorResponse } from '../utils/response';
 import { ApiError } from '../utils/errorHandler';
 import { validateRating } from '../utils/validator';
 
 const router = Router();
 
 // Get all ratings
-router.get('/', async (req, res, next) => {
+router.get('/', async (_req, res, next) => {
   console.log(`[${new Date().toISOString()}] GET /api/ratings - Request received.`);
   try {
     const ratings = await ratingService.getAllRatings();

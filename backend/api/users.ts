@@ -8,7 +8,7 @@ import { validateUser } from '../utils/validator'; // Added import for validateU
 const router = Router();
 
 // Get all users
-router.get('/', async (req, res, next) => {
+router.get('/', async (_req, res, next) => {
   console.log(`[${new Date().toISOString()}] GET /api/users - Request received.`);
   try {
     const users = await userService.getAllUsers();
