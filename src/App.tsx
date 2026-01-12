@@ -26,6 +26,7 @@ import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
 import MessageCenterPage from "./pages/MessageCenterPage";
 import SupportCenterPage from "./pages/SupportCenterPage";
+import ProviderOrderDetailsPage from "./pages/ProviderOrderDetailsPage"; // Import the new page
 
 // Client Home Pages
 import ClientHomePage from "./pages/ClientHomePage";
@@ -82,6 +83,7 @@ const App = () => (
               <Route path="/dashboard/services/add" element={<AddServicePage />} />
               <Route path="/dashboard/services/edit/:id" element={<EditServicePage />} />
               <Route path="/dashboard/orders" element={<OrdersPage />} />
+              <Route path="/dashboard/orders/:id" element={<ProviderOrderDetailsPage />} /> {/* NEW ROUTE */}
               <Route path="/dashboard/messages" element={<MessageCenterPage />} />
               <Route path="/dashboard/calendar" element={<CalendarPage />} />
               <Route path="/dashboard/customers" element={<CustomersPage />} />
@@ -97,7 +99,7 @@ const App = () => (
             {/* These routes will now use the LayoutWithHeaderFooter if accessed directly */}
             {/* If they are accessed via a ProtectedRoute, the ProtectedRoute's layout will apply */}
             {/* <Route path="/profile" element={<ProfilePage />} /> */}
-            {/* <Route path="/notifications" element={<NotificationsPage />} /> */}
+            {/* <Route path="/notifications" element={<NotificationsPage />} */}
             {/* <Route path="/requests" element={<MyRequestsPage />} */}
             
             {/* Catch-all route for any other unmatched routes, now handled by the LayoutWithHeaderFooter */}
