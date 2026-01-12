@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoggedIn(true);
       setUserRole(parsedUser.role);
     }
-  }, []);
+  }, []); // Empty dependency array means it runs once on mount
 
   const login = async (email: string, password: string) => {
     // Simulate API call delay
