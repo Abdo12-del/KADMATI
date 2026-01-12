@@ -56,6 +56,15 @@ app.use('/api/auth', authRoutes);
 app.use(errorHandler);
 
 // Start the server
+console.log(`Attempting to start backend server on port ${env.PORT}...`);
 app.listen(env.PORT, () => {
-  console.log(`Server running on port ${env.PORT} in ${env.NODE_ENV} mode`);
+  console.log(`Backend server successfully running on port ${env.PORT} in ${env.NODE_ENV} mode`);
+}).on('error', (err: NodeJS.ErrnoException) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`Error: Port ${env.PORT} is already in use. Please free up the port or change the PORT environment variable.`);
+  } else {
+    console.error(`Failed to start backend server on port ${env.PORT}:`, err);
+  }
+  process.exit(1);
 });
+console.log('Backend server setup complete.');
