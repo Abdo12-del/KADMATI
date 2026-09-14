@@ -30,10 +30,14 @@ export default defineConfig({
     target: 'es2022',
     chunkSizeWarningLimit: 2000,
     rollupOptions: {
+      // Vite 8 builds with rolldown, which only accepts the function form of manualChunks.
+      // Keeping pptxgenjs (and the chart stack) out of the entry chunk matters: the editor
+      // should not download the exporter before the first slide is painted.
       output: {
-        manualChunks: {
-          pptx: ['pptxgenjs'],
-          charts: ['recharts'],
+        manualChunks(id: string) {
+          if (!id.includes('node_modules')) return
+          if (id.includes('pptxgenjs') || id.includes('pptxtojson') || id.includes('jszip')) return 'pptx'
+          if (id.includes('recharts') || id.includes('victory-vendor') || id.includes('d3-')) return 'charts'
         },
       },
     },
