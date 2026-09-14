@@ -3,7 +3,7 @@
  * folders, favorites and trash. No tables, no stat cards pretending to be analytics.
  */
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   Boxes,
   FolderInput,
@@ -34,17 +34,19 @@ import { toast } from '../store/useUI'
 import { cn } from '../lib/cn'
 import { newBlankPresentation } from './newDeck'
 
-const NAV = [
-  { to: '/app', end: true, label: 'الرئيسية', icon: LayoutTemplate },
-  { to: '/app/decks', label: 'عروضك', icon: Boxes },
-  { to: '/templates', label: 'القوالب', icon: Sparkles },
-  { to: '/app/brand', label: 'العلامة التجارية', icon: LayoutTemplate },
-  { to: '/app/elements', label: 'العناصر', icon: Boxes },
-  { to: '/app/trash', label: 'سلة المحذوفات', icon: Trash2 },
+/** `key` mirrors useScope() so the active state never depends on reading the global `location`. */
+const NAV: { to: string; key: string; label: string; icon: typeof LayoutTemplate }[] = [
+  { to: '/app', key: 'home', label: 'الرئيسية', icon: LayoutTemplate },
+  { to: '/app/decks', key: 'decks', label: 'عروضك', icon: Boxes },
+  { to: '/templates', key: 'templates', label: 'القوالب', icon: Sparkles },
+  { to: '/app/brand', key: 'brand', label: 'العلامة التجارية', icon: LayoutTemplate },
+  { to: '/app/elements', key: 'elements', label: 'العناصر', icon: Boxes },
+  { to: '/app/trash', key: 'trash', label: 'سلة المحذوفات', icon: Trash2 },
 ]
 
 export function DashboardPage() {
   const scope = useScope()
+  const { pathname } = useLocation()
   const library = useLibrary()
   const navigate = useNavigate()
   const search = useLibrary((s) => s.search)
@@ -91,7 +93,7 @@ export function DashboardPage() {
         </Link>
         <nav className="space-y-0.5">
           {NAV.map((item) => {
-            const active = item.end ? scope === 'home' : location.pathname === item.to
+            const active = item.key === 'templates' ? pathname.startsWith('/templates') : item.key === scope
             return (
               <Link
                 key={item.to}

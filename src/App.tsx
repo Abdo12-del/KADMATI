@@ -33,12 +33,10 @@ export function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/templates" element={<TemplatesPage />} />
-        <Route path="/app" element={<DashboardPage />}>
-          <Route path="decks" element={null} />
-          <Route path="brand" element={null} />
-          <Route path="elements" element={null} />
-          <Route path="trash" element={null} />
-        </Route>
+        {/* Two sibling routes (not nested children): the dashboard reads :scope itself and
+            renders the matching pane, so no <Outlet/> is involved. */}
+        <Route path="/app" element={<DashboardPage />} />
+        <Route path="/app/:scope" element={<DashboardPage />} />
         <Route path="/brand" element={<BrandPage />} />
         <Route path="/elements" element={<ElementsPage />} />
         <Route path="/edit/:id" element={<EditorPage />} />
