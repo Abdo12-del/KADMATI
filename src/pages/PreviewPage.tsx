@@ -4,7 +4,7 @@
  */
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Pencil, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Copy, Pencil, X } from 'lucide-react'
 import { SlidePreview } from '../components/SlidePreview'
 import { useLibrary } from '../store/useLibrary'
 import { useDoc } from '../store/useDoc'
@@ -73,11 +73,16 @@ export function PreviewPage() {
           <Button size="sm" variant={notes ? 'surface' : 'ghost'} onClick={() => setNotes((v) => !v)}>
             ملاحظات
           </Button>
-          <Button size="sm" variant="primary" onClick={() => requestOpenProject({ doc })} title="يفتح نسخة قابلة للتحرير">
-            <Pencil size={12} /> تحرير
+          <Button
+            size="sm"
+            variant="subtle"
+            onClick={() => requestOpenProject({ doc })}
+            title="يبقي هذا العرض كما هو ويفتح نسخة يمكنك التعديل عليها بحرية"
+          >
+            <Copy size={12} /> نسخة للتعديل
           </Button>
-          <Button size="sm" variant="subtle" onClick={() => { useDoc.getState().load(doc, id); navigate(`/edit/${id}`) }}>
-            فتح في المحرر
+          <Button size="sm" variant="primary" onClick={() => { useDoc.getState().load(doc, id); navigate(`/edit/${id}`) }} title="تحرير هذا العرض نفسه (الحفظ التلقائي يسري عليه)">
+            <Pencil size={12} /> تحرير هذا العرض
           </Button>
         </div>
       </header>
