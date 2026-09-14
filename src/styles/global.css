@@ -1,0 +1,425 @@
+@import 'tailwindcss';
+
+/* ------------------------------------------------------------------ *
+ * KADMATI Studio — design tokens
+ * A creative-tool palette: warm ink neutrals, one vermillion signal,
+ * a violet reserved exclusively for AI affordances.
+ * ------------------------------------------------------------------ */
+@theme {
+  --color-ink-1000: #08080a;
+  --color-ink-950: #0c0c0e;
+  --color-ink-900: #111114;
+  --color-ink-850: #16161a;
+  --color-ink-800: #1b1b20;
+  --color-ink-750: #212127;
+  --color-ink-700: #2a2a32;
+  --color-ink-600: #35353f;
+  --color-ink-500: #45454f;
+  --color-ink-400: #6b6b76;
+  --color-ink-300: #8f8f9b;
+  --color-ink-200: #b6b6c0;
+  --color-ink-100: #dcdce2;
+  --color-ink-50: #f2f2f5;
+
+  --color-signal: #ff5a36;
+  --color-signal-soft: #ff8a6b;
+  --color-signal-dim: #4a1c11;
+  --color-ai: #8b7cf6;
+  --color-ai-dim: #241f42;
+  --color-good: #3ecf8e;
+  --color-warn: #f5b544;
+
+  --color-paper: #ffffff;
+  --color-paper-dim: #f6f5f2;
+
+  --font-ui: 'Inter', 'Tajawal', 'IBM Plex Sans Arabic', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Space Grotesk', 'Readex Pro', 'Tajawal', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 9px;
+  --radius-lg: 13px;
+  --radius-xl: 20px;
+
+  --shadow-panel: 0 1px 0 rgba(255, 255, 255, 0.03), 0 12px 32px -12px rgba(0, 0, 0, 0.7);
+  --shadow-float: 0 24px 60px -18px rgba(0, 0, 0, 0.75), 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-slide: 0 2px 6px rgba(0, 0, 0, 0.25), 0 18px 48px -20px rgba(0, 0, 0, 0.55);
+
+  --animate-fade-in: fade-in 0.16s ease-out;
+  --animate-pop-in: pop-in 0.14s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  --animate-slide-up: slide-up 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-shimmer: shimmer 1.4s linear infinite;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--color-ink-700);
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-ink-950);
+    color: var(--color-ink-50);
+    font-family: var(--font-ui);
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overscroll-behavior: none;
+  }
+
+  /* Arabic renders best with a touch more leading. */
+  [dir='rtl'] body {
+    letter-spacing: 0;
+  }
+
+  button {
+    font: inherit;
+    color: inherit;
+  }
+
+  input,
+  textarea,
+  select {
+    font: inherit;
+    color: inherit;
+  }
+
+  input[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--color-signal) 35%, transparent);
+  }
+
+  :focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--color-signal) 70%, transparent);
+    outline-offset: 1px;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-ink-700) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-ink-700);
+    border: 3px solid transparent;
+    background-clip: content-box;
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-ink-600);
+    background-clip: content-box;
+  }
+}
+
+@utility panel-x {
+  scrollbar-width: thin;
+}
+
+/* Hairline used across panels — the "premium tool" detail. */
+@utility hairline {
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-ink-100) 7%, transparent);
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Rich text inside text elements.
+ * Styles are owned by the element, not by the browser's <b>/<i>.
+ * ------------------------------------------------------------------ */
+.rte {
+  font-variant-ligatures: common-ligatures contextual;
+}
+.rte b,
+.rte strong {
+  font-weight: 700;
+}
+.rte i,
+.rte em {
+  font-style: italic;
+}
+.rte u {
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+.rte s,
+.rte strike {
+  text-decoration: line-through;
+}
+.rte a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+  cursor: text;
+}
+.rte ul,
+.rte ol {
+  margin: 0.35em 0;
+  padding-inline-start: 1.4em;
+}
+.rte ul {
+  list-style: disc;
+}
+.rte ol {
+  list-style: decimal;
+}
+.rte li {
+  margin: 0.12em 0;
+}
+.rte p {
+  margin: 0;
+}
+.rte br {
+  line-height: inherit;
+}
+.rte:empty::before {
+  content: '\200b';
+}
+
+/* Element chrome: shown only while editing a text element. */
+.text-editing [data-editable='true'] {
+  cursor: text;
+  user-select: text;
+}
+.text-editing [data-editable='true'] * {
+  user-select: text;
+}
+
+/* Slide canvas helpers */
+.slide-root {
+  position: relative;
+  overflow: hidden;
+  transform-origin: top left;
+}
+.el-absolute {
+  position: absolute;
+  will-change: transform;
+}
+
+.grid-overlay {
+  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: var(--grid-size, 40px) var(--grid-size, 40px);
+}
+
+/* Presenter view must never show app chrome. */
+body.presenting,
+body.presenting * {
+  cursor: none;
+}
+body.presenting .cursor-visible,
+body.presenting .cursor-visible * {
+  cursor: default;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+}
+
+
+/* ------------------------------------------------------------------ tooltips */
+.tip {
+  position: relative;
+}
+.tip[data-tip]:not([data-tip=''])::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 8px);
+  inset-inline-start: 50%;
+  transform: translateX(var(--tip-x, -50%)) translateY(-2px);
+  background: #26262d;
+  color: var(--color-ink-50);
+  border: 1px solid var(--color-ink-700);
+  padding: 3px 7px;
+  border-radius: 6px;
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 90;
+  box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.8);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+[dir='rtl'] .tip[data-tip]:not([data-tip=''])::after {
+  --tip-x: 50%;
+}
+.tip:hover::after,
+.tip:focus-visible::after {
+  opacity: 1;
+  transform: translateX(var(--tip-x, -50%)) translateY(0);
+  transition-delay: 0.32s;
+}
+
+/* ------------------------------------------------------------------ range */
+.range-input {
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--color-ink-700);
+  border-radius: 999px;
+  outline: none;
+}
+.range-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  cursor: grab;
+}
+.range-input::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  cursor: grab;
+}
+
+/* ------------------------------------------------------------------ entrance animations (presenter) */
+@keyframes kad-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes kad-slide {
+  from {
+    opacity: 0;
+    transform: var(--kad-from, translateY(32px));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes kad-zoom {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Imported SVGs (icons, custom art) inherit color unless they say otherwise. */
+.el-content svg {
+  display: block;
+}
+
+/* Keep native inputs legible on the dark chrome. */
+input[type='color']::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+input[type='color']::-webkit-color-swatch {
+  border: none;
+  border-radius: 5px;
+}
+
+/* ------------------------------------------------------------------ slide transitions (presenter) */
+@keyframes kad-t-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes kad-t-slide {
+  from {
+    opacity: 0;
+    transform: translateX(var(--kad-tx, 6%));
+  }
+}
+@keyframes kad-t-push {
+  from {
+    transform: translateX(var(--kad-tx, 12%));
+  }
+}
+@keyframes kad-t-zoom {
+  from {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+}
+.kad-t-fade,
+.kad-t-slide,
+.kad-t-push,
+.kad-t-zoom {
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-fill-mode: both;
+}
+[dir='rtl'] .kad-t-slide,
+[dir='rtl'] .kad-t-push {
+  --kad-tx: -6%;
+}
