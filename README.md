@@ -54,6 +54,15 @@ npm run build      # حزمة ثابتة في dist/
 
 تُبذر تلقائيًا عند أول تشغيل (وفي الإعدادات زر «إعادة بذر العروض التجريبية»).
 
+## النشر
+
+- **م محليًا**: `npm run dev` (يُفتح على `:5173`)، أو `npm run build` ثم `npm run preview`.
+- **على الإنترنت**: `.github/workflows/deploy-pages.yml` يبني (typecheck + vite build بـ `base=/KADMATI/`)
+  وينشر على GitHub Pages عند أي دفع إلى `main`، مع `cp dist/index.html dist/404.html` لتعمل روابط
+  `/edit/:id` العميقة (Pages لا يملك إعادة كتابة SPA). يلزم مرة واحدة فقط في إعدادات المستودع:
+  **Settings → Pages → Source: GitHub Actions** — بدونه يفشل `actions/configure-pages` بخطأ «Pages not enabled».
+- التطبيق يعمل بلا خادم وبلا مفاتيح: لا تسجيل دخول ولا API مطلوب. الصور تُخدَم من Google Fonts والباقي محلي.
+
 ## ما لم نبنِه — ولماذا (بصدق)
 
 | الشيء | الحالة | السبب |
