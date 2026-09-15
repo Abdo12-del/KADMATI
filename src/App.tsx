@@ -12,6 +12,7 @@ import { BrandPage } from './pages/BrandPage'
 import { ElementsPage } from './pages/ElementsPage'
 import { EditorPage } from './pages/EditorPage'
 import { PreviewPage } from './pages/PreviewPage'
+import { PdfImportPage } from './pages/PdfImportPage'
 import { DialogHost } from './components/Dialogs'
 import { ToastHost } from './components/ToastHost'
 import { useDeckOpener } from './services/openDeck'
@@ -33,6 +34,7 @@ export function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/templates" element={<TemplatesPage />} />
+        <Route path="/pdf" element={<PdfImportPage />} />
         {/* Two sibling routes (not nested children): the dashboard reads :scope itself and
             renders the matching pane, so no <Outlet/> is involved. */}
         <Route path="/app" element={<DashboardPage />} />

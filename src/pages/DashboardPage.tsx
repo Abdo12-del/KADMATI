@@ -462,6 +462,11 @@ function QuickStart() {
       run: () => useUI.getState().openDialog('import'),
     },
     {
+      label: 'تحليل PDF',
+      hint: 'من المستند إلى عرض قابل للتعديل',
+      run: () => navigate('/pdf'),
+    },
+    {
       label: 'توليد بالذكاء',
       hint: 'هيكل + محتوى قابل للتحرير',
       run: async () => {
@@ -477,7 +482,7 @@ function QuickStart() {
   return (
     <section className="mt-9">
       <SectionHead title="تبدأ من هنا" />
-      <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
         {items.map((item) => (
           <button
             key={item.label}
