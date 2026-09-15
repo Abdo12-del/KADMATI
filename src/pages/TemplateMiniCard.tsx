@@ -19,7 +19,7 @@ export function TemplateMiniCard({ template, onOpen, className }: { template: Te
   }
 
   return (
-    <article className={cn('group overflow-hidden rounded-xl border border-ink-800 bg-ink-900/60 transition-[border-color,transform] hover:-translate-y-0.5 hover:border-ink-600', className)}>
+    <article className={cn('glass group overflow-hidden rounded-xl border transition-all hover:-translate-y-0.5 hover:border-signal/40 hover:shadow-aurora', className)}>
       <button type="button" onClick={() => (onOpen ? onOpen() : void use())} className="block w-full text-start">
         <SlidePreview doc={doc} index={0} />
       </button>

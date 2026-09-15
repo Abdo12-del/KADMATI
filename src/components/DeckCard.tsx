@@ -33,7 +33,7 @@ export function DeckCard({ record, onOpen }: { record: ProjectRecord; onOpen?: (
   const title = doc.metadata.title || 'بدون عنوان'
 
   return (
-    <article className="group relative overflow-hidden rounded-xl border border-ink-800 bg-ink-900 transition-[border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-ink-600">
+    <article className="glass group relative overflow-hidden rounded-xl border transition-all duration-200 hover:-translate-y-0.5 hover:border-signal/40 hover:shadow-aurora">
       <button type="button" onClick={() => (onOpen ? onOpen() : requestOpenProject({ projectId: record.id }))} className="block w-full text-start">
         <div className="relative">
           <DeckThumb doc={doc} />

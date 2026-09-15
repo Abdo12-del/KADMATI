@@ -403,10 +403,10 @@ export function AnimationDock() {
   for (let t = 0; t <= animDuration; t += tickStep) ticks.push(t)
 
   return (
-    <div className="flex h-[248px] shrink-0 flex-col border-t border-ink-800 bg-ink-950">
+    <div className="glass aur-hairline-t flex h-[248px] shrink-0 flex-col border-t border-ink-800/70">
       {/* transport */}
       <div className="flex h-11 shrink-0 items-center gap-1.5 border-b border-ink-800 px-2.5" dir="rtl">
-        <button type="button" onClick={playing ? doPause : doPlay} className="grid size-8 place-items-center rounded-lg bg-signal text-white hover:bg-signal-soft" title={playing ? 'إيقاف مؤقت' : 'تشغيل'}>
+        <button type="button" onClick={playing ? doPause : doPlay} className="aur-fill glow-blue grid size-8 place-items-center rounded-lg text-white transition-all hover:brightness-110 active:scale-95" title={playing ? 'إيقاف مؤقت' : 'تشغيل'}>
           {playing ? <Pause size={14} /> : <Play size={14} />}
         </button>
         <button type="button" onClick={doRestart} className="grid size-8 place-items-center rounded-lg border border-ink-700 text-ink-300 hover:bg-ink-800" title="إعادة تشغيل">
@@ -856,7 +856,7 @@ export function AnimationDock() {
               className="h-28 w-full rounded-lg border border-ink-700 bg-ink-950 p-2.5 font-mono text-[11px] text-ink-200 outline-none"
             />
             <div className="mt-2 flex justify-end">
-              <button type="button" onClick={applyJson} className="rounded-lg bg-signal px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-signal-soft">
+              <button type="button" onClick={applyJson} className="aur-fill rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white hover:brightness-110">
                 تطبيق
               </button>
             </div>
@@ -949,7 +949,7 @@ function PerfModal({ onClose }: { onClose: () => void }) {
         <button type="button" disabled={running} onClick={() => void run(10, 1)} className="rounded-lg border border-ink-700 px-3 py-1.5 text-[12px] text-ink-200 hover:bg-ink-750 disabled:opacity-40">
           سريع: 10 شرائح × 30 عنصرًا
         </button>
-        <button type="button" disabled={running} onClick={() => void run(50, 0.4)} className="rounded-lg bg-signal px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-signal-soft disabled:opacity-40">
+        <button type="button" disabled={running} onClick={() => void run(50, 0.4)} className="aur-fill rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white hover:brightness-110 disabled:opacity-40">
           كامل: 50 شريحة × 30 عنصرًا
         </button>
         {running ? <span className="text-[11px] text-ink-400">جارٍ التشغيل… {Math.round(progress)}%</span> : null}

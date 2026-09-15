@@ -293,7 +293,10 @@ export function CanvasStage() {
     <div
       ref={viewportRef}
       className={cn('relative min-h-0 flex-1 overflow-auto', editingId && 'text-editing')}
-      style={{ background: 'radial-gradient(120% 120% at 50% 0%, #14141a 0%, #0c0c0e 60%)' }}
+      style={{
+        background:
+          'radial-gradient(120% 70% at 50% -8%, rgba(79,125,255,0.13) 0%, transparent 58%), radial-gradient(90% 70% at 50% 112%, rgba(139,92,246,0.10) 0%, transparent 60%), radial-gradient(60% 50% at 85% 100%, rgba(47,212,246,0.05), transparent 70%), #070b16',
+      }}
       onPointerDown={surfaceDown}
       onPointerMove={interaction.onPointerMove}
       onPointerUp={interaction.onPointerUp}

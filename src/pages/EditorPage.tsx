@@ -115,7 +115,7 @@ export function EditorPage() {
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="mt-4 rounded-lg bg-signal px-4 py-2 text-[13px] font-semibold text-white transition-transform hover:-translate-y-0.5"
+            className="aur-fill mt-4 rounded-lg px-4 py-2 text-[13px] font-semibold text-white transition-all hover:-translate-y-0.5 hover:brightness-110"
           >
             العودة إلى المكتبة
           </button>

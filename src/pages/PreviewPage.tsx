@@ -87,11 +87,17 @@ export function PreviewPage() {
         </div>
       </header>
 
-      <div className="relative flex min-h-0 flex-1 items-center justify-center p-4">
+      <div
+        className="relative flex min-h-0 flex-1 items-center justify-center p-4"
+        style={{
+          background:
+            'radial-gradient(90% 80% at 50% 0%, rgba(79,125,255,0.10) 0%, transparent 55%), radial-gradient(80% 70% at 50% 110%, rgba(139,92,246,0.08) 0%, transparent 60%), #070b16',
+        }}
+      >
         <button type="button" onClick={() => setIndex((i) => Math.max(0, i - 1))} disabled={index === 0} className="absolute start-3 z-10 grid size-10 place-items-center rounded-full border border-ink-700 bg-ink-900/80 text-ink-100 transition-colors hover:bg-ink-800 disabled:opacity-30" title="السابق">
           {rtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
         </button>
-        <div className="w-full max-w-5xl overflow-hidden rounded-xl shadow-float">
+        <div className="w-full max-w-5xl overflow-hidden rounded-xl shadow-float glow-aur">
           <SlidePreview doc={doc} index={index} className="rounded-xl" />
         </div>
         <button type="button" onClick={() => setIndex((i) => Math.min(doc.slides.length - 1, i + 1))} disabled={index === doc.slides.length - 1} className="absolute end-3 z-10 grid size-10 place-items-center rounded-full border border-ink-700 bg-ink-900/80 text-ink-100 transition-colors hover:bg-ink-800 disabled:opacity-30" title="التالي">

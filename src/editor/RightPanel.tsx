@@ -52,7 +52,7 @@ export function RightPanel() {
   const tab = (selection.length && rightPanel === 'design' ? 'element' : rightPanel) as Tab
 
   return (
-    <aside className="flex h-full w-[320px] shrink-0 flex-col border-s border-ink-800 bg-ink-900">
+    <aside className="glass flex h-full w-[320px] shrink-0 flex-col border-s border-ink-800/70">
       <nav className="flex shrink-0 items-center gap-0.5 overflow-x-auto border-b border-ink-800 px-1.5 py-1.5 no-scrollbar">
         {TABS.map((t) => (
           <button
