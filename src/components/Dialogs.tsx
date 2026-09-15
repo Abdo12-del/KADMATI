@@ -14,6 +14,7 @@ import {
   Upload,
   Wand2,
   Download,
+  Link2,
 } from 'lucide-react'
 import { Button, Chip, Divider, Field, Modal, NumberField, Row, Segmented, Select, Slider, Switch, TextArea, TextField } from './ui'
 import { SlideView } from '../render/SlideView'
@@ -23,6 +24,8 @@ import { toast, useUI } from '../store/useUI'
 import { TEMPLATE_CATEGORIES, TEMPLATE_MAP, templatesByCategory } from '../templates/catalog'
 import type { TemplateCategory } from '../templates/engine'
 import { CATEGORY_LABEL, instantiateDeck, type TemplateDef } from '../templates/engine'
+import type { GenCategory } from '../services/ai/planner'
+import type { DesignStyleId } from '../services/ai/schema'
 import { createPresentation, presentationWordCount } from '../document/factory'
 import { exportToPptx } from '../services/exportPptx'
 import { exportImagesZip, exportPdf, type RasterFormat } from '../services/exportImages'
@@ -263,8 +266,8 @@ function ImportFlow({ compact }: { compact?: boolean }) {
 function AiPane() {
   const [prompt, setPrompt] = useState('')
   const [slides, setSlides] = useState(9)
-  const [category, setCategory] = useState<TemplateCategory>('business')
-  const [style, setStyle] = useState<'minimal' | 'business' | 'creative' | 'academic' | 'bold'>('business')
+  const [category, setCategory] = useState<GenCategory>('business')
+  const [style, setStyle] = useState<DesignStyleId>('professional')
   const [audience, setAudience] = useState('')
   const [busy, setBusy] = useState<string | null>(null)
   const ai = useUI((s) => s.ai)
@@ -277,19 +280,18 @@ function AiPane() {
     setBusy('بدء التوليد…')
     try {
       const { generateDeck } = await import('../services/ai/generate')
-      const { spec, engine } = await generateDeck(prompt, {
+      const { doc, engine } = await generateDeck(prompt, {
         slides,
         category,
         style,
         audience,
         onStage: (stage, done, total) => setBusy(`${stage} (${done}/${total})`),
       })
-      const doc = instantiateDeck(spec, { category })
       requestOpenProject({ doc })
       toast({
         kind: 'ai',
         title: `أُنشئ عرض من ${doc.slides.length} شرائح`,
-        body: engine === 'provider' ? 'المحتوى من مزوّدك — راجعه وعدّله.' : 'المحتوى مُهيكل محليًا: عدّل العناوين والنقاط، كل شيء قابل للتحرير.',
+        body: engine === 'local' ? 'المحتوى مُهيكل محليًا: عدّل العناوين والنقاط، كل شيء قابل للتحرير.' : `المحتوى عبر ${engine} — راجعه وعدّله.`,
       })
     } catch (err) {
       toast({ kind: 'error', title: 'تعذّر التوليد', body: (err as Error).message })
@@ -311,18 +313,31 @@ function AiPane() {
           <NumberField value={slides} min={4} max={30} onChange={(v) => setSlides(Math.max(4, Math.min(30, v)))} compact />
         </Field>
         <Field label="نوع العرض">
-          <Select value={category} onChange={(v) => setCategory(v as TemplateCategory)} options={TEMPLATE_CATEGORIES.map((c) => ({ value: c, label: CATEGORY_LABEL[c] }))} />
+          <Select
+            value={category}
+            onChange={(v) => setCategory(v as GenCategory)}
+            options={[
+              { value: 'business', label: 'أعمال' },
+              { value: 'education', label: 'تعليم' },
+              { value: 'pitch', label: 'Pitch Deck' },
+              { value: 'marketing', label: 'تسويق' },
+              { value: 'report', label: 'تقرير' },
+              { value: 'academic', label: 'أكاديمي' },
+              { value: 'general', label: 'عام' },
+            ]}
+          />
         </Field>
         <Field label="أسلوب بصري">
           <Select
             value={style}
-            onChange={(v) => setStyle(v as never)}
+            onChange={(v) => setStyle(v as DesignStyleId)}
             options={[
               { value: 'minimal', label: 'بسيط' },
-              { value: 'business', label: 'أعمال' },
+              { value: 'modern', label: 'حديث' },
+              { value: 'professional', label: 'مهني' },
               { value: 'creative', label: 'إبداعي' },
-              { value: 'academic', label: 'أكاديمي' },
-              { value: 'bold', label: 'جريء' },
+              { value: 'cinematic', label: 'سينمائي' },
+              { value: 'elegant', label: 'أنيق' },
             ]}
           />
         </Field>
@@ -333,7 +348,9 @@ function AiPane() {
       <p className="text-[11.5px] leading-relaxed text-ink-400">
         {ai.provider === 'custom' && ai.endpoint
           ? `المصدر: ${ai.model || ai.endpoint} — نطلب منه الهيكل والنصوص فقط، ثم نبني التخطيط والعناصر محليًا.`
-          : 'المصدر: محرك كدماتي المحلي — يبني هيكلًا ومنطقًا لغويًا دون إنترنت. اضبط مزوّدًا من إعدادات الذكاء لتحصل على صياغة أعمق.'}
+          : ai.provider === 'ollama'
+            ? `المصدر: Ollama محليًا (${ai.model || 'نموذج مقترح تلقائيًا'}) — بياناتك لا تغادر جهازك.`
+            : 'المصدر: محرك كدماتي المحلي — يبني هيكلًا ومنطقًا لغويًا دون إنترنت. اضبط مزوّدًا من إعدادات الذكاء لتحصل على صياغة أعمق.'}
       </p>
       <div className="flex items-center gap-2">
         <Button variant="primary" onClick={() => void generate()} disabled={!!busy}>
@@ -579,6 +596,26 @@ function ShortcutsDialog() {
 function AiSettingsDialog() {
   const ai = useUI((s) => s.ai)
   const setAi = useUI((s) => s.setAi)
+  const [ollama, setOllama] = useState<{ ok: boolean; models: string[]; error?: string } | null>(null)
+  const [probing, setProbing] = useState(false)
+
+  const probeOllama = async () => {
+    setProbing(true)
+    try {
+      const { detectOllama, ollamaUrl, recommendModel, hardwareProfile } = await import('../services/ai/provider')
+      const status = await detectOllama(ollamaUrl(ai))
+      if (status.ok) {
+        const model = recommendModel(status.models.map((m) => m.name), hardwareProfile().tier) ?? status.models[0]?.name ?? ''
+        setOllama({ ok: true, models: status.models.map((m) => m.name) })
+        if (model) setAi({ model })
+      } else {
+        setOllama({ ok: false, models: [], error: status.error })
+      }
+    } finally {
+      setProbing(false)
+    }
+  }
+
   return (
     <Modal open onClose={close} title="إعدادات الذكاء الاصطناعي" width={600}>
       <div className="space-y-3.5">
@@ -587,11 +624,43 @@ function AiSettingsDialog() {
             value={ai.provider}
             onChange={(v) => setAi({ provider: v as never })}
             options={[
-              { value: 'local', label: 'محلي (في المتصفح)' },
+              { value: 'local', label: 'محرك القواعد' },
+              { value: 'ollama', label: 'Ollama محلي' },
               { value: 'custom', label: 'مزوّد خارجي' },
             ]}
           />
         </Field>
+        {ai.provider === 'ollama' ? (
+          <>
+            <Field label="عنوان خادم Ollama">
+              <TextField value={ai.ollamaUrl} onChange={(v) => setAi({ ollamaUrl: v })} placeholder="http://localhost:11434" />
+            </Field>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="surface" onClick={() => void probeOllama()} disabled={probing}>
+                {probing ? <Loader2 size={13} className="animate-spin" /> : <Link2 size={13} />} فحص الخادم واختيار النموذج
+              </Button>
+              {ollama ? (
+                ollama.ok ? (
+                  <span className="text-[11.5px] text-good">✓ {ollama.models.length} نموذجًا مثبّتًا — أُقترح «{ai.model}»</span>
+                ) : (
+                  <span className="text-[11.5px] text-warn">لا استجابة ({ollama.error}) — ثبّت Ollama من ollama.com</span>
+                )
+              ) : null}
+            </div>
+            {ollama?.ok ? (
+              <Field label="النموذج">
+                <Select value={ai.model} onChange={(v) => setAi({ model: v })} options={ollama.models.map((m) => ({ value: m, label: m }))} />
+              </Field>
+            ) : (
+              <Field label="النموذج">
+                <TextField value={ai.model} onChange={(v) => setAi({ model: v })} placeholder="qwen3:8b" />
+              </Field>
+            )}
+            <p className="rounded-lg border border-good/30 bg-good/8 p-2.5 text-[11.5px] leading-relaxed text-ink-200">
+              Private AI: المحتوى يُولَّد على جهازك ولا يُرسل لأي خدمة خارجية. يُفضَّل نموذج Qwen3 المكمّم (8B على أجهزة 16GB، 4B على أقل من ذلك) لدعمه العربية والفرنسية وإخراجه JSON منظمًا.
+            </p>
+          </>
+        ) : null}
         {ai.provider === 'custom' ? (
           <>
             <Field label="عنوان API">

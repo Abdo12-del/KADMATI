@@ -164,7 +164,10 @@ export function DashboardPage() {
           <Button size="sm" variant="subtle" onClick={() => useUI.getState().openDialog('new-presentation')}>
             <LayoutTemplate size={13} /> من قالب
           </Button>
-          <Button size="sm" variant="primary" onClick={() => void startNew()}>
+          <Button size="sm" variant="primary" onClick={() => navigate('/create')} className="shadow-[0_0_18px_-6px_rgba(79,125,255,0.7)]">
+            <Sparkles size={13} /> Create with AI
+          </Button>
+          <Button size="sm" variant="surface" onClick={() => void startNew()}>
             <Plus size={14} /> جديد
           </Button>
           <button
@@ -451,9 +454,14 @@ function DeckThumbSmall({ doc }: { doc: import('../document/types').Presentation
 }
 
 function QuickStart() {
-  const library = useLibrary()
   const navigate = useNavigate()
   const items = [
+    {
+      label: 'Create with AI',
+      hint: 'فكرة → عرض كامل قابل للتعديل',
+      run: () => navigate('/create'),
+      primary: true,
+    },
     { label: 'عرض فارغ', hint: '١٢٨٠×٧٢٠ · كل الأدوات', run: () => useUI.getState().openDialog('new-presentation') },
     { label: 'من قالب', hint: '١٢ قالبًا عربيًا حقيقيًا', run: () => navigate('/templates') },
     {
@@ -466,18 +474,6 @@ function QuickStart() {
       hint: 'من المستند إلى عرض قابل للتعديل',
       run: () => navigate('/pdf'),
     },
-    {
-      label: 'توليد بالذكاء',
-      hint: 'هيكل + محتوى قابل للتحرير',
-      run: async () => {
-        const { generateDeck } = await import('../services/ai/generate')
-        const { instantiateDeck } = await import('../templates/engine')
-        const { spec } = await generateDeck('عرض عن كيف يغيّر الذكاء الاصطناعي طريقة عمل الفرق خلال سنة واحدة', { slides: 8, category: 'business' })
-        const doc = instantiateDeck(spec)
-        const record = await library.createProject(doc)
-        requestOpenProject({ projectId: record.id })
-      },
-    },
   ]
   return (
     <section className="mt-9">
@@ -488,9 +484,15 @@ function QuickStart() {
             key={item.label}
             type="button"
             onClick={() => void item.run()}
-            className="group glass rounded-xl border p-3.5 text-start transition-all hover:-translate-y-0.5 hover:border-signal/40 hover:shadow-aurora"
+            className={cn(
+              'group glass rounded-xl border p-3.5 text-start transition-all hover:-translate-y-0.5 hover:shadow-aurora',
+              (item as { primary?: boolean }).primary ? 'border-signal/40 hover:border-signal/70' : 'hover:border-signal/40',
+            )}
           >
-            <span className="block text-[13.5px] font-semibold text-ink-50">{item.label}</span>
+            <span className="flex items-center gap-1.5 text-[13.5px] font-semibold text-ink-50">
+              {(item as { primary?: boolean }).primary ? <Sparkles size={13} className="text-signal-soft" /> : null}
+              {item.label}
+            </span>
             <span className="mt-1 block text-[11.5px] text-ink-500">{item.hint}</span>
           </button>
         ))}

@@ -17,12 +17,11 @@ import { parseColor, toHex } from '../lib/colors'
 import { resolveFont } from '../lib/fonts'
 import { chartData } from '../render/ChartView'
 import type { AnyElement, Background, ChartElement, ImageElement, ImageFilters, Presentation, ShapeElement, Slide, TableElement, TextStyle } from '../document/types'
-import { CANVAS_W } from '../document/types'
 import { normalizePresentation } from '../document/factory'
 
-/** Our design space is 1280×720 px; PowerPoint widescreen is 13.333×7.5 in. */
-const IN_PER_PX = 13.3333 / CANVAS_W
+/** Design units are 96-dpi pixels: 1280×720 → 13.333×7.5 in (16:9), 960×720 → 10×7.5 in (4:3). */
 const PT_PER_PX = 0.75
+const PX_PER_IN = 96
 
 export interface PptxExportResult {
   fileName: string
@@ -41,11 +40,13 @@ export interface PptxExportOptions {
 export async function exportToPptx(input: Presentation, opts: PptxExportOptions = {}): Promise<{ blob: Blob; result: PptxExportResult }> {
   const doc = normalizePresentation(input)
   const pptx = new pptxgen()
-  const scale = (v: number) => v * IN_PER_PX
+  const widthIn = doc.size.w / PX_PER_IN
+  const heightIn = doc.size.h / PX_PER_IN
+  const scale = (v: number) => v / PX_PER_IN
   const rasterized: PptxExportResult['rasterized'] = []
 
-  pptx.defineLayout({ name: 'KADMATI_169', width: 13.3333, height: 7.5 })
-  pptx.layout = 'KADMATI_169'
+  pptx.defineLayout({ name: `KADMATI_${doc.size.w}x${doc.size.h}`, width: widthIn, height: heightIn })
+  pptx.layout = `KADMATI_${doc.size.w}x${doc.size.h}`
   pptx.author = doc.metadata.author ?? 'KADMATI Studio'
   pptx.company = doc.metadata.company ?? 'KADMATI Studio'
   pptx.title = doc.metadata.title

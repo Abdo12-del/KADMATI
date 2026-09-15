@@ -9,6 +9,7 @@
  */
 import { ArrowLeft, ChevronDown, ClipboardCheck, ListChecks, Palette, PenLine, Sparkles, X } from 'lucide-react'
 import { AuroraScene } from './AuroraScene'
+import { useNavigate } from 'react-router-dom'
 import { Reveal } from './Reveal'
 
 const CAPABILITIES = [
@@ -19,6 +20,7 @@ const CAPABILITIES = [
 ]
 
 export function AISection() {
+  const navigate = useNavigate()
   return (
     <section id="features" className="relative mx-auto max-w-7xl scroll-mt-24 px-6 py-20 md:py-24">
       {/* dramatic violet field, as in the reference */}
@@ -122,7 +124,7 @@ export function AISection() {
                   <FormRow label="عدد الشرائح" value="10" />
                   <FormRow label="نوع العرض" value="احترافي" />
                   <FormRow label="الأسلوب البصري" value="حيوي" />
-                  <button type="button" className="slf-btn slf-btn-primary mt-1 h-11 w-full text-[14px]">
+                  <button type="button" onClick={() => navigate('/create')} className="slf-btn slf-btn-primary mt-1 h-11 w-full text-[14px]">
                     إنشاء
                   </button>
                 </div>

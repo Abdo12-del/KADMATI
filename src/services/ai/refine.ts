@@ -13,8 +13,9 @@ import { htmlToPlainText, plainToHtml, sanitizeHtml } from '../../document/text'
 import { LAYOUTS, buildLayout, type LayoutDef } from '../../templates/layouts'
 import { unionBounds } from '../../document/geometry'
 import type { AnyElement, Presentation, Slide, TextElement } from '../../document/types'
+import { resolveProvider } from './provider'
 
-export type RefineOp = 'improve' | 'shorten' | 'formal' | 'title'
+export type RefineOp = 'improve' | 'shorten' | 'formal' | 'title' | 'expand' | 'grammar' | 'friendly'
 
 export interface RefineResult {
   changed: boolean
@@ -33,7 +34,7 @@ export async function rewriteText(elementId: string, op: RefineOp): Promise<Refi
   let next = localRewrite(source, op, el, doc)
   let engine = 'محلي'
 
-  if (ai.endpoint && ai.provider === 'custom') {
+  if (ai.endpoint && (ai.provider === 'custom' || ai.provider === 'ollama')) {
     const remote = await providerRewrite(source, op, ai)
     if (remote && acceptable(source, remote, op)) {
       next = remote
@@ -41,7 +42,12 @@ export async function rewriteText(elementId: string, op: RefineOp): Promise<Refi
     }
   }
 
-  if (!next || next === source) return { changed: false, title: 'لا تغيير مطلوب', detail: 'النص بالفعل في شكل جيد.' }
+  if (!next || next === source) {
+    if (op === 'expand' || op === 'friendly') {
+      return { changed: false, title: 'يحتاج مزوّد ذكاء', detail: 'التوسيع وتغيير النبرة يعملان مع Ollama أو مزوّد خارجي — اضبطهما من إعدادات الذكاء.' }
+    }
+    return { changed: false, title: 'لا تغيير مطلوب', detail: 'النص بالفعل في شكل جيد.' }
+  }
 
   const html = op === 'title' ? plainToHtml(next) : wrapLike(el.content, next)
   updateElement(elementId, { content: sanitizeHtml(html) } as Partial<TextElement>, `تحسين النص · ${engine}`)
@@ -57,6 +63,9 @@ const LABELS: Record<RefineOp, string> = {
   shorten: 'اختُصر النص',
   formal: 'أُعيد بصياغة رسمية',
   title: 'عنوان مقترح',
+  expand: 'وُسِّع النص',
+  grammar: 'صُحِّحت القواعد',
+  friendly: 'صارت النبرة ودّية',
 }
 
 function wordCount(text: string): number {
@@ -69,7 +78,9 @@ function acceptable(source: string, next: string, op: RefineOp): boolean {
   if (/```|^[#*-]\s/m.test(trimmed)) return false
   if (op === 'shorten' && wordCount(trimmed) > wordCount(source)) return false
   if (op === 'title' && wordCount(trimmed) > 12) return false
-  if (wordCount(trimmed) > Math.max(8, wordCount(source) * 3)) return false
+  if (op === 'expand' && wordCount(trimmed) <= wordCount(source)) return false
+  if (op === 'grammar' && wordCount(trimmed) > wordCount(source) * 1.6) return false
+  if (op !== 'expand' && wordCount(trimmed) > Math.max(8, wordCount(source) * 3)) return false
   return true
 }
 
@@ -132,6 +143,9 @@ const FORMAL: [RegExp, string][] = [
 export function localRewrite(source: string, op: RefineOp, el: TextElement, doc: Presentation): string {
   let text = source.replace(/\s+/g, ' ').trim()
 
+  // Provider-only ops: the local engine refuses to fake them with filler prose.
+  if (op === 'expand' || op === 'friendly') return source
+
   if (op === 'title') {
     const first = text.split(/[.!؟]\s/)[0] ?? text
     const clipped = first.split(/\s+/).slice(0, 7).join(' ')
@@ -152,13 +166,24 @@ export function localRewrite(source: string, op: RefineOp, el: TextElement, doc:
     text = text.replace(/\s{2,}/g, ' ').replace(/!+/g, '.')
   }
 
-  if (op === 'improve') {
+  if (op === 'improve' || op === 'grammar') {
     for (const [re] of WEAK) text = text.replace(re, ' ')
     text = text.replace(/\s{2,}/g, ' ').replace(/\s+([.,:؛،؟!])/g, '$1').trim()
     // A body block that starts lowercase after a period reads as a fragment — open it properly.
     text = text.charAt(0).toUpperCase() + text.slice(1)
     if (el.role === 'body' && wordCount(text) > 18) text = tighten(text)
     text = ensureTerminator(text, el.role === 'title')
+  }
+
+  if (op === 'grammar') {
+    // Common Arabic orthography slips that are safe to fix mechanically.
+    text = text
+      .replace(/\bان شاء\b/g, 'إن شاء')
+      .replace(/\bانا\b/g, 'أنا')
+      .replace(/\bان\s+ال/g, 'إن ال')
+      .replace(/\bلان\b/g, 'لأن')
+      .replace(/\s{2,}/g, ' ')
+      .trim()
   }
 
   return text.replace(/\s+/g, ' ').trim()
@@ -216,37 +241,27 @@ function titleCase(text: string, dir: 'rtl' | 'ltr'): string {
 
 /* ------------------------------------------------------------------ provider pass */
 
-async function providerRewrite(source: string, op: RefineOp, ai: { endpoint: string; model: string; tone: string }): Promise<string | null> {
+async function providerRewrite(source: string, op: RefineOp, ai: ReturnType<typeof useUI.getState>['ai']): Promise<string | null> {
   const instructions: Record<RefineOp, string> = {
     improve: 'حسّن الصياغة مع الحفاظ على المعنى والطول التقريبي.',
     shorten: 'اختصر إلى النصف تقريبًا مع إبقاء الأرقام والاستنتاجات.',
     formal: 'أعد الصياغة بنبرة رسمية مهنية.',
     title: 'اقترح عنوانًا من ٤ إلى ٧ كلمات يلخص الفكرة.',
+    expand: 'وسّع النص بجملة أو جملتين مفيدتين دون حشو، مع الحفاظ على الأسلوب.',
+    grammar: 'صحح الأخطاء الإملائية والنحوية وعلامات الترقيم فقط، دون تغيير المعنى.',
+    friendly: 'أعد الصياغة بنبرة ودّية قريبة دون فقدان الاحترافية.',
   }
-  try {
-    const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 20000)
-    const res = await fetch(ai.endpoint.replace(/\/$/, ''), {
-      method: 'POST',
-      signal: controller.signal,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: ai.model,
-        messages: [
-          { role: 'system', content: `أنت محرر عروض تقديمية. أعد النص المعدّل فقط دون شرح أو تنسيق. النبرة: ${ai.tone}.` },
-          { role: 'user', content: `${instructions[op]}\n\nالنص:\n${source}` },
-        ],
-        temperature: 0.4,
-      }),
-    })
-    clearTimeout(timer)
-    if (!res.ok) return null
-    const json = (await res.json()) as { choices?: { message?: { content?: string } }[] }
-    const content = json.choices?.[0]?.message?.content
-    return typeof content === 'string' ? content.trim() : null
-  } catch {
-    return null
-  }
+  const resolved = await resolveProvider(ai)
+  if (!resolved.provider) return null
+  const result = await resolved.provider.generateJSON({
+    system: 'أنت محرر عروض تقديمية. أعد JSON فقط بالشكل {"text":"النص المعدّل"} دون شرح أو تنسيق داخل النص.',
+    user: `${instructions[op]}\n\nالنص:\n${source}`,
+    jsonSchema: { type: 'object', properties: { text: { type: 'string' } }, required: ['text'] },
+    temperature: 0.4,
+    timeoutMs: 25000,
+  })
+  const text = (result?.data as { text?: unknown } | null)?.text
+  return typeof text === 'string' ? text.trim() : null
 }
 
 /* ------------------------------------------------------------------ slide-level ops */

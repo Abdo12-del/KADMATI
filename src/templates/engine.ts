@@ -7,11 +7,13 @@
  */
 import { createAsset, createText, newId, THEME_PRESETS } from '../document/factory'
 import { CANVAS_H, CANVAS_W } from '../document/types'
+import { SIZE_4_3, reflowToSize } from './reflow'
 import { buildLayout, LAYOUT_MAP } from './layouts'
 import {
   type AnyElement,
   type AssetRef,
   type Background,
+  type ChartKind,
   type ElementRole,
   type Presentation,
   type Slide,
@@ -50,6 +52,13 @@ export const CATEGORY_LABEL: Record<TemplateCategory, string> = {
   creative: 'إبداعي',
 }
 
+export interface SlideData {
+  /** Real chart payload — becomes a native, editable chart element. */
+  chart?: { kind: ChartKind; categories: string[]; series: { name: string; values: number[] }[] }
+  /** Real table payload — becomes a native, editable table element. */
+  table?: { header: string[]; rows: string[][] }
+}
+
 export interface SlideSpec {
   layout: string
   /** Copy per role. An array becomes a bullet list on a single element, or one item per matching element. */
@@ -60,6 +69,8 @@ export interface SlideSpec {
   notes?: string
   /** Overrides for specific element indices, e.g. { title: '...' } applied after layout copy. */
   patch?: Record<string, unknown>
+  /** Native data payloads (chart/table) filled into the layout's matching element. */
+  data?: SlideData
 }
 
 export type ArtKind = 'aurora' | 'grid' | 'waves' | 'city' | 'lab' | 'portrait' | 'product' | 'paper'
@@ -75,6 +86,12 @@ export interface DeckSpec {
   categories?: TemplateCategory[]
   tags?: string[]
   slides: SlideSpec[]
+  /** Runtime design-system theme (AI-composed or brand kit). Wins over `themeId`. */
+  theme?: Theme
+  /** Brand kit that should be linked to the generated document. */
+  brandKitId?: string
+  /** Aspect ratio — 4:3 reflows every layout to a 960×720 canvas. */
+  aspect?: '16:9' | '4:3'
 }
 
 export interface TemplateDef extends DeckSpec {
@@ -307,33 +324,77 @@ function setText(el: AnyElement, html: string, dir: 'rtl' | 'ltr') {
   }
 }
 
+/**
+ * Instantiate ONE slide spec against a theme — the unit used by `instantiateDeck` and by
+ * per-slide AI regeneration (which must never rebuild the rest of the deck).
+ */
+export function instantiateSlide(
+  s: SlideSpec,
+  theme: Theme,
+  dir: 'rtl' | 'ltr',
+  seed = 0,
+  assets?: Record<string, AssetRef>,
+): Slide {
+  const layout = LAYOUT_MAP.get(s.layout) ?? LAYOUT_MAP.get('title-content')!
+  const slide = buildLayout(layout, theme)
+  slide.background = bgFor(s, theme)
+  if (s.transition) Object.assign(slide.transition, s.transition)
+  if (s.notes) slide.notes = s.notes
+  if (s.patch) Object.assign(slide, s.patch)
+
+  const needsArt = s.bg === 'image' || slide.elements.some((e) => e.kind === 'image' && !e.assetId)
+  if (needsArt) {
+    const art = makeArt(s.image ?? 'aurora', theme, seed)
+    if (assets) assets[art.id] = art
+    for (const el of slide.elements) {
+      if (el.kind === 'image' && !el.assetId) el.assetId = art.id
+    }
+    if (s.bg === 'image') slide.background = bgFor(s, theme, art)
+  }
+
+  applyCopy(slide, s, theme, dir)
+  if (s.data?.chart) fillChart(slide, s.data.chart, theme)
+  if (s.data?.table) fillTable(slide, s.data.table, theme)
+  return slide
+}
+
+function fillChart(slide: Slide, data: NonNullable<SlideData['chart']>, theme: Theme) {
+  const chart = slide.elements.find((e) => e.kind === 'chart')
+  if (!chart || chart.kind !== 'chart') return
+  chart.chart = data.kind
+  chart.categories = data.categories.slice(0, 8)
+  chart.series = data.series.slice(0, 3).map((sr) => ({ name: sr.name, values: sr.values.slice(0, 8) }))
+  chart.colors = [theme.palette.secondary, theme.palette.accent, theme.palette.primary, theme.palette.success]
+  chart.legend = chart.series.length > 1
+}
+
+function fillTable(slide: Slide, data: NonNullable<SlideData['table']>, theme: Theme) {
+  const table = slide.elements.find((e) => e.kind === 'table')
+  if (!table || table.kind !== 'table') return
+  const header = data.header.slice(0, 6)
+  const cols = Math.max(1, header.length)
+  const rows = data.rows.slice(0, 7).map((r) => {
+    const cells = r.slice(0, cols).map((c) => ({ text: String(c).slice(0, 60) }))
+    while (cells.length < cols) cells.push({ text: '' })
+    return cells
+  })
+  table.header = true
+  table.cells = [
+    header.map((h) => ({ text: String(h).slice(0, 40), bold: true, fill: theme.palette.primary, color: theme.palette.onPrimary })),
+    ...rows,
+  ]
+  table.colWidths = header.map(() => table.w / cols)
+  table.rowHeights = rows.map(() => (table.h - 44) / Math.max(1, rows.length))
+}
+
 export function instantiateDeck(spec: DeckSpec, opts: { templateId?: string; category?: TemplateCategory } = {}): Presentation {
-  const theme = THEME_PRESETS.find((t) => t.id === spec.themeId)?.theme ?? THEME_PRESETS[0].theme
-  const dir = spec.dir ?? (spec.lang === 'en' ? 'ltr' : 'rtl')
+  const theme = spec.theme ?? (THEME_PRESETS.find((t) => t.id === spec.themeId)?.theme ?? THEME_PRESETS[0].theme)
+  const dir = spec.dir ?? (spec.lang === 'en' || spec.lang === 'fr' ? 'ltr' : 'rtl')
   const assets: Record<string, AssetRef> = {}
   const slides: Slide[] = []
 
-  for (const s of spec.slides) {
-    const layout = LAYOUT_MAP.get(s.layout) ?? LAYOUT_MAP.get('title-content')!
-    const slide = buildLayout(layout, theme)
-    slide.background = bgFor(s, theme)
-    if (s.transition) Object.assign(slide.transition, s.transition)
-    if (s.notes) slide.notes = s.notes
-    if (s.patch) Object.assign(slide, s.patch)
-
-    const needsArt = s.bg === 'image' || slide.elements.some((e) => e.kind === 'image' && !e.assetId)
-    let art: AssetRef | undefined
-    if (needsArt) {
-      art = makeArt(s.image ?? 'aurora', theme, slides.length)
-      assets[art.id] = art
-      for (const el of slide.elements) {
-        if (el.kind === 'image' && !el.assetId) el.assetId = art.id
-      }
-      if (s.bg === 'image') slide.background = bgFor(s, theme, art)
-    }
-
-    applyCopy(slide, s, theme, dir)
-    slides.push(slide)
+  for (const [i, s] of spec.slides.entries()) {
+    slides.push(instantiateSlide(s, theme, dir, i, assets))
   }
 
   const doc = createPresentation({
@@ -341,6 +402,7 @@ export function instantiateDeck(spec: DeckSpec, opts: { templateId?: string; cat
     theme,
     slides,
     assets,
+    brandKitId: spec.brandKitId,
     metadata: {
       title: spec.title,
       subject: spec.subject,
@@ -353,7 +415,14 @@ export function instantiateDeck(spec: DeckSpec, opts: { templateId?: string; cat
       trashedAt: null,
     },
   })
-  if (opts.templateId) doc.raw = { templateId: opts.templateId, category: opts.category }
+  if (spec.aspect === '4:3') reflowToSize(doc, SIZE_4_3)
+  if (opts.templateId || spec.brandKitId) {
+    doc.raw = {
+      ...(doc.raw ?? {}),
+      ...(opts.templateId ? { templateId: opts.templateId, category: opts.category } : {}),
+      ...(spec.brandKitId ? { brandKitId: spec.brandKitId } : {}),
+    }
+  }
   return doc
 }
 

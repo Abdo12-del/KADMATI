@@ -14,10 +14,14 @@ export interface Toast {
 }
 
 export interface AiSettings {
-  provider: 'local' | 'custom'
+  /** local = deterministic in-browser engine · ollama = local LLM runtime · custom = any OpenAI-compatible endpoint */
+  provider: 'local' | 'ollama' | 'custom'
+  /** OpenAI-compatible endpoint (provider='custom') */
   endpoint: string
   model: string
   apiKey?: string
+  /** Ollama server URL (provider='oll') — default http://localhost:11434 */
+  ollamaUrl: string
   tone: 'neutral' | 'formal' | 'friendly' | 'punchy'
   density: 'short' | 'balanced' | 'rich'
 }
@@ -72,6 +76,7 @@ const DEFAULT_AI: AiSettings = {
   provider: 'local',
   endpoint: '',
   model: '',
+  ollamaUrl: 'http://localhost:11434',
   tone: 'neutral',
   density: 'balanced',
 }

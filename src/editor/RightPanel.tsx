@@ -27,6 +27,7 @@ import {
   Trash2,
   Underline,
   Wand2,
+  RefreshCw,
 } from 'lucide-react'
 import { useDoc } from '../store/useDoc'
 import { toast, useUI } from '../store/useUI'
@@ -1590,14 +1591,25 @@ function AiTab() {
         </div>
       </Section>
 
+      <RegenerateSection busy={busy} setBusy={setBusy} run={run} />
+
+      <Section title="أفعال التصميم" defaultOpen={false}>
+        <div className="flex flex-wrap gap-1">
+          {SLIDE_ACTIONS.map((action) => (
+            <ActionButton key={action.id} action={action} busy={busy} run={run} />
+          ))}
+        </div>
+        <p className="text-[11px] leading-relaxed text-ink-500">كل فعل يعدّل هذه الشريحة فقط، داخل خطوة تراجع واحدة.</p>
+      </Section>
+
       <Section title="النص المحدد">
         <div className="flex flex-wrap gap-1">
-          {(['improve', 'shorten', 'formal', 'title'] as const).map((op) => (
+          {(['improve', 'shorten', 'expand', 'formal', 'friendly', 'grammar', 'title'] as const).map((op) => (
             <AiChip key={op} id={useDoc.getState().selection[0] ?? ''} op={op} label={AI_OP_LABEL[op]} />
           ))}
         </div>
         <p className="text-[11px] leading-relaxed text-ink-500">
-          المحسِّن يعمل محليًا على إعادة صياغة الجمل الطويلة وحشو الكلمات. عند ضبط مزوّد ذكاء اصطناعي في الإعدادات تُستخدمواجهته بدلًا من ذلك.
+          المحسِّن يعمل محليًا على إعادة صياغة الجمل الطويلة وحشو الكلمات. التوسيع وتغيير النبرة يعملان عند ضبط Ollama أو مزوّد خارجي من الإعدادات.
         </p>
         <Button size="sm" variant="ghost" className="w-full" onClick={() => useUI.getState().openDialog('ai-settings')}>
           <Link2 size={13} /> إعدادات الذكاء
@@ -1607,14 +1619,80 @@ function AiTab() {
   )
 }
 
+/* --------------------------------------------------- regenerate one slide (in place) */
+
+const SLIDE_ACTIONS = [
+  { id: 'more-visual', label: 'أكثر بصرية' },
+  { id: 'simplify', label: 'بسّط' },
+  { id: 'hierarchy', label: 'هرمية أوضح' },
+  { id: 'shorten', label: 'اختصر' },
+  { id: 'professional', label: 'أكثر مهنية' },
+  { id: 'creative', label: 'أكثر إبداعًا' },
+] as const
+
+function RegenerateSection({ busy, setBusy, run }: { busy: string | null; setBusy: (v: string | null) => void; run: (label: string, fn: () => Promise<void>) => Promise<void> }) {
+  const [instruction, setInstruction] = useState('')
+  return (
+    <Section title="إعادة توليد الشريحة" defaultOpen={false}>
+      <p className="text-[11px] leading-relaxed text-ink-400">
+        تعاد صياغة هذه الشريحة وحدها — بقية العرض وتعديلاتك اليدوية تبقى كما هي. اكتب طلبًا مثل «اجعلها أقصر» أو «حوّلها لمقارنة».
+      </p>
+      <TextField value={instruction} onChange={setInstruction} placeholder="مثال: اجعلها أكثر بصرية" />
+      <Button
+        size="sm"
+        variant="subtle"
+        className="w-full"
+        disabled={busy !== null}
+        onClick={() =>
+          run('إعادة توليد', async () => {
+            const { regenerateCurrentSlide } = await import('../services/ai/generate')
+            const res = await regenerateCurrentSlide(instruction.trim() || undefined)
+            toast({ kind: res ? 'ai' : 'info', title: res ? 'أُعيدت صياغة الشريحة' : 'لم يتغيّر شيء', body: res?.summary ?? 'جرّب طلبًا أوضح، أو اضبط مزوّدًا لصياغة أعمق.' })
+            setBusy(null)
+          })
+        }
+      >
+        <RefreshCw size={13} /> Regenerate
+      </Button>
+    </Section>
+  )
+}
+
+function ActionButton({ action, busy, run }: { action: (typeof SLIDE_ACTIONS)[number]; busy: string | null; run: (label: string, fn: () => Promise<void>) => Promise<void> }) {
+  const [done, setDone] = useState(false)
+  return (
+    <Chip
+      key={action.id}
+      active={done}
+      title={busy ? 'جارٍ المعالجة…' : action.label}
+      onClick={() => {
+        if (busy) return
+        setDone(false)
+        void run(action.label, async () => {
+          const { applyDesignAction } = await import('../services/ai/generate')
+          const note = await applyDesignAction(action.id)
+          toast({ kind: 'ai', title: action.label, body: note })
+          setDone(true)
+          setTimeout(() => setDone(false), 1600)
+        })
+      }}
+    >
+      {action.label}
+    </Chip>
+  )
+}
+
 const AI_OP_LABEL: Record<string, string> = {
   improve: 'تحسين الصياغة',
   shorten: 'اختصار',
+  expand: 'توسيع',
   formal: 'أكثر رسمية',
+  friendly: 'نبرة ودّية',
+  grammar: 'تصحيح القواعد',
   title: 'اقتراح عنوان',
 }
 
-function AiChip({ id, op, label }: { id: string; op: 'improve' | 'shorten' | 'formal' | 'title'; label: string }) {
+function AiChip({ id, op, label }: { id: string; op: 'improve' | 'shorten' | 'formal' | 'title' | 'expand' | 'grammar' | 'friendly'; label: string }) {
   const [busy, setBusy] = useState(false)
   return (
     <Chip
@@ -1626,7 +1704,7 @@ function AiChip({ id, op, label }: { id: string; op: 'improve' | 'shorten' | 'fo
         setBusy(true)
         try {
           const { rewriteText } = await import('../services/ai/refine')
-          const res = await rewriteText(id, op)
+          const res = await rewriteText(id, op as never)
           toast({ kind: res.changed ? 'ai' : 'info', title: res.changed ? res.title : 'لا تغيير مطلوب', body: res.detail })
         } finally {
           setBusy(false)

@@ -11,7 +11,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:anim": "node tests/animations/verify.mjs",
     "test:pdf": "node tests/pdf/build.mjs && node .tmp-verify/pdf-test.mjs",
-    "test:pdf:fixtures": "node tests/pdf/fixtures.mjs"
+    "test:pdf:fixtures": "node tests/pdf/fixtures.mjs",
+    "test:ai": "node tests/ai/verify.mjs"
   },
   "dependencies": {
     "@tanstack/react-virtual": "3.14.12",

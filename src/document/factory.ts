@@ -67,7 +67,7 @@ const BASE_PALETTE: ThemePalette = {
   warning: '#D68910',
 }
 
-function theme(
+export function theme(
   id: string,
   name: string,
   palette: Partial<Theme['palette']>,

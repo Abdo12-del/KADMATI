@@ -178,11 +178,18 @@ const HISTORY_LIMIT = 150
 export const useDoc = create<DocState>()(
   temporal(
     (set, get) => {
-      const touch = () =>
+      const touch = () => {
+        // The timestamp alone must never enter undo history: pause tracking for this set, so the
+        // history holds content changes only (the mutation that called touch() already pushed).
+        const temporalApi = useDoc.temporal.getState()
+        const wasTracking = temporalApi.isTracking
+        temporalApi.pause()
         set((s) => ({
           doc: { ...s.doc, metadata: { ...s.doc.metadata, updatedAt: Date.now() } },
           saveStatus: 'dirty' as SaveStatus,
         }))
+        if (wasTracking) temporalApi.resume()
+      }
 
       const slideIdOf = () => {
         const { doc, slideIndex } = get()
@@ -882,12 +889,26 @@ export const useDoc = create<DocState>()(
           }),
 
         undo: () => {
-          useDoc.temporal.getState().undo()
+          // Pause tracking while the temporal store applies the previous snapshot, otherwise the
+          // wrapped set re-pushes the pre-undo doc and multi-step undo ping-pongs.
+          const temporalApi = useDoc.temporal.getState()
+          temporalApi.pause()
+          try {
+            temporalApi.undo()
+          } finally {
+            temporalApi.resume()
+          }
           pruneSelection()
           touch()
         },
         redo: () => {
-          useDoc.temporal.getState().redo()
+          const temporalApi = useDoc.temporal.getState()
+          temporalApi.pause()
+          try {
+            temporalApi.redo()
+          } finally {
+            temporalApi.resume()
+          }
           pruneSelection()
           touch()
         },
@@ -899,6 +920,8 @@ export const useDoc = create<DocState>()(
     {
       limit: HISTORY_LIMIT,
       partialize: (state): HistoryState => ({ doc: state.doc }),
+      // A set that left the document untouched (selection, zoom, save flags…) is not history.
+      equality: (past, current) => past.doc === current.doc,
     },
   ),
 )
