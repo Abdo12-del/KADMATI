@@ -29,19 +29,16 @@ export interface ElementViewProps {
  * One renderer, three consumers (editor canvas, thumbnails, presenter). Because all three use
  * this component, a slide can never look different in the gallery than it does while editing.
  */
-function ElementViewImpl({ el, mode, editing, asset, order = 0, onTextInput, onTextCommit, onStartEdit, onTableText, pointerEvents }: ElementViewProps) {
+function ElementViewImpl({ el, mode, editing, asset, onTextInput, onTextCommit, onStartEdit, onTableText, pointerEvents }: ElementViewProps) {
   const interactive = mode === 'edit'
-  const animate = mode === 'present' && el.animation && el.animation.enter !== 'none'
-
-  const animStyle = useMemo(() => (animate ? animationCss(el.animation!, order) : undefined), [animate, el.animation, order])
 
   // Position/rotation lives on the SlideView shell so both layers never fight over the transform.
+  // All motion is data-driven via the animation engine (slide.animations) — no CSS keyframes here.
   const style: React.CSSProperties = {
     width: '100%',
     height: '100%',
     opacity: el.opacity,
     mixBlendMode: el.blendMode && el.blendMode !== 'normal' ? (el.blendMode as React.CSSProperties['mixBlendMode']) : undefined,
-    ...animStyle,
     pointerEvents: pointerEvents ?? (interactive ? 'auto' : 'none'),
   }
 
@@ -401,21 +398,3 @@ function FrameBody({ el }: { el: FrameElement }) {
 }
 
 /* ------------------------------------------------------------------ utils */
-
-export function animationCss(anim: NonNullable<AnyElement['animation']>, order: number): React.CSSProperties {
-  const delay = (anim.delay ?? 0) + order * 90
-  const dur = anim.duration ?? 500
-  const dir = anim.direction ?? 'bottom'
-  const from = dir === 'left' ? 'translateX(-40px)' : dir === 'right' ? 'translateX(40px)' : dir === 'top' ? 'translateY(-32px)' : 'translateY(32px)'
-  const map: Record<string, string> = {
-    fade: 'kad-fade',
-    appear: 'kad-fade',
-    slide: 'kad-slide',
-    zoom: 'kad-zoom',
-    scale: 'kad-zoom',
-  }
-  return {
-    animation: `${map[anim.enter] ?? 'kad-fade'} ${dur}ms cubic-bezier(0.22, 1, 0.36, 1) ${delay}ms both`,
-    ['--kad-from' as string]: from,
-  }
-}

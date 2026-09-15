@@ -1,8 +1,9 @@
 import { memo, type CSSProperties } from 'react'
-import { Lock } from 'lucide-react'
+import { Lock, Spline } from 'lucide-react'
 import { rotatedBounds } from '../document/geometry'
 import type { AnyElement, Presentation, Slide } from '../document/types'
 import type { HandleId, Guide } from './useInteraction'
+import { useUI } from '../store/useUI'
 
 /**
  * Screen-space overlay: selection, handles, smart guides, live badges.
@@ -30,6 +31,12 @@ export const SelectionOverlay = memo(function SelectionOverlay({ slide, doc, sel
   const bounds = union(els)
   const px = (v: number) => v * zoom
   const active = gesture && gesture !== 'marquee'
+  const setRightPanel = useUI((s) => s.setRightPanel)
+
+  const openAnimate = (e: React.PointerEvent) => {
+    e.stopPropagation()
+    setRightPanel('animate')
+  }
 
   return (
     <div className="pointer-events-none absolute inset-0" style={{ width: px(doc.size.w), height: px(doc.size.h) }}>
@@ -81,6 +88,19 @@ export const SelectionOverlay = memo(function SelectionOverlay({ slide, doc, sel
           className="absolute rounded-[2px] border border-signal/80 bg-signal/10"
           style={{ left: px(marquee.x), top: px(marquee.y), width: px(marquee.w), height: px(marquee.h) }}
         />
+      ) : null}
+
+      {/* quick Animate action — opens the effect library for the current selection */}
+      {bounds && els.length && !els.every((e) => e.locked) ? (
+        <button
+          type="button"
+          onPointerDown={openAnimate}
+          className="pointer-events-auto absolute z-10 flex items-center gap-1 rounded-full border border-signal/50 bg-ink-1000/92 px-2 py-0.5 text-[10.5px] font-semibold text-signal-soft shadow-lg transition-transform hover:scale-105"
+          style={{ left: px(bounds.x + bounds.w / 2), top: px(bounds.y) - 26, transform: 'translateX(-50%)' }}
+          title="إضافة حركة إلى التحديد"
+        >
+          <Spline size={11} /> حركة{els.length > 1 ? ` (${els.length})` : ''}
+        </button>
       ) : null}
 
       {/* live badge */}

@@ -10,12 +10,16 @@
  *  - scale      → absolute (1 = base size)
  *  - rotation   → RELATIVE delta in degrees
  *  - opacity    → absolute 0..1
- *  - blur       → absolute px (CSS filter)
+ *  - blur       → absolute px (CSS filter blur)
+ *  - clip       → 0..1 reveal fraction for a clip-path wipe (see RevealSpec)
  */
 
-export type AnimProp = 'x' | 'y' | 'scale' | 'rotation' | 'opacity' | 'blur'
+export type AnimProp = 'x' | 'y' | 'scale' | 'rotation' | 'opacity' | 'blur' | 'clip'
 
-export const ANIM_PROPS: AnimProp[] = ['x', 'y', 'scale', 'rotation', 'opacity', 'blur']
+/** Properties exposed in the manual keyframe table/timeline diamonds (clip is preset-managed). */
+export const MANUAL_PROPS: AnimProp[] = ['x', 'y', 'scale', 'rotation', 'opacity', 'blur']
+
+export const ANIM_PROPS: AnimProp[] = ['x', 'y', 'scale', 'rotation', 'opacity', 'blur', 'clip']
 
 export type EasingName =
   | 'linear'
@@ -72,7 +76,21 @@ export interface TextAnimSpec {
   from: 'start' | 'center' | 'end'
 }
 
-export type AnimKind = 'entrance' | 'exit' | 'emphasis' | 'motion' | 'custom'
+/**
+ * Clip-path reveal descriptor. The `clip` property runs 0 (hidden) → 1 (revealed);
+ * this describes the geometry of the revealing edge.
+ */
+export interface RevealSpec {
+  kind: 'wipe-down' | 'wipe-up' | 'wipe-left' | 'wipe-right' | 'circle'
+}
+
+export type AnimKind = 'entrance' | 'exit' | 'emphasis' | 'motion' | 'reveal' | 'custom'
+
+/** PowerPoint-style start trigger. */
+export type AnimStart = 'onClick' | 'with' | 'after'
+
+/** What happens after the animation finishes its (finite) plays. */
+export type AnimEnd = 'hold' | 'revert'
 
 export interface AnimSpec {
   id: string
@@ -80,6 +98,8 @@ export interface AnimSpec {
   target: string
   kind: AnimKind
   name?: string
+  /** preset this was created from (enables Direction re-application) */
+  presetId?: string
   /** start offset, ms */
   delay: number
   /** ms */
@@ -90,10 +110,18 @@ export interface AnimSpec {
   repeat: number
   /** alternate direction on each repeat */
   yoyo: boolean
+  /** when the animation starts relative to the previous one (presentation playback) */
+  start?: AnimStart
+  /** end state: hold the final frame or return to the neutral element state */
+  end?: AnimEnd
+  /** multiplies travel distances/deviations: x/y/rotation/blur × intensity, scale deviations around 1 × intensity */
+  intensity?: number
   /** per-property keyframes, t in [0, duration] */
   properties: Partial<Record<AnimProp, Keyframe[]>>
   /** takes precedence over x/y keyframes when set */
   motionPath?: MotionPathSpec
+  /** clip-path reveal geometry when properties.clip is present */
+  reveal?: RevealSpec
   /** text-split animation (text elements) */
   text?: TextAnimSpec
 }
@@ -131,6 +159,9 @@ export function normalizeAnim(a: AnimSpec): AnimSpec {
     delay: Math.max(0, Math.round(a.delay ?? 0)),
     repeat: typeof a.repeat === 'number' && isFinite(a.repeat) ? Math.round(a.repeat) : 0,
     yoyo: !!a.yoyo,
+    intensity: typeof a.intensity === 'number' && isFinite(a.intensity) && a.intensity > 0 ? a.intensity : 1,
+    start: a.start === 'onClick' || a.start === 'after' ? a.start : a.start === 'with' ? 'with' : undefined,
+    end: a.end === 'revert' ? 'revert' : undefined,
     easing: isNamedEasing(a.easing) ? a.easing : defaultEasing(),
     properties,
   }
@@ -142,8 +173,13 @@ export function animHasContent(a: AnimSpec): boolean {
   return Object.values(a.properties ?? {}).some((kfs) => (kfs?.length ?? 0) >= 1)
 }
 
+/** Duration of one play ignoring infinite repeats. */
+export function finiteSpan(a: AnimSpec): number {
+  const plays = a.repeat > 0 ? a.repeat + 1 : 1
+  return a.duration * plays
+}
+
 /** Effective total time the spec occupies on the (finite) timeline. */
 export function animSpan(a: AnimSpec): number {
-  const plays = a.repeat > 0 ? a.repeat + 1 : 1
-  return a.delay + a.duration * plays
+  return a.delay + finiteSpan(a)
 }

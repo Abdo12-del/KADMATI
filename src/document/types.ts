@@ -96,7 +96,7 @@ export interface AnimationSpec {
 }
 
 export interface TransitionSpec {
-  type: 'none' | 'fade' | 'slide' | 'push' | 'zoom'
+  type: 'none' | 'fade' | 'slide' | 'push' | 'zoom' | 'morph'
   duration: number
   direction?: 'left' | 'right' | 'up' | 'down'
 }

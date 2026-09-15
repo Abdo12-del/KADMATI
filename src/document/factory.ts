@@ -4,7 +4,6 @@ import {
   CANVAS_H,
   CANVAS_W,
   DOC_VERSION,
-  defaultAnimation,
   defaultFilters,
   defaultTextStyle,
   defaultTransition,
@@ -234,7 +233,6 @@ function base(kind: ElementKind, opts: BaseOpts = {}): ElementBase {
     link: opts.link,
     visible: true,
     locked: false,
-    animation: defaultAnimation(),
   }
 }
 

@@ -8,8 +8,11 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
+  ArrowDown,
+  ArrowUp,
   Braces,
   ChevronDown,
+  Copy,
   Gauge,
   Pause,
   Play,
@@ -19,20 +22,21 @@ import {
   Sparkles,
   Trash2,
   X,
-  Zap,
 } from 'lucide-react'
 import { buildSlideEngine, sampleKeyframes, type ElementBaseInfo, type SlideEngine } from '../../animation/engine'
 import { EASING_OPTIONS, easingLabel } from '../../animation/easing'
-import { presetById, PRESET_GROUPS } from '../../animation/presets'
+import { directionalPresetId, presetById, PRESET_GROUPS } from '../../animation/presets'
 import { cloneAnim, parseSlideAnims, slideAnimsJson } from '../../animation/serialize'
-import type { AnimProp, AnimSpec, EasingSpec, Keyframe } from '../../animation/types'
-import { animSpan } from '../../animation/types'
+import type { AnimProp, AnimSpec, AnimStart, EasingSpec, Keyframe } from '../../animation/types'
+import { MANUAL_PROPS, animSpan } from '../../animation/types'
 import { cn } from '../../lib/cn'
 import { toast, useUI } from '../../store/useUI'
 import { useCurrentSlide, useDoc } from '../../store/useDoc'
 import { EasingEditor } from './EasingEditor'
 import { runPerfTest, type PerfReport } from './perf'
 import { animRegistry } from './registry'
+import { AnimationLibrary } from './AnimationLibrary'
+import { setStudioOpen } from './preview'
 
 const TRACK_COLORS = ['#818cf8', '#f59e0b', '#34d399', '#f472b6', '#38bdf8', '#a78bfa', '#fb7185', '#facc15']
 const TRACK_H = 36
@@ -53,6 +57,7 @@ const PROP_LABELS: Record<AnimProp, string> = {
   rotation: 'Rotation (°)',
   opacity: 'Opacity',
   blur: 'Blur (px)',
+  clip: 'Clip (كشف)',
 }
 
 export function AnimationDock() {
@@ -67,6 +72,7 @@ export function AnimationDock() {
   const [playing, setPlaying] = useState(false)
   const [loop, setLoop] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [inspView, setInspView] = useState<'library' | 'settings'>('library')
   const [jsonOpen, setJsonOpen] = useState(false)
   const [loadText, setLoadText] = useState('')
   const [perfOpen, setPerfOpen] = useState(false)
@@ -91,6 +97,45 @@ export function AnimationDock() {
   const selAnim = useMemo(() => anims?.find((a) => a.id === selAnimId) ?? null, [anims, selAnimId])
   const targetEl = useMemo(() => (selAnim ? slide?.elements.find((el) => el.id === selAnim.target) : undefined), [selAnim, slide])
   const kfs: Keyframe[] | undefined = selAnim ? selAnim.properties[selProp] : undefined
+
+  // When animations are added (from the library) select the newest one and open settings.
+  const lastCount = useRef(0)
+  useEffect(() => {
+    const n = anims?.length ?? 0
+    if (n > lastCount.current && anims?.length) {
+      const last = anims[n - 1]
+      setSelAnimId(last.id)
+      setInspView('settings')
+      const t = window.setTimeout(() => doRestart(), 90)
+      lastCount.current = n
+      return () => window.clearTimeout(t)
+    }
+    lastCount.current = n
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [anims?.length])
+
+  // Switching slides resets the inspector to the library and selection.
+  useEffect(() => {
+    setSelAnimId(null)
+    setInspView('library')
+    lastT.current = 0
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slide?.id])
+
+  // tell the canvas to render motion-path guides while the studio is open;
+  // while open the dock owns canvas playback and quick-previews route to it
+  useEffect(() => {
+    setStudioOpen(true)
+    window.dispatchEvent(new Event('kadmati:anim-visible'))
+    const onPreview = () => doRestart()
+    window.addEventListener('kadmati:anim-preview', onPreview)
+    return () => {
+      setStudioOpen(false)
+      window.dispatchEvent(new Event('kadmati:anim-hidden'))
+      window.removeEventListener('kadmati:anim-preview', onPreview)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   /* ------------------------------------------------------------ doc mutation */
 
@@ -131,7 +176,7 @@ export function AnimationDock() {
     const targets = animRegistry.all()
     const elements: Record<string, ElementBaseInfo> = {}
     for (const el of slide.elements) elements[el.id] = { x: el.x, y: el.y, w: el.w, h: el.h, rotation: el.rotation ?? 0 }
-    const engine = buildSlideEngine({ targets, elements, anims, textSplit: false })
+    const engine = buildSlideEngine({ targets, elements, anims, textSplit: true })
     engineRef.current = engine
     engine.seek(lastT.current)
     movePlayhead(lastT.current)
@@ -211,6 +256,7 @@ export function AnimationDock() {
     e.stopPropagation()
     e.preventDefault()
     setSelAnimId(anim.id)
+    setInspView('settings')
     const startX = e.clientX
     const startDelay = anim.delay
     const startDur = anim.duration
@@ -306,25 +352,31 @@ export function AnimationDock() {
   const addPreset = (presetId: string) => {
     setMenuOpen(false)
     if (!slide?.elements.length) return
-    const target = selElId && slide.elements.some((el) => el.id === selElId) ? selElId : slide.elements[0].id
-    const el = slide.elements.find((x) => x.id === target)
-    const def = presetById(presetId)
-    if (!el || !def) return
-    const over: Partial<AnimSpec> = {}
-    if (def.kind === 'motion') {
-      const cx = el.x + el.w / 2
-      const cy = el.y + el.h / 2
-      over.motionPath =
-        presetId === 'path-circle'
-          ? { kind: 'circle', radius: 90 }
-          : { kind: 'bezier', points: [{ x: cx - 140, y: cy }, { x: cx - 50, y: cy - 70 }, { x: cx + 50, y: cy + 70 }, { x: cx + 140, y: cy }] }
-    }
-    const spec = def.make(target, over)
+    const targets = selection.length ? selection.filter((id) => slide.elements.some((el) => el.id === id)) : [slide.elements[0].id]
+    if (!targets.length) return
     mutateAnims((list) => {
-      list.push(spec)
+      targets.forEach((target, i) => {
+        const el = slide.elements.find((x) => x.id === target)
+        const def = presetById(presetId)
+        if (!el || !def) return
+        const over: Partial<AnimSpec> = {}
+        if (def.kind === 'motion') {
+          const cx = el.x + el.w / 2
+          const cy = el.y + el.h / 2
+          over.motionPath =
+            presetId === 'path-circle'
+              ? { kind: 'circle', radius: 90 }
+              : presetId === 'path-custom'
+                ? { kind: 'svg', d: `M ${cx - 220} ${cy} C ${cx - 90} ${cy - 110}, ${cx + 90} ${cy + 110}, ${cx + 220} ${cy}` }
+                : { kind: 'bezier', points: [{ x: cx - 140, y: cy }, { x: cx - 50, y: cy - 70 }, { x: cx + 50, y: cy + 70 }, { x: cx + 140, y: cy }] }
+        }
+        const spec = def.make(target, over)
+        if (targets.length > 1) spec.delay += i * 100
+        list.push(spec)
+        if (i === 0 && spec.properties.opacity?.length) setSelProp('opacity')
+      })
     }, 'إضافة حركة')
-    setSelAnimId(spec.id)
-    if (spec.properties.opacity?.length) setSelProp('opacity')
+    window.setTimeout(() => doRestart(), 90)
   }
 
   const removeAnim = (id: string) => {
@@ -341,6 +393,50 @@ export function AnimationDock() {
       list.push(clone)
     }, 'نسخ الحركة')
     setSelAnimId(clone.id)
+  }
+
+  /** Copy the selected animation onto another element ("apply same animation"). */
+  const applyAnimTo = (a: AnimSpec, otherTarget: string) => {
+    const clone = cloneAnim(a, otherTarget)
+    clone.delay = a.delay
+    mutateAnims((list) => {
+      list.push(clone)
+    }, 'تطبيق الحركة على عنصر آخر')
+    setSelAnimId(clone.id)
+    toast({ kind: 'success', title: 'طُبّقت الحركة على العنصر' })
+  }
+
+  const reorder = (a: AnimSpec, dir: -1 | 1) => {
+    mutateAnims((list) => {
+      const i = list.findIndex((x) => x.id === a.id)
+      const j = i + dir
+      if (i < 0 || j < 0 || j >= list.length) return
+      const [item] = list.splice(i, 1)
+      list.splice(j, 0, item)
+    }, 'إعادة ترتيب الحركات')
+  }
+
+  /** Re-generate a directional preset family for a new direction, keeping edits. */
+  const changeDirection = (a: AnimSpec, direction: string) => {
+    const newId = directionalPresetId(a.presetId, direction)
+    const def = newId ? presetById(newId) : undefined
+    if (!def) return
+    mutateAnims((list) => {
+      const cur = list.find((x) => x.id === a.id)
+      if (!cur) return
+      const fresh = def.make(cur.target, {
+        id: cur.id,
+        delay: cur.delay,
+        easing: cur.easing,
+        repeat: cur.repeat,
+        yoyo: cur.yoyo,
+        intensity: cur.intensity,
+        start: cur.start,
+        end: cur.end,
+      })
+      fresh.name = cur.name
+      Object.assign(cur, fresh)
+    }, 'تغيير اتجاه الحركة')
   }
 
   /* ------------------------------------------------------------ motion path drawing (canvas events) */
@@ -495,7 +591,10 @@ export function AnimationDock() {
                   <button
                     key={a.id}
                     type="button"
-                    onClick={() => setSelAnimId(a.id)}
+                    onClick={() => {
+                      setSelAnimId(a.id)
+                      setInspView('settings')
+                    }}
                     className={cn('flex w-full items-center gap-2 border-b border-ink-800/60 px-2 text-start', selAnimId === a.id && 'bg-ink-800/60')}
                     style={{ height: TRACK_H }}
                   >
@@ -519,10 +618,13 @@ export function AnimationDock() {
                         className={cn('absolute bottom-1 top-1 cursor-grab rounded-md border active:cursor-grabbing', selected ? 'shadow-lg' : 'opacity-90')}
                         style={{ left: a.delay * pxPerMs, width: Math.max(a.duration * pxPerMs, 10), background: `${color}2e`, borderColor: selected ? color : `${color}66`, boxShadow: selected ? `0 0 0 1px ${color}88` : undefined }}
                         onPointerDown={(e) => dragClip(e, a, 'delay')}
-                        onClick={() => setSelAnimId(a.id)}
+                        onClick={() => {
+                          setSelAnimId(a.id)
+                          setInspView('settings')
+                        }}
                       >
                         <span className="pointer-events-none absolute inset-y-0 start-1.5 flex items-center gap-1 truncate px-0.5 font-mono text-[9.5px]" style={{ color }}>
-                          {pathOn ? '◈' : ''} {a.name ?? a.kind}
+                          {a.start === 'onClick' ? '▸' : pathOn ? '◈' : ''} {a.name ?? a.kind}
                         </span>
                         <div
                           className="absolute bottom-0 end-0 top-0 w-2 cursor-ew-resize rounded-e-md"
@@ -556,7 +658,7 @@ export function AnimationDock() {
           {/* property tabs */}
           <div className="flex h-8 shrink-0 items-center gap-1 border-t border-ink-800 px-2" dir="rtl">
             <span className="me-1 text-[10.5px] text-ink-500">الخاصية:</span>
-            {(['x', 'y', 'scale', 'rotation', 'opacity', 'blur'] as AnimProp[]).map((p) => (
+            {MANUAL_PROPS.map((p) => (
               <button
                 key={p}
                 type="button"
@@ -572,31 +674,117 @@ export function AnimationDock() {
         </div>
 
         {/* inspector */}
-        <div className="w-[290px] shrink-0 overflow-y-auto border-s border-ink-800 bg-ink-900/40 p-3" dir="rtl">
-          {!selAnim ? (
-            <div className="text-[12px] leading-relaxed text-ink-400">
-              <p className="mb-2 font-semibold text-ink-200">مفتش الحركة</p>
-              <p>• اختر Clip من الـ Timeline لعرض خصائصه.</p>
-              <p>• نقر مزدوج على المسار = إضافة Keyframe عند الخاصية المحددة.</p>
-              <p>• اسحب جسم الـ Clip لتغيير التوقيت، وحافته اليمنى لتغيير المدة.</p>
-              <p>• «حركة جديدة» تضيف Preset للعنصر المحدد.</p>
+        <div className="flex w-[300px] shrink-0 flex-col border-s border-ink-800 bg-ink-900/40" dir="rtl">
+          <div className="flex shrink-0 items-center gap-1 border-b border-ink-800 px-2 py-1.5">
+            <button
+              type="button"
+              onClick={() => setInspView('library')}
+              className={cn('rounded-md px-2.5 py-1 text-[11px] font-semibold', inspView === 'library' ? 'bg-signal-dim text-signal-soft' : 'text-ink-400 hover:bg-ink-800')}
+            >
+              <Sparkles size={11} className="ms-1 inline" /> المكتبة
+            </button>
+            <button
+              type="button"
+              disabled={!selAnim}
+              onClick={() => setInspView('settings')}
+              className={cn('rounded-md px-2.5 py-1 text-[11px] font-semibold', inspView === 'settings' ? 'bg-signal-dim text-signal-soft' : 'text-ink-400 hover:bg-ink-800 disabled:opacity-40')}
+            >
+              الإعدادات
+            </button>
+            <span className="flex-1" />
+            {selAnim ? (
+              <span className="max-w-[120px] truncate text-[10px] text-ink-500">{selAnim.name ?? selAnim.kind}</span>
+            ) : null}
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto p-3">
+          {inspView === 'library' || !selAnim ? (
+            <div className="space-y-3">
+              <AnimationLibrary
+                targets={
+                  selection.length && slide.elements.some((el) => el.id === selection[0])
+                    ? selection.filter((id) => slide.elements.some((el) => el.id === id))
+                    : selAnim
+                      ? [selAnim.target]
+                      : slide.elements.slice(-1).map((el) => el.id)
+                }
+                autoPreview={false}
+                onApplied={() => {
+                  window.setTimeout(() => doRestart(), 90)
+                }}
+              />
+              <p className="text-[10.5px] leading-relaxed text-ink-500">
+                • اختر Clip من الـ Timeline لتعديل الإعدادات.
+                <br />• نقر مزدوج على المسار يضيف Keyframe للخاصية المحددة.
+                <br />• اسحب جسم الـ Clip للتأخير، وحافته للمدة.
+              </p>
             </div>
           ) : (
             <div className="space-y-3.5">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <input
                   value={selAnim.name ?? ''}
                   onChange={(e) => mutateAnim(selAnim.id, (a) => void (a.name = e.target.value))}
-                  className="w-full rounded-md border border-ink-700 bg-ink-950 px-2 py-1 text-[12px] text-ink-100 outline-none focus:border-signal/60"
+                  className="w-full min-w-0 rounded-md border border-ink-700 bg-ink-950 px-2 py-1 text-[12px] text-ink-100 outline-none focus:border-signal/60"
                   placeholder="اسم الحركة"
                 />
-                <button type="button" onClick={() => removeAnim(selAnim.id)} className="grid size-7 shrink-0 place-items-center rounded-md border border-ink-700 text-ink-400 hover:bg-signal-dim hover:text-signal-soft" title="حذف">
-                  <Trash2 size={13} />
+                <button type="button" onClick={() => reorder(selAnim, -1)} className="grid size-7 shrink-0 place-items-center rounded-md border border-ink-700 text-ink-400 hover:bg-ink-750" title="تقديم الحركة">
+                  <ArrowUp size={12} />
                 </button>
-                <button type="button" onClick={() => duplicateAnim(selAnim)} className="grid size-7 shrink-0 place-items-center rounded-md border border-ink-700 text-ink-400 hover:bg-ink-750" title="نسخ">
-                  <Zap size={13} />
+                <button type="button" onClick={() => reorder(selAnim, 1)} className="grid size-7 shrink-0 place-items-center rounded-md border border-ink-700 text-ink-400 hover:bg-ink-750" title="تأخير الترتيب">
+                  <ArrowDown size={12} />
+                </button>
+                <button type="button" onClick={() => duplicateAnim(selAnim)} className="grid size-7 shrink-0 place-items-center rounded-md border border-ink-700 text-ink-400 hover:bg-ink-750" title="نسخ على نفس العنصر">
+                  <Copy size={12} />
+                </button>
+                <button type="button" onClick={() => removeAnim(selAnim.id)} className="grid size-7 shrink-0 place-items-center rounded-md border border-ink-700 text-ink-400 hover:bg-signal-dim hover:text-signal-soft" title="حذف">
+                  <Trash2 size={12} />
                 </button>
               </div>
+
+              {/* apply the same animation to another element */}
+              <label className="block">
+                <span className="mb-1 block text-[10.5px] text-ink-500">تطبيق نفس الحركة على عنصر آخر</span>
+                <select
+                  value=""
+                  onChange={(e) => e.target.value && applyAnimTo(selAnim, e.target.value)}
+                  className="w-full rounded-md border border-ink-700 bg-ink-950 px-2 py-1 text-[11.5px] text-ink-200 outline-none"
+                >
+                  <option value="">— اختر عنصرًا —</option>
+                  {slide.elements
+                    .filter((el) => el.id !== selAnim.target)
+                    .map((el) => (
+                      <option key={el.id} value={el.id}>{el.name || el.kind}</option>
+                    ))}
+                </select>
+              </label>
+
+              {/* direction (directional preset families) */}
+              {presetById(selAnim.presetId ?? '')?.directions?.length ? (
+                <label className="block">
+                  <span className="mb-1 block text-[10.5px] text-ink-500">الاتجاه (Direction)</span>
+                  <div className="grid grid-cols-4 gap-1">
+                    {([
+                      ['left', 'يسار'],
+                      ['right', 'يمين'],
+                      ['top', 'أعلى'],
+                      ['bottom', 'أسفل'],
+                    ] as const).map(([d, label]) => {
+                      const targetId = directionalPresetId(selAnim.presetId, d)
+                      const active = !!targetId && selAnim.presetId === targetId
+                      return (
+                        <button
+                          key={d}
+                          type="button"
+                          onClick={() => changeDirection(selAnim, d)}
+                          className={cn('rounded-md border px-1 py-1 text-[10.5px]', active ? 'border-signal/60 bg-signal-dim text-signal-soft' : 'border-ink-700 text-ink-300 hover:bg-ink-800')}
+                        >
+                          {label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </label>
+              ) : null}
 
               {/* re-apply preset */}
               <label className="block">
@@ -605,7 +793,25 @@ export function AnimationDock() {
                   value=""
                   onChange={(e) => {
                     const def = presetById(e.target.value)
-                    if (def) mutateAnim(selAnim.id, (a) => Object.assign(a, def.make(a.target, a)), 'تطبيق Preset')
+                    if (!def) return
+                    mutateAnim(
+                      selAnim.id,
+                      (a) => {
+                        const keep = {
+                          id: a.id,
+                          delay: a.delay,
+                          easing: a.easing,
+                          repeat: a.repeat,
+                          yoyo: a.yoyo,
+                          intensity: a.intensity,
+                          start: a.start,
+                          end: a.end,
+                        }
+                        const fresh = def.make(a.target, keep)
+                        Object.assign(a, fresh)
+                      },
+                      'تطبيق Preset',
+                    )
                   }}
                   className="w-full rounded-md border border-ink-700 bg-ink-950 px-2 py-1 text-[11.5px] text-ink-200 outline-none"
                 >
@@ -642,6 +848,50 @@ export function AnimationDock() {
                   Yoyo (ذهاب/عودة)
                 </label>
               </div>
+
+              {/* start / end triggers */}
+              <div className="grid grid-cols-2 gap-2">
+                <label className="block">
+                  <span className="mb-1 block text-[10.5px] text-ink-500">البداية (Start)</span>
+                  <select
+                    value={selAnim.start ?? 'with'}
+                    onChange={(e) => mutateAnim(selAnim.id, (a) => void (a.start = (e.target.value === 'with' ? undefined : (e.target.value as AnimStart))))}
+                    className="w-full rounded-md border border-ink-700 bg-ink-950 px-2 py-1 text-[11.5px] text-ink-200 outline-none"
+                  >
+                    <option value="with">مع السابقة</option>
+                    <option value="onClick">عند النقر</option>
+                    <option value="after">بعد السابقة</option>
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-[10.5px] text-ink-500">النهاية (End)</span>
+                  <select
+                    value={selAnim.end === 'revert' ? 'revert' : 'hold'}
+                    onChange={(e) => mutateAnim(selAnim.id, (a) => void (a.end = e.target.value === 'revert' ? 'revert' : undefined))}
+                    className="w-full rounded-md border border-ink-700 bg-ink-950 px-2 py-1 text-[11.5px] text-ink-200 outline-none"
+                  >
+                    <option value="hold">تثبيت النتيجة</option>
+                    <option value="revert">العودة للحالة</option>
+                  </select>
+                </label>
+              </div>
+
+              {/* intensity */}
+              <label className="block">
+                <span className="mb-1 flex justify-between text-[10.5px] text-ink-500">
+                  <span>الشدة (Intensity)</span>
+                  <span className="font-mono text-ink-300">{Math.round((selAnim.intensity ?? 1) * 100)}%</span>
+                </span>
+                <input
+                  type="range"
+                  min={0.2}
+                  max={2}
+                  step={0.05}
+                  value={selAnim.intensity ?? 1}
+                  onChange={(e) => mutateAnim(selAnim.id, (a) => void (a.intensity = Number(e.target.value)))}
+                  className="w-full accent-signal"
+                />
+              </label>
 
               {/* easing */}
               <div>
@@ -818,7 +1068,7 @@ export function AnimationDock() {
                       </label>
                     </div>
                   ) : null}
-                  <p className="mt-1 text-[10px] text-ink-500">معاينة التقطيع (كلمات/حروف) في وضع العرض — في المحرر تُشغَّل الحركة على العنصر كاملًا.</p>
+                  <p className="mt-1 text-[10px] text-ink-500">المعاينة فورية على اللوحة وفي وضع العرض — يُقسَّم النص إلى وحدات تتتابع حسب الـ Stagger.</p>
                 </div>
               ) : null}
 
@@ -827,6 +1077,7 @@ export function AnimationDock() {
               </p>
             </div>
           )}
+          </div>
         </div>
       </div>
 

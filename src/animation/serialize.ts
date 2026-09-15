@@ -8,7 +8,7 @@ import { newAnimId } from './presets'
 import type { AnimProp, AnimSpec, Keyframe } from './types'
 import { animHasContent } from './types'
 
-const PROPS: AnimProp[] = ['x', 'y', 'scale', 'rotation', 'opacity', 'blur']
+const PROPS: AnimProp[] = ['x', 'y', 'scale', 'rotation', 'opacity', 'blur', 'clip']
 
 export function slideAnimsJson(slide: Slide): string {
   return JSON.stringify(slide.animations ?? [], null, 2)
@@ -40,11 +40,16 @@ function sanitizeAnim(v: unknown): AnimSpec | null {
     const kfs = sanitizeKeyframes((a.properties as Record<string, unknown> | undefined)?.[p], duration)
     if (kfs) properties[p] = kfs
   }
+  const kind =
+    a.kind === 'entrance' || a.kind === 'exit' || a.kind === 'emphasis' || a.kind === 'motion' || a.kind === 'reveal' || a.kind === 'custom'
+      ? a.kind
+      : 'custom'
   const spec: AnimSpec = {
     id: typeof a.id === 'string' && a.id ? a.id : newAnimId(),
     target: a.target,
-    kind: a.kind === 'entrance' || a.kind === 'exit' || a.kind === 'emphasis' || a.kind === 'motion' || a.kind === 'custom' ? a.kind : 'custom',
+    kind,
     name: typeof a.name === 'string' ? a.name : undefined,
+    presetId: typeof a.presetId === 'string' ? a.presetId : undefined,
     delay: typeof a.delay === 'number' && isFinite(a.delay) ? Math.max(0, a.delay) : 0,
     duration,
     easing:
@@ -53,7 +58,13 @@ function sanitizeAnim(v: unknown): AnimSpec | null {
         : { type: 'named', name: 'cubicOut' },
     repeat: typeof a.repeat === 'number' && isFinite(a.repeat) ? Math.round(a.repeat) : 0,
     yoyo: !!a.yoyo,
+    start: a.start === 'onClick' || a.start === 'with' || a.start === 'after' ? a.start : undefined,
+    end: a.end === 'hold' || a.end === 'revert' ? a.end : undefined,
+    intensity: typeof a.intensity === 'number' && isFinite(a.intensity) && a.intensity > 0 ? a.intensity : 1,
     properties,
+  }
+  if (a.reveal && typeof a.reveal === 'object' && ['wipe-down', 'wipe-up', 'wipe-left', 'wipe-right', 'circle'].includes(a.reveal.kind)) {
+    spec.reveal = { kind: a.reveal.kind }
   }
   if (a.motionPath && typeof a.motionPath === 'object' && (a.motionPath.kind === 'bezier' || a.motionPath.kind === 'circle' || a.motionPath.kind === 'svg')) {
     spec.motionPath = a.motionPath

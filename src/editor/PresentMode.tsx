@@ -1,16 +1,18 @@
 /**
  * Presentation mode — a real presenter, not a slideshow widget:
  * fullscreen, keyboard/pointer/wheel navigation, timer with elapsed + total, speaker notes with
- * their own reading surface, per-slide transitions and per-element entrance animations, and a
- * blank/black-out key for the moments a presenter actually needs one.
+ * their own reading surface, per-slide transitions (including engine-driven Morph), and
+ * data-driven per-element animations with PowerPoint-style click sequencing.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, FileText, Minimize2, Moon, Play, Square } from 'lucide-react'
 import { SlideView } from '../render/SlideView'
-import { buildSlideEngine, type ElementBaseInfo } from '../animation/engine'
+import { buildSlideEngine, type ElementBaseInfo, type SlideEngine } from '../animation/engine'
+import { scheduleAnims } from '../animation/schedule'
+import { buildMorphSpecs, MORPH_OLD_PREFIX } from '../animation/morph'
 import { useDoc } from '../store/useDoc'
 import { cn } from '../lib/cn'
-import type { Presentation } from '../document/types'
+import type { Presentation, Slide } from '../document/types'
 
 interface PresentModeProps {
   doc: Presentation
@@ -29,6 +31,8 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
   const visible = useMemo(() => doc.slides.filter((s) => !s.hidden), [doc.slides])
   const initial = Math.max(0, visible.findIndex((s) => s.id === doc.slides[startAt]?.id))
   const [index, setIndex] = useState(initial >= 0 ? initial : 0)
+  const [morph, setMorph] = useState<{ fromId: string; duration: number } | null>(null)
+  const [playNonce, setPlayNonce] = useState(0)
   const [showNotes, setShowNotes] = useState(false)
   const [blank, setBlank] = useState<null | 'black' | 'white'>(null)
   const [running, setRunning] = useState(true)
@@ -36,37 +40,144 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
   const [chromeVisible, setChromeVisible] = useState(true)
   const rootRef = useRef<HTMLDivElement>(null)
   const hideTimer = useRef<number | null>(null)
+  /** slide whose entrance was already expressed by a morph — don't replay its own anims */
+  const morphedInto = useRef<string | null>(null)
   const slide = visible[Math.min(index, visible.length - 1)] ?? doc.slides[0]
   const dir = doc.metadata.dir === 'rtl' ? 'rtl' : 'ltr'
 
-  /* ------------------------------------------------- engine playback (data-driven animations) */
+  /* ------------------------------------------------- engine registries (current + morph outgoing) */
   const animTargets = useRef(new Map<string, HTMLDivElement>())
+  const engineRef = useRef<SlideEngine | null>(null)
+  const stepRef = useRef(0)
+  const groupsRef = useRef<{ starts: number[]; ends: number[] }>({ starts: [0], ends: [0] })
+  const unsubEndRef = useRef<(() => void) | null>(null)
+
+  /** Play until the end of click group `step`, then hold there (Infinity = looping group, never hold). */
+  const playGroup = useCallback((step: number) => {
+    const engine = engineRef.current
+    if (!engine) return
+    unsubEndRef.current?.()
+    const end = groupsRef.current.ends[step] ?? 0
+    const onFrame = (t: number) => {
+      if (isFinite(end) && end > 0 && t >= end - 8) engine.pause()
+    }
+    unsubEndRef.current = engine.onUpdate(onFrame)
+    engine.play()
+    // check immediately in case the group starts after a seeked position
+    onFrame(engine.getTime())
+  }, [])
+
   const registerAnim = useCallback((id: string, n: HTMLDivElement | null) => {
     if (n) animTargets.current.set(id, n)
     else animTargets.current.delete(id)
   }, [])
+  const registerOldAnim = useCallback((id: string, n: HTMLDivElement | null) => {
+    const key = `${MORPH_OLD_PREFIX}${id}`
+    if (n) animTargets.current.set(key, n)
+    else animTargets.current.delete(key)
+  }, [])
 
+  const outgoingSlide: Slide | null = morph ? visible.find((s) => s.id === morph.fromId) ?? null : null
+
+  /* ------------------------------------------------- normal per-slide animation playback */
   useEffect(() => {
+    if (morph) return // morph effect owns the slide while active
     const anims = slide?.animations
-    if (!slide || !anims?.length) return
+    if (morphedInto.current === slide?.id) {
+      // morph already moved every element into place — hold still
+      engineRef.current?.destroy()
+      engineRef.current = null
+      return
+    }
+    if (!slide || !anims?.length) {
+      engineRef.current?.destroy()
+      engineRef.current = null
+      return
+    }
+    const schedule = scheduleAnims(anims)
+    groupsRef.current = { starts: schedule.groupStarts, ends: schedule.groupEnds }
+    stepRef.current = 0
+
     const targets: Record<string, HTMLElement> = {}
     animTargets.current.forEach((n, id) => {
-      targets[id] = n
+      if (!id.startsWith(MORPH_OLD_PREFIX)) targets[id] = n
     })
     const elements: Record<string, ElementBaseInfo> = {}
     for (const el of slide.elements) elements[el.id] = { x: el.x, y: el.y, w: el.w, h: el.h, rotation: el.rotation ?? 0 }
-    const engine = buildSlideEngine({ targets, elements, anims, textSplit: true })
-    engine.play()
-    return () => engine.destroy()
+
+    const engine = buildSlideEngine({ targets, elements, anims: schedule.items.map((i) => i.spec), textSplit: true })
+    engineRef.current = engine
+    stepRef.current = 0
+    playGroup(0)
+    return () => {
+      unsubEndRef.current?.()
+      unsubEndRef.current = null
+      engine.destroy()
+      if (engineRef.current === engine) engineRef.current = null
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slide?.id, slide?.animations])
+  }, [slide?.id, morph, playNonce])
+
+  /* ------------------------------------------------- morph transition playback */
+  useEffect(() => {
+    if (!morph || !outgoingSlide || !slide) return
+    let destroyed = false
+    let engine: SlideEngine | null = null
+    const specs = buildMorphSpecs(outgoingSlide, slide, morph.duration)
+    const run = window.setTimeout(() => {
+      const targets: Record<string, HTMLElement> = {}
+      animTargets.current.forEach((n, id) => void (targets[id] = n))
+      const elements: Record<string, ElementBaseInfo> = {}
+      for (const el of [...outgoingSlide.elements, ...slide.elements]) {
+        elements[el.id] = { x: el.x, y: el.y, w: el.w, h: el.h, rotation: el.rotation ?? 0 }
+      }
+      if (destroyed) return
+      engine = buildSlideEngine({ targets, elements, anims: specs, textSplit: false })
+      engine.play()
+    }, 40)
+    const finish = window.setTimeout(() => {
+      engine?.destroy()
+      morphedInto.current = slide.id
+      setMorph(null)
+      setPlayNonce((n) => n + 1)
+    }, morph.duration + 350)
+    return () => {
+      destroyed = true
+      window.clearTimeout(run)
+      window.clearTimeout(finish)
+      engine?.destroy()
+    }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [morph?.fromId, morph?.duration, slide?.id])
 
   const go = useCallback(
     (delta: number) => {
-      setIndex((i) => Math.max(0, Math.min(visible.length - 1, i + delta)))
+      if (morph) return
+      // advance click-triggered animation groups first
+      const engine = engineRef.current
+      const { starts } = groupsRef.current
+      if (engine && starts.length > 1 && stepRef.current < starts.length - 1) {
+        const nextStep = stepRef.current + 1
+        stepRef.current = nextStep
+        engine.seek(Math.max(0, starts[nextStep] - 16))
+        playGroup(nextStep)
+        return
+      }
+      const next = Math.max(0, Math.min(visible.length - 1, index + delta))
+      if (next === index) return
+      const incoming = visible[next]
+      engineRef.current?.destroy()
+      engineRef.current = null
+      if (incoming.transition.type === 'morph') {
+        setMorph({ fromId: slide.id, duration: incoming.transition.duration || 650 })
+        setIndex(next)
+      } else {
+        morphedInto.current = null
+        setIndex(next)
+      }
       setBlank(null)
     },
-    [visible.length],
+    [morph, visible, index, slide, playGroup],
   )
 
   // Keep the editor's cursor in sync so exiting presentation leaves you where you presented.
@@ -172,7 +283,33 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
 
   if (!slide) return null
   const transition = slide.transition
-  const tClass = transition.type === 'none' ? '' : (TRANSITION_CLASS[transition.type] ?? 'kad-t-fade')
+  const tClass = morph ? '' : transition.type === 'none' ? '' : (TRANSITION_CLASS[transition.type] ?? 'kad-t-fade')
+
+  const slideBox = (s: Slide, old: boolean) => (
+    <div
+      key={old ? `old-${s.id}` : s.id}
+      className={cn('relative origin-center', old ? '' : tClass)}
+      style={{
+        width: doc.size.w,
+        height: doc.size.h,
+        position: old ? 'absolute' : 'relative',
+        left: old ? '50%' : undefined,
+        top: old ? '50%' : undefined,
+        transform: old ? `translate(-50%, -50%) scale(${scale})` : `scale(${scale})`,
+        transformOrigin: 'center center',
+        animationDuration: `${transition.duration ?? 400}ms`,
+      }}
+    >
+      <SlideView
+        slide={s}
+        doc={doc}
+        mode="present"
+        static
+        animRegistry={old ? registerOldAnim : registerAnim}
+        style={{ width: doc.size.w, height: doc.size.h, borderRadius: 0, position: 'absolute', inset: 0 }}
+      />
+    </div>
+  )
 
   return (
     <div
@@ -194,17 +331,11 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
       {blank ? <div className={cn('absolute inset-0 z-40', blank === 'black' ? 'bg-black' : 'bg-white')} /> : null}
 
       <div className="grid h-full w-full place-items-center overflow-hidden">
-        <div
-          key={slide.id}
-          className={cn('relative origin-center', tClass)}
-          style={{
-            width: doc.size.w,
-            height: doc.size.h,
-            transform: `scale(${scale})`,
-            animationDuration: `${transition.duration ?? 400}ms`,
-          }}
-        >
-          <SlideView slide={slide} doc={doc} mode="present" static animRegistry={registerAnim} style={{ width: doc.size.w, height: doc.size.h, borderRadius: 0 }} />
+        <div className="relative" style={{ width: doc.size.w * scale, height: doc.size.h * scale }}>
+          {morph && outgoingSlide ? (
+            <div className="absolute inset-0 grid place-items-center">{slideBox(outgoingSlide, true)}</div>
+          ) : null}
+          {slideBox(slide, false)}
         </div>
       </div>
 
@@ -241,9 +372,9 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
               </button>
             </div>
           </div>
-          {index === 0 ? (
+          {index === 0 && !morph ? (
             <p className="pointer-events-none absolute inset-x-0 top-3 text-center text-[11px] text-white/45">
-              ← → أو المسافة للتنقل · N للملاحظات · B للتعتيم · Esc للخروج
+              ← → أو المسافة للتنقل (تدعم الحركات بالنقر) · N للملاحظات · B للتعتيم · Esc للخروج
             </p>
           ) : null}
         </>

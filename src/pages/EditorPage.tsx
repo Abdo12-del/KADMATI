@@ -69,8 +69,13 @@ export function EditorPage() {
 
   useEffect(() => {
     const close = () => setAnimOpen(false)
+    const open = () => setAnimOpen(true)
     window.addEventListener('kadmati:anim-close', close)
-    return () => window.removeEventListener('kadmati:anim-close', close)
+    window.addEventListener('kadmati:anim-open', open)
+    return () => {
+      window.removeEventListener('kadmati:anim-close', close)
+      window.removeEventListener('kadmati:anim-open', open)
+    }
   }, [])
 
   useKeyboard({
