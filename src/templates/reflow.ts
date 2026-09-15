@@ -48,6 +48,18 @@ function scaleElement(el: AnyElement, sx: number, sy: number, fs: number): AnyEl
   return next
 }
 
+/**
+ * Scale ONE slide from the 1280×720 authoring space to the document's size — used when a single
+ * slide is (re)generated outside instantiateDeck (per-slide AI regeneration on a 4:3 document).
+ */
+export function scaleSlideTo(slide: { elements: AnyElement[] }, size: { w: number; h: number }): void {
+  const sx = size.w / SIZE_16_9.w
+  const sy = size.h / SIZE_16_9.h
+  if (sx === 1 && sy === 1) return
+  const fs = Math.min(sx, sy)
+  slide.elements = slide.elements.map((el) => scaleElement(el, sx, sy, fs))
+}
+
 /** Scale an entire presentation to the target size (idempotent when already at it). */
 export function reflowToSize(doc: Presentation, to: { w: number; h: number }): void {
   const from = doc.size

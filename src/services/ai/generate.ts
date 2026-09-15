@@ -16,9 +16,10 @@ import { createShape } from '../../document/factory'
 import type { Presentation, Slide } from '../../document/types'
 import type { DeckSpec, SlideSpec } from '../../templates/engine'
 import { instantiateSlide } from '../../templates/engine'
+import { scaleSlideTo } from '../../templates/reflow'
 import { buildTheme, brandFor, type DesignStyleId } from './design'
 import { suggestSlideAnimations } from './animate'
-import { detectLang, inferCategory, inferCount, localPlan, packFor, providerPlan, type GenerateBrief, type GenCategory } from './planner'
+import { detectLang, inferCategory, inferCount, localPlan, noteFor, packFor, providerPlan, type GenerateBrief, type GenCategory } from './planner'
 import { composeDeck, polish } from './composer'
 import { enforceStructure, type PresentationPlan } from './schema'
 import { resolveProvider, type EngineKind } from './provider'
@@ -57,8 +58,8 @@ export interface GenerateProgress {
 
 export interface GenerateResult {
   spec: DeckSpec
-  /** presentation built from the spec (already themed, 4:3-reflowed, animations suggested) */
-  doc: Presentation
+  /** presentation built from the spec (themed, 4:3-reflowed, animations suggested) — omitted when `skipBuild` */
+  doc?: Presentation
   engine: EngineKind
   engineDetail: string
   outline: string[]
@@ -143,9 +144,13 @@ export async function generateDeck(prompt: string, opts: GenerateOptions = {}): 
   if (!plan) plan = localPlan(brief)
   emit('planning', { plan, engine, engineDetail })
 
-  /* 3 — structure guarantees */
+  /* 3 — structure guarantees (cover/agenda/closing inserted, count clamped) */
   emit('structure')
   plan = enforceStructure(plan, { lang: brief.lang, min: 4, max: brief.count + 4, fallbackTitles: { cover: brief.topic, closing: pack.closing } }).plan
+  // Every slide speaks: inserted/backfilled slides get a speakable note too.
+  for (const slide of plan.slides) {
+    if (!slide.notes?.trim()) slide.notes = noteFor(slide, brief.lang)
+  }
 
   /* 4 — content quality rules */
   emit('content')
@@ -161,12 +166,12 @@ export async function generateDeck(prompt: string, opts: GenerateOptions = {}): 
   /* 6 — compose spec + build real elements */
   emit('visuals')
   const spec = composeDeck(plan, brief, { theme, themeId, brandKitId: brand?.id, aspect: opts.aspect ?? '16:9' })
-  const doc = opts.skipBuild ? ({} as Presentation) : await buildDocFromSpec(spec)
+  const doc = opts.skipBuild ? undefined : await buildDocFromSpec(spec)
 
   /* 7 — animation suggestions through the real engine (skipped when the caller builds progressively) */
   emit('animate')
   let animationsApplied = 0
-  if (!opts.skipBuild) {
+  if (doc) {
     for (const slide of doc.slides) {
       const anims = suggestSlideAnimations(slide)
       if (anims.length) {
@@ -363,6 +368,12 @@ export async function regenerateCurrentSlide(instruction?: string): Promise<{ su
 
   const assets: Record<string, import('../../document/types').AssetRef> = {}
   const rebuilt = instantiateSlide(result.spec, doc.theme, doc.metadata.dir, slideIndex, assets)
+  // instantiateSlide authors in the 1280×720 space; a non-16:9 document needs the slide scaled
+  // to its own size, otherwise the regenerated slide overflows a 4:3 canvas.
+  scaleSlideTo(rebuilt, doc.size)
+  // The old slide's animations pointed at elements that no longer exist — replace them with
+  // fresh suggestions for the new elements (stale targets would be dead motion).
+  rebuilt.animations = suggestSlideAnimations(rebuilt)
   useDoc.getState().mutate(
     (d) => {
       const target = d.slides[slideIndex]
@@ -370,6 +381,7 @@ export async function regenerateCurrentSlide(instruction?: string): Promise<{ su
       target.layoutId = rebuilt.layoutId
       target.elements = rebuilt.elements
       target.background = rebuilt.background
+      target.animations = rebuilt.animations
       if (rebuilt.notes) target.notes = rebuilt.notes
       for (const [k, v] of Object.entries(assets)) d.assets[k] = v
     },

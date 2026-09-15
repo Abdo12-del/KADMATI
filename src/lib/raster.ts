@@ -19,6 +19,11 @@ export function loadImage(src: string): Promise<HTMLImageElement> {
     img.onload = () => resolve(img)
     img.onerror = () => reject(new Error('decode'))
     img.src = src
+    // Some environments (jsdom, blocked decoders) never fire load OR error — fail loudly
+    // instead of hanging the export forever.
+    const timer = setTimeout(() => reject(new Error('decode-timeout')), 4000)
+    img.onload = () => { clearTimeout(timer); resolve(img) }
+    img.onerror = () => { clearTimeout(timer); reject(new Error('decode')) }
   })
 }
 
@@ -33,6 +38,9 @@ export async function svgToPngDataUrl(
   opts: { scale?: number; background?: string } = {},
 ): Promise<string | null> {
   if (!isBrowser) return null
+  // No real 2D canvas (jsdom/node without node-canvas) → rasterization is impossible; skip
+  // straight to the caller's fallback instead of waiting on an image that never decodes.
+  if (!document.createElement('canvas').getContext('2d')) return null
   try {
     const scale = opts.scale ?? 2
     const w = Math.max(2, Math.round(width * scale))

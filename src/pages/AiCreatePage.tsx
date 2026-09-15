@@ -8,7 +8,7 @@
  * thumbnail — so "what you saw while generating" is literally what opens in the editor.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Check, ChevronDown, Cpu, Loader2, Lock, RefreshCw, Sparkles, Wand2 } from 'lucide-react'
 import { Button, Field, Select, Slider, TextArea, TextField, Segmented } from '../components/ui'
 import { SlidePreview } from '../components/SlidePreview'
@@ -51,11 +51,12 @@ type Phase = 'form' | 'generating' | 'ready'
 
 export function AiCreatePage() {
   const ai = useUI((s) => s.ai)
+  const [params] = useSearchParams()
   const brandKits = useLibrary((s) => s.brandKits)
   const init = useLibrary((s) => s.init)
 
   const [phase, setPhase] = useState<Phase>('form')
-  const [prompt, setPrompt] = useState('')
+  const [prompt, setPrompt] = useState(() => params.get('prompt') ?? '')
   const [lang, setLang] = useState<'ar' | 'fr' | 'en'>('ar')
   const [category, setCategory] = useState<GenCategory>('general')
   const [audience, setAudience] = useState('')
@@ -69,6 +70,7 @@ export function AiCreatePage() {
   const [outline, setOutline] = useState<string[]>([])
   const [partial, setPartial] = useState<Presentation | null>(null)
   const [result, setResult] = useState<GenerateResult | null>(null)
+  const [animsCount, setAnimsCount] = useState(0)
   const [engineNote, setEngineNote] = useState('')
   const [ollamaStatus, setOllamaStatus] = useState<'unknown' | 'ok' | 'off'>('unknown')
   const cancelled = useRef(false)
@@ -152,10 +154,15 @@ export function AiCreatePage() {
         setProgress({ stage: 'visuals', message: `تصميم الشريحة ${i + 1} من ${spec.slides.length}…`, done: 5, total: 8, slidesDone: i + 1 })
       }
       const { suggestSlideAnimations } = await import('../services/ai/animate')
+      let animTotal = 0
       for (const slide of builtSlides) {
         const anims = suggestSlideAnimations(slide)
-        if (anims.length) slide.animations = anims
+        if (anims.length) {
+          slide.animations = anims
+          animTotal += anims.length
+        }
       }
+      setAnimsCount(animTotal)
       setPartial(mkPartial())
       setProgress({ stage: 'done', message: 'اكتمل العرض', done: 8, total: 8 })
       setPhase('ready')
@@ -191,7 +198,7 @@ export function AiCreatePage() {
 
       <main className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-8 lg:grid-cols-[minmax(340px,420px)_1fr] sm:px-6">
         {/* ------------------------------------------------------------ form */}
-        <section className="glass h-fit rounded-2xl border border-ink-800/70 p-5">
+        <section className={cn('glass h-fit rounded-2xl border border-ink-800/70 p-5 transition-opacity', phase === 'generating' && 'pointer-events-none opacity-60')}>
           <h1 className="font-display text-[22px] font-bold tracking-tight">ماذا تريد أن تصنع؟</h1>
           <p className="mt-1 text-[12.5px] leading-relaxed text-ink-400">
             فكرة واحدة تكفي. نخطط العرض، نختار نوع كل شريحة، ونبني عناصر حقيقية قابلة للتعديل بالكامل داخل المحرر.
@@ -335,7 +342,7 @@ export function AiCreatePage() {
                   </Button>
                   {result ? (
                     <span className="ms-auto text-[11px] text-ink-500">
-                      {result.animationsApplied ? `${result.animationsApplied} حركة مقترحة · ` : ''}
+                      {animsCount ? `${animsCount} حركة مقترحة · ` : ''}
                       {result.engine === 'local' ? 'محرك محلي' : result.engine} · {partial.slides.length} شريحة
                     </span>
                   ) : null}
@@ -442,10 +449,13 @@ async function instantiateOne(spec: SlideSpec, theme: DeckSpec['theme'], dir: 'r
 }
 
 function makePartialDoc(spec: DeckSpec, slides: Slide[], assets: Record<string, AssetRef>): Presentation {
+  // Slides are authored in 1280×720; reflowing mutates coordinates, so the partial doc gets a
+  // deep copy for 4:3 — reflowing the same slide objects on every build would compound the scale.
+  const copies = slides.map((slide) => structuredClone(slide))
   const doc = createPresentation({
     title: spec.title,
     theme: spec.theme,
-    slides: slides.length ? [...slides] : undefined,
+    slides: copies.length ? copies : undefined,
     assets: { ...assets },
     metadata: {
       title: spec.title,
@@ -462,4 +472,5 @@ function makePartialDoc(spec: DeckSpec, slides: Slide[], assets: Record<string, 
   if (spec.aspect === '4:3') reflowToSize(doc, SIZE_4_3)
   return doc
 }
+
 

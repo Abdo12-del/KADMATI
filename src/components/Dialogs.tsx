@@ -3,6 +3,7 @@
  * real service (templates engine, PPTX exporter, importer, AI generator) and reports what happened.
  */
 import { useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Check,
   FileSpreadsheet,
@@ -16,22 +17,20 @@ import {
   Download,
   Link2,
 } from 'lucide-react'
-import { Button, Chip, Divider, Field, Modal, NumberField, Row, Segmented, Select, Slider, Switch, TextArea, TextField } from './ui'
+import { Button, Chip, Divider, Field, Modal, Row, Segmented, Select, Slider, Switch, TextArea, TextField } from './ui'
 import { SlideView } from '../render/SlideView'
-import { SHORTCUTS } from '../editor/useKeyboard'
 import { useDoc } from '../store/useDoc'
 import { toast, useUI } from '../store/useUI'
 import { TEMPLATE_CATEGORIES, TEMPLATE_MAP, templatesByCategory } from '../templates/catalog'
 import type { TemplateCategory } from '../templates/engine'
 import { CATEGORY_LABEL, instantiateDeck, type TemplateDef } from '../templates/engine'
-import type { GenCategory } from '../services/ai/planner'
-import type { DesignStyleId } from '../services/ai/schema'
 import { createPresentation, presentationWordCount } from '../document/factory'
+import { downloadBlob, downloadUrl } from '../store/storage'
+import { importPptxFile } from '../services/importPptx'
+import { SHORTCUTS } from '../editor/useKeyboard'
 import { exportToPptx } from '../services/exportPptx'
 import { exportImagesZip, exportPdf, type RasterFormat } from '../services/exportImages'
 import { makeRenderSlide } from '../services/renderOffscreen'
-import { downloadBlob, downloadUrl } from '../store/storage'
-import { importPptxFile } from '../services/importPptx'
 import { cn, fileNameSafe } from '../lib/cn'
 import { requestOpenProject } from '../services/openDeck'
 
@@ -264,108 +263,28 @@ function ImportFlow({ compact }: { compact?: boolean }) {
 }
 
 function AiPane() {
+  // One generation experience, one place: the full Create-with-AI page. Carrying the prompt over
+  // keeps this dialog's "quick idea" entry seamless without maintaining a second generator UI.
+  const navigate = useNavigate()
   const [prompt, setPrompt] = useState('')
-  const [slides, setSlides] = useState(9)
-  const [category, setCategory] = useState<GenCategory>('business')
-  const [style, setStyle] = useState<DesignStyleId>('professional')
-  const [audience, setAudience] = useState('')
-  const [busy, setBusy] = useState<string | null>(null)
-  const ai = useUI((s) => s.ai)
-
-  const generate = async () => {
-    if (prompt.trim().length < 8) {
-      toast({ kind: 'error', title: 'اكتب موضوعًا أوضح', body: 'مثال: عرض عن اعتماد الذكاء الاصطناعي في المستشفى لهذا العام.' })
-      return
-    }
-    setBusy('بدء التوليد…')
-    try {
-      const { generateDeck } = await import('../services/ai/generate')
-      const { doc, engine } = await generateDeck(prompt, {
-        slides,
-        category,
-        style,
-        audience,
-        onStage: (stage, done, total) => setBusy(`${stage} (${done}/${total})`),
-      })
-      requestOpenProject({ doc })
-      toast({
-        kind: 'ai',
-        title: `أُنشئ عرض من ${doc.slides.length} شرائح`,
-        body: engine === 'local' ? 'المحتوى مُهيكل محليًا: عدّل العناوين والنقاط، كل شيء قابل للتحرير.' : `المحتوى عبر ${engine} — راجعه وعدّله.`,
-      })
-    } catch (err) {
-      toast({ kind: 'error', title: 'تعذّر التوليد', body: (err as Error).message })
-    } finally {
-      setBusy(null)
-    }
-  }
-
   return (
     <div className="space-y-3">
-      <TextArea
-        value={prompt}
-        onChange={setPrompt}
-        rows={3}
-        placeholder="مثال: عرض تقديمي عن خطة تبني الذكاء الاصطناعي في خدمة العملاء خلال ٩٠ يومًا"
-      />
-      <div className="grid grid-cols-2 gap-2">
-        <Field label="عدد الشرائح">
-          <NumberField value={slides} min={4} max={30} onChange={(v) => setSlides(Math.max(4, Math.min(30, v)))} compact />
-        </Field>
-        <Field label="نوع العرض">
-          <Select
-            value={category}
-            onChange={(v) => setCategory(v as GenCategory)}
-            options={[
-              { value: 'business', label: 'أعمال' },
-              { value: 'education', label: 'تعليم' },
-              { value: 'pitch', label: 'Pitch Deck' },
-              { value: 'marketing', label: 'تسويق' },
-              { value: 'report', label: 'تقرير' },
-              { value: 'academic', label: 'أكاديمي' },
-              { value: 'general', label: 'عام' },
-            ]}
-          />
-        </Field>
-        <Field label="أسلوب بصري">
-          <Select
-            value={style}
-            onChange={(v) => setStyle(v as DesignStyleId)}
-            options={[
-              { value: 'minimal', label: 'بسيط' },
-              { value: 'modern', label: 'حديث' },
-              { value: 'professional', label: 'مهني' },
-              { value: 'creative', label: 'إبداعي' },
-              { value: 'cinematic', label: 'سينمائي' },
-              { value: 'elegant', label: 'أنيق' },
-            ]}
-          />
-        </Field>
-        <Field label="الجمهور">
-          <TextField value={audience} onChange={setAudience} placeholder="إدارة عليا / طلاب / عملاء" />
-        </Field>
-      </div>
-      <p className="text-[11.5px] leading-relaxed text-ink-400">
-        {ai.provider === 'custom' && ai.endpoint
-          ? `المصدر: ${ai.model || ai.endpoint} — نطلب منه الهيكل والنصوص فقط، ثم نبني التخطيط والعناصر محليًا.`
-          : ai.provider === 'ollama'
-            ? `المصدر: Ollama محليًا (${ai.model || 'نموذج مقترح تلقائيًا'}) — بياناتك لا تغادر جهازك.`
-            : 'المصدر: محرك كدماتي المحلي — يبني هيكلًا ومنطقًا لغويًا دون إنترنت. اضبط مزوّدًا من إعدادات الذكاء لتحصل على صياغة أعمق.'}
+      <TextArea value={prompt} onChange={setPrompt} rows={3} placeholder="مثال: عرض تقديمي عن خطة تبني الذكاء الاصطناعي في خدمة العملاء" />
+      <p className="rounded-lg border border-ink-800 bg-ink-950 p-2.5 text-[11.5px] leading-relaxed text-ink-300">
+        التوليد الكامل يجري في صفحة «Create with AI»: تخطيط العرض، اختيار نوع كل شريحة، نظام تصميم موحّد، ومعاينة حية شريحةً بشريحة — ثم يفتح العرض في المحرر قابقًا للتعديل.
       </p>
-      <div className="flex items-center gap-2">
-        <Button variant="primary" onClick={() => void generate()} disabled={!!busy}>
-          {busy ? <Loader2 size={13} className="animate-spin" /> : <Wand2 size={13} />} توليد العرض
-        </Button>
-        {busy ? <span className="text-[11.5px] text-signal-soft">{busy}</span> : null}
-        <Button variant="ghost" size="sm" onClick={() => useUI.getState().openDialog('ai-settings')}>
-          إعدادات الذكاء
-        </Button>
-      </div>
+      <Button
+        variant="primary"
+        onClick={() => {
+          close()
+          navigate(prompt.trim() ? `/create?prompt=${encodeURIComponent(prompt.trim())}` : '/create')
+        }}
+      >
+        <Wand2 size={13} /> متابعة في Create with AI
+      </Button>
     </div>
   )
 }
-
-/* ------------------------------------------------------------------ export */
 
 type ExportFormat = 'pptx' | 'pdf' | 'png' | 'jpg'
 

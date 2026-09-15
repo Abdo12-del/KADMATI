@@ -1,0 +1,13 @@
+/** Aggregator for the full-path product review harness (bundled by review.mjs). */
+export { generateDeck, regenerateCurrentSlide, applyDesignAction, suggestSlideAnimations } from '../../src/services/ai/generate'
+export { localPlan } from '../../src/services/ai/planner'
+export { polish, composeDeck } from '../../src/services/ai/composer'
+export { validatePlan, planJsonSchema } from '../../src/services/ai/schema'
+export { buildTheme } from '../../src/services/ai/design'
+export { detectOllama, recommendModel, hardwareProfile } from '../../src/services/ai/provider'
+export { instantiateDeck } from '../../src/templates/engine'
+export { useDoc } from '../../src/store/useDoc'
+export { useUI } from '../../src/store/useUI'
+export { exportToPptx } from '../../src/services/exportPptx'
+export { importPptx } from '../../src/services/importPptx'
+export type { GenerateResult } from '../../src/services/ai/generate'

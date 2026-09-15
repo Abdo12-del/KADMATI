@@ -37,6 +37,21 @@ export interface PptxExportOptions {
   captureElement?: (id: string, el: AnyElement) => Promise<string | null>
 }
 
+/**
+ * Embed an asset for PPTX. SVG sources (AI-generated art, imported SVGs) are rasterized to PNG
+ * first when a canvas is available — raw `image/svg+xml` parts are not rendered by LibreOffice
+ * and older PowerPoint builds. With no DOM (tests/server) the SVG passes through unchanged.
+ */
+async function embedAsset(src: string, w?: number, h?: number): Promise<string | null> {
+  if (src.startsWith('data:image/svg') || /<svg/i.test(src)) {
+    const png = await svgToPngDataUrl(src, w ?? 1600, h ?? 1000, { scale: 1.5 })
+    // Never pass raw SVG through: a rasterization failure must skip the picture, not embed
+    // an SVG payload under a .png extension that PowerPoint cannot decode.
+    return png
+  }
+  return toEmbeddableImageData(src)
+}
+
 export async function exportToPptx(input: Presentation, opts: PptxExportOptions = {}): Promise<{ blob: Blob; result: PptxExportResult }> {
   const doc = normalizePresentation(input)
   const pptx = new pptxgen()
@@ -106,7 +121,7 @@ async function applyBackground(slide: pptxgen.Slide, bg: Background, doc: Presen
   if (bg.type === 'image' && bg.image) {
     const asset = doc.assets[bg.image.assetId]
     if (asset) {
-      const data = await toEmbeddableImageData(asset.src)
+      const data = await embedAsset(asset.src, asset.w, asset.h)
       if (data) {
         slide.background = { data }
         return
@@ -202,7 +217,7 @@ async function writeElement(
       const asset = doc.assets[el.assetId]
       const mustRaster = hasEffects(el.filters) || !!el.mask || radiusSum(el.radius) > 0 || !!el.shadow || (el.stroke?.width ?? 0) > 0
       if (asset && !mustRaster) {
-        const embedded = await toEmbeddableImageData(asset.src)
+        const embedded = await embedAsset(asset.src, asset.w, asset.h)
         if (!embedded) {
           rasterized.push({ id: el.id, name: el.name, reason: 'صيغة الصورة لا يمكن تضمينها في PPTX (blob/شبكة خارجية)' })
           return
@@ -211,7 +226,7 @@ async function writeElement(
         return
       }
       if (asset && mustRaster) {
-        const data = (await rasterElement(el, opts)) ?? (await rasterizeImageElement(el, await toEmbeddableImageData(asset.src)))
+        const data = (await rasterElement(el, opts)) ?? (await rasterizeImageElement(el, await embedAsset(asset.src, asset.w, asset.h)))
         if (data) {
           out.addImage({ data, ...common, transparency: opacityToTransparency(el.opacity) })
           rasterized.push({ id: el.id, name: el.name, reason: 'تأثيرات صورتية (فلاتر/قناع/ظل) مسطّحة' })

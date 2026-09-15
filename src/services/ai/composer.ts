@@ -30,7 +30,6 @@ export interface QualityReport {
   shortenedBullets: number
   dedupedTitles: number
   droppedSlides: number
-  notes: string[]
 }
 
 function words(text: string): number {
@@ -39,7 +38,7 @@ function words(text: string): number {
 
 /** Presentation ≠ document: cap density, kill repeated titles, strip markdown residue. */
 export function polish(plan: PresentationPlan, lang: 'ar' | 'en' | 'fr'): { plan: PresentationPlan; quality: QualityReport } {
-  const quality: QualityReport = { trimmedBullets: 0, shortenedBullets: 0, dedupedTitles: 0, droppedSlides: 0, notes: [] }
+  const quality: QualityReport = { trimmedBullets: 0, shortenedBullets: 0, dedupedTitles: 0, droppedSlides: 0 }
   const seenTitles = new Set<string>()
   const slides: SlidePlan[] = []
 

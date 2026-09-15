@@ -237,14 +237,19 @@ export interface PromptSignals {
   versus: [string, string] | null
   steps: string[]
   questions: string[]
+  /** The user's own comma-separated clauses (2–7 words) — the most authentic slide titles. */
+  clauses: string[]
 }
 
 export function extractSignals(topic: string, lang: 'ar' | 'en' | 'fr'): PromptSignals {
   const numbers: PromptSignals['numbers'] = []
-  const numRe = /([\p{L}\p{N}]{2,20}\s*)?(\d{1,3}(?:[.,]\d+)?)\s*(%|٪)?/gu
+  const numRe = /([\p{L}]{2,20}\s*)?(\d{1,3}(?:[.,]\d+)?)\s*(%|٪)?/gu
   for (const m of topic.matchAll(numRe)) {
     const value = `${m[2]}${m[3] ?? ''}`
-    if (numbers.length < 6) numbers.push({ raw: value, context: (m[1] ?? '').trim() })
+    if (numbers.length >= 6) break
+    // Label = the words before the number, else the words right after it ("45% نمو" → 'نمو').
+    const after = topic.slice((m.index ?? 0) + m[0].length).trim().split(/\s+/).slice(0, 2).join(' ').replace(/[،,؛.].*$/, '').trim()
+    numbers.push({ raw: value, context: (m[1] ?? '').trim() || after })
   }
   let versus: [string, string] | null = null
   const vsRe = lang === 'ar' ? /(.{2,30}?)\s*(مقابل|أم|او|أو|vs\.?)\s*(.{2,30}?)(?:[،,.]|$)/ : /(.{2,30}?)\s+(vs\.?|or|contre)\s+(.{2,30}?)(?:[,.;]|$)/i
@@ -256,14 +261,29 @@ export function extractSignals(topic: string, lang: 'ar' | 'en' | 'fr'): PromptS
     .filter((s) => s.length > 3 && s.length < 60)
     .slice(0, 5)
   const questions = (topic.match(/[^.!?؟\n]+[?؟]/g) ?? []).map((q) => q.trim()).slice(0, 3)
-  return { numbers, versus, steps, questions }
+  // A long prompt like "…مؤشرات القياس، المخاطر وحلولها، وخطة التدريب" is a storyline the user
+  // already wrote — each 2–7 word clause becomes a slide title, in the user's order.
+  const clauses = topic
+    .split(/[:,؛،]/)
+    .map((c) => c.trim())
+    .map((c) => c.replace(/^(و)/, '').trim())
+    .map((c) => c.replace(/^(المحور|النقطة|قسم)\s+/i, '').trim())
+    .filter((c) => {
+      const w = c.split(/\s+/).length
+      return w >= 2 && w <= 7 && !/\d/.test(c)
+    })
+    .filter((c, i, arr) => arr.indexOf(c) === i)
+    .slice(0, 8)
+  return { numbers, versus, steps, questions, clauses }
 }
 
 /* ------------------------------------------------------------------ local planner */
 
 /** Rotate the slide-type vocabulary so consecutive decks differ structurally, not just textually. */
 function typeRotation(): SlideType[] {
-  return ['content', 'statistics', 'comparison', 'process', 'image-text', 'timeline', 'quote', 'chart', 'divider', 'table']
+  // Order matters: consecutive entries must map to DIFFERENT layout ids (image-text and
+  // numberless charts both render as the title-content layout, so they never sit adjacent).
+  return ['content', 'statistics', 'comparison', 'image-text', 'timeline', 'process', 'quote', 'chart', 'divider', 'table']
 }
 
 export function localPlan(brief: GenerateBrief): PresentationPlan {
@@ -287,9 +307,16 @@ export function localPlan(brief: GenerateBrief): PresentationPlan {
   const rotation = typeRotation()
   let numbersUsed = 0
 
-  for (let i = 0; i < budget; i++) {
-    // Alternate chapters every slide: two banks × rotating types keep titles from repeating.
+  // Titles come from the user's own clauses first; chapter banks only fill the gaps.
+  const clauseTitles = [...signals.clauses]
+  const chapterFor = (i: number) => {
     const chapter = chapters[i % chapters.length]
+    const clause = clauseTitles.shift()
+    return clause ? { title: clause, points: chapter.points } : chapter
+  }
+
+  for (let i = 0; i < budget; i++) {
+    const chapter = chapterFor(i)
     const isFirstPass = i < chapters.length
 
     if (isFirstPass && i === 0 && signals.numbers.length) {
@@ -431,8 +458,14 @@ export function localPlan(brief: GenerateBrief): PresentationPlan {
     type: 'closing',
     title: pack.closing,
     bullets: unique(slides.slice(-4).map((s) => s.title)).slice(0, 3),
-    notes: brief.lang === 'ar' ? 'اطلب قرارًا واحدًا محددًا.' : 'Ask for one specific decision.',
+    notes: brief.lang === 'ar' ? 'اطلب قرارًا واحدًا محددًا.' : brief.lang === 'fr' ? 'Demandez une décision précise.' : 'Ask for one specific decision.',
   })
+
+  // A presentation is spoken, not read: every slide carries one speakable sentence.
+  for (const slide of slides) {
+    if (slide.notes?.trim()) continue
+    slide.notes = noteFor(slide, brief.lang)
+  }
 
   const plan: PresentationPlan = { title: clean, subtitle: pack.subtitleFor(clean, brief.audience), slides }
   const structured = enforceStructure(plan, {
@@ -458,15 +491,73 @@ function truncate(text: string, n: number): string {
 
 export function cleanTitle(topic: string, _lang?: 'ar' | 'en' | 'fr'): string {
   let t = topic
-  // Strip the request scaffolding in stages: verb → object → preposition, per language.
+  // Strip the request scaffolding in stages: verb → object → adjective → preposition.
   t = t.replace(/^(أريد|اريد|أود|نريد|اصنع|أنشئ|اعمل|صمم|create|make|build|generate|fais|crée|génère|je veux|une|a)\s+(لي\s+|لي\s+|moi\s+)?/i, '')
-  t = t.replace(/^(عرضً?ا?\s*تقديميًّ?ا?|عرضًا|عرضٍ|عرض|presentation|deck|slides?|présentation)\s+/i, '')
+  t = t.replace(/^(عرضً?ا?\s*تقديميًّ?ا?|عرضًا|عرضٍ|عرض)\s+(تفصيليً?|مفصلً?ا?|مختصرً?ا?|قصيرً?ا?|كاملً?ا?)?\s*/i, '')
+  t = t.replace(/^(presentation|présentation|deck|slides?)\s+(détaillé\s+|complet\s+|bref\s+|detailed\s+|comprehensive\s+|quick\s+)?/i, '')
   t = t.replace(/^(عن|حول|لـ|about|for|on|sur|de|à propos de)\s+/i, '')
   t = t.replace(/[.!?؟]+\s*$/, '').trim()
+  // The part after a colon is context, not a title.
+  const colon = t.indexOf(':')
+  if (colon > 0 && t.slice(0, colon).split(/\s+/).length >= 2) t = t.slice(0, colon)
   if (!t) t = topic
   // A title is an idea, not a sentence — drop a trailing audience clause if one snuck in.
   t = t.replace(/\s+(لطلاب|للمرجع|لجمهور|for students|pour les étudiants)\b.*$/i, '')
   return t.length > 80 ? `${t.slice(0, 77)}…` : t
+}
+
+/** One speakable speaker-note line per slide type — the deck is a talk, not a document. */
+export function noteFor(slide: SlidePlan, lang: 'ar' | 'en' | 'fr'): string {
+  const t = slide.title
+  if (lang === 'ar') {
+    switch (slide.type) {
+      case 'cover': return `افتتح بالفكرة التي تريد أن تبقى: ${t}.`
+      case 'agenda': return 'اعرض الخريطة بسرعة ثم انتقل — لا تقرأ القائمة.'
+      case 'divider': return `جملة انتقالية قصيرة نحو: ${t}.`
+      case 'statistics': return 'اربط كل رقم بقرار يتخذه أحد الحاضرين.'
+      case 'comparison': return 'اعرض الخيارين بعدل، ثم مّل بوضوح.'
+      case 'process': return 'اقرأ الخطوات بترتيبها وأشر إلى كل بطاقة.'
+      case 'timeline': return 'ركز على المسار الزمني والتزاماته.'
+      case 'chart': return 'اشرح ما يعنيه الشكل قبل قراءة الأرقام.'
+      case 'table': return 'لا تقرأ الجدول — لخص خلية واحدة قيمة.'
+      case 'quote': return 'اقرأ الاقتباسة ثم اصمت ثانيتين.'
+      case 'image-text': return 'دع الصورة تحدث أولًا، ثم عالق النقطة.'
+      case 'closing': return 'اختم بطلب واضح واحد.'
+      default: return `اشرح: ${t} — بمثال واحد ملموس.`
+    }
+  }
+  if (lang === 'fr') {
+    switch (slide.type) {
+      case 'cover': return `Ouvrez sur l’idée à retenir : ${t}.`
+      case 'agenda': return 'Présentez le plan rapidement, sans le lire.'
+      case 'divider': return `Transition courte vers : ${t}.`
+      case 'statistics': return 'Reliez chaque chiffre à une décision.'
+      case 'comparison': return 'Présentez les deux options, puis tranchez.'
+      case 'process': return 'Suivez les étapes dans l’ordre.'
+      case 'timeline': return 'Insistez sur le calendrier et ses engagements.'
+      case 'chart': return 'Expliquez la forme avant les chiffres.'
+      case 'table': return 'Résumez une seule cellule clé.'
+      case 'quote': return 'Lisez la citation, puis silences deux secondes.'
+      case 'image-text': return 'Laissez l’image parler, puis concluez.'
+      case 'closing': return 'Terminez par une demande claire.'
+      default: return `Expliquez : ${t} — avec un exemple concret.`
+    }
+  }
+  switch (slide.type) {
+    case 'cover': return `Open with the one idea to keep: ${t}.`
+    case 'agenda': return 'Show the map quickly, do not read it.'
+    case 'divider': return `Short transition into: ${t}.`
+    case 'statistics': return 'Tie each number to a decision.'
+    case 'comparison': return 'Present both sides fairly, then commit.'
+    case 'process': return 'Walk the steps in order.'
+    case 'timeline': return 'Emphasize the timeline and its commitments.'
+    case 'chart': return 'Explain the shape before the numbers.'
+    case 'table': return 'Do not read the table — summarize one cell.'
+    case 'quote': return 'Read the quote, then pause.'
+    case 'image-text': return 'Let the image land first, then the point.'
+    case 'closing': return 'End with one clear ask.'
+    default: return `Explain: ${t} — with one concrete example.`
+  }
 }
 
 /* ------------------------------------------------------------------ provider planner */

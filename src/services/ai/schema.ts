@@ -338,7 +338,13 @@ export function enforceStructure(plan: PresentationPlan, opts: StructureOptions)
 
   // An agenda earns its place only in longer decks.
   if (slides.length >= 7 && !slides.some((s) => s.type === 'agenda')) {
-    slides.splice(1, 0, { type: 'agenda', title: agendaTitle(opts.lang), bullets: slides.slice(2, 6).map((s) => s.title) })
+    const lang = opts.lang
+    slides.splice(1, 0, {
+      type: 'agenda',
+      title: agendaTitle(lang),
+      bullets: slides.slice(2, 6).map((s) => s.title),
+      notes: lang === 'ar' ? 'اعرض الخريطة بسرعة ثم انتقل — لا تقرأ القائمة.' : lang === 'fr' ? 'Présentez le plan rapidement, sans le lire.' : 'Show the map quickly, do not read it.',
+    })
     fixes.push('agenda')
   }
 
