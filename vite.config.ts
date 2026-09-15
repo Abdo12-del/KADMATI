@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
 
-// SHAFAQ Studio — build config
+// Aurova Studio — build config
 // The dev server binds to 0.0.0.0 and accepts any Host so it can run behind a proxy.
 export default defineConfig({
   plugins: [react(), tailwindcss()],

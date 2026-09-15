@@ -158,7 +158,7 @@ async function main() {
     const doc = await runFull(buf, 'mixed.pdf')
     const text = allText(doc)
     check('language = mixed', doc.language === 'mixed', doc.language)
-    check('latin terms survived', /Machine Learning|Deep Learning|شفق|PPTX/i.test(text), text.slice(0, 140))
+    check('latin terms survived', /Machine Learning|Deep Learning|أوروفا|PPTX/i.test(text), text.slice(0, 140))
     check('arabic survived', text.includes('الذكاء الاصطناعي') || /[\u0600-\u06FF]/.test(text))
     const { plan } = toDeck(doc)
     check('deck dir rtl for mixed', plan.spec.dir === 'rtl')

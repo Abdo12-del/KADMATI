@@ -102,7 +102,7 @@ async function jpegBytes(dataUrl: string): Promise<Uint8Array> {
 }
 
 /** Minimal, valid PDF 1.4 with one DCTDecode image per page. */
-export function buildPdf(pages: { bytes: Uint8Array; width: number; height: number }[], designW: number, designH: number, title = 'SHAFAQ'): Blob {
+export function buildPdf(pages: { bytes: Uint8Array; width: number; height: number }[], designW: number, designH: number, title = 'AUROVA'): Blob {
   void title
   const enc = new TextEncoder()
   const chunks: (Uint8Array | string)[] = []
@@ -128,7 +128,7 @@ export function buildPdf(pages: { bytes: Uint8Array; width: number; height: numb
   push('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n')
   obj(1, `<< /Type /Catalog /Pages 2 0 R >>`)
   obj(2, `<< /Type /Pages /Kids [${kids}] /Count ${pageCount} >>`)
-  obj(3, `<< /Producer (SHAFAQ Studio) /Title (${pdfString(title)}) >>`)
+  obj(3, `<< /Producer (Aurova Studio) /Title (${pdfString(title)}) >>`)
 
   pages.forEach((page, i) => {
     const pageId = 4 + i * 3

@@ -1,9 +1,9 @@
 {
-  "name": "shafaq-studio",
+  "name": "aurova-studio",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "SHAFAQ Studio — a professional presentation design platform (RTL-first, PPTX round-trip)",
+  "description": "Aurova Studio — a professional presentation design platform (RTL-first, PPTX round-trip)",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",

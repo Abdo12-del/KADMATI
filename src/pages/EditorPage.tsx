@@ -63,18 +63,18 @@ export function EditorPage() {
 
   useEffect(() => {
     const start = () => setPresenting(true)
-    window.addEventListener('shafaq:present', start)
-    return () => window.removeEventListener('shafaq:present', start)
+    window.addEventListener('aurova:present', start)
+    return () => window.removeEventListener('aurova:present', start)
   }, [])
 
   useEffect(() => {
     const close = () => setAnimOpen(false)
     const open = () => setAnimOpen(true)
-    window.addEventListener('shafaq:anim-close', close)
-    window.addEventListener('shafaq:anim-open', open)
+    window.addEventListener('aurova:anim-close', close)
+    window.addEventListener('aurova:anim-open', open)
     return () => {
-      window.removeEventListener('shafaq:anim-close', close)
-      window.removeEventListener('shafaq:anim-open', open)
+      window.removeEventListener('aurova:anim-close', close)
+      window.removeEventListener('aurova:anim-open', open)
     }
   }, [])
 

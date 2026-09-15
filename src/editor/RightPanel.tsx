@@ -1277,7 +1277,7 @@ function AnimateTab() {
   const targetSet = new Set(targets)
   const ownAnims = (slide?.animations ?? []).filter((a) => targetSet.has(a.target))
 
-  const openStudio = () => window.dispatchEvent(new CustomEvent('shafaq:anim-open'))
+  const openStudio = () => window.dispatchEvent(new CustomEvent('aurova:anim-open'))
 
   const removeAnim = (id: string) => {
     if (!slide) return

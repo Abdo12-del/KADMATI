@@ -333,7 +333,7 @@ function AiPane() {
       <p className="text-[11.5px] leading-relaxed text-ink-400">
         {ai.provider === 'custom' && ai.endpoint
           ? `المصدر: ${ai.model || ai.endpoint} — نطلب منه الهيكل والنصوص فقط، ثم نبني التخطيط والعناصر محليًا.`
-          : 'المصدر: محرك شفق المحلي — يبني هيكلًا ومنطقًا لغويًا دون إنترنت. اضبط مزوّدًا من إعدادات الذكاء لتحصل على صياغة أعمق.'}
+          : 'المصدر: محرك أوروفا المحلي — يبني هيكلًا ومنطقًا لغويًا دون إنترنت. اضبط مزوّدًا من إعدادات الذكاء لتحصل على صياغة أعمق.'}
       </p>
       <div className="flex items-center gap-2">
         <Button variant="primary" onClick={() => void generate()} disabled={!!busy}>
@@ -675,7 +675,7 @@ function ProfileDialog() {
           <Button
             variant="primary"
             onClick={() => {
-              setProfile({ name: name.trim() || 'مستخدم شفق', role: role.trim(), email: email.trim() })
+              setProfile({ name: name.trim() || 'مستخدم أوروفا', role: role.trim(), email: email.trim() })
               close()
               toast({ kind: 'success', title: 'حُفظ الملف' })
             }}
@@ -702,7 +702,7 @@ function ShareDialog() {
           <Button
             variant="surface"
             onClick={() => {
-              downloadBlob(new Blob([json], { type: 'application/json' }), `${fileNameSafe(doc.metadata.title)}.shafaq.json`)
+              downloadBlob(new Blob([json], { type: 'application/json' }), `${fileNameSafe(doc.metadata.title)}.aurova.json`)
             }}
           >
             <Upload size={13} /> تنزيل نسخة JSON

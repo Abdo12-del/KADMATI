@@ -153,7 +153,7 @@ export function createPresentation(input: Partial<Presentation> & { title?: stri
     metadata: {
       title,
       subject: input.metadata?.subject,
-      author: input.metadata?.author ?? 'شفق ستوديو',
+      author: input.metadata?.author ?? 'أوروفا ستوديو',
       company: input.metadata?.company,
       createdAt: input.metadata?.createdAt ?? now,
       updatedAt: now,

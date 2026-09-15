@@ -37,7 +37,7 @@ export function TemplatesPage() {
         <div className="mx-auto flex max-w-6xl items-center gap-4 px-6 py-4">
           <Link to="/" className="flex items-center gap-2.5">
             <span className="aur-fill glow-blue grid size-7 place-items-center rounded-lg text-[12px] font-black text-white">ك</span>
-            <span className="font-display text-[15px] font-semibold tracking-tight">شفق</span>
+            <span className="font-display text-[15px] font-semibold tracking-tight">أوروفا</span>
           </Link>
           <div className="ms-auto flex items-center gap-2">
             <Link to="/app/decks">

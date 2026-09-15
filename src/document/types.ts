@@ -1,5 +1,5 @@
 /**
- * SHAFAQ Studio — document model.
+ * Aurova Studio — document model.
  *
  * The whole product is a serializer around this shape: a `Presentation` is a plain JSON
  * document (metadata + theme + slides[] + settings) and every slide owns a flat,

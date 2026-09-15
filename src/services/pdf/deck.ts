@@ -3,7 +3,7 @@
  * instantiateDeck() does the layout/typography work; this module then injects
  * the *document's own* assets — extracted images replace placeholder art, and
  * detected tables fill real table elements — so the result is a native, fully
- * editable SHAFAQ deck (PPTX export works on it like any other deck).
+ * editable Aurova deck (PPTX export works on it like any other deck).
  */
 import { instantiateDeck, type DeckSpec } from '../../templates/engine'
 import { normalizePresentation } from '../../document/factory'
