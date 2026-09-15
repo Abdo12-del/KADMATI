@@ -406,33 +406,6 @@ export function AnimationDock() {
     <div className="glass aur-hairline-t flex h-[248px] shrink-0 flex-col border-t border-ink-800/70">
       {/* transport */}
       <div className="flex h-11 shrink-0 items-center gap-1.5 border-b border-ink-800 px-2.5" dir="rtl">
-        {/* dock tabs — الأنيميشن هنا؛ البقية ينقلون إلى اللوحة المرتبطة */}
-        <div className="me-1 flex shrink-0 items-center gap-0.5 rounded-lg bg-ink-900/70 p-0.5">
-          <span className="rounded-md bg-signal/20 px-2.5 py-1 text-[11px] font-semibold text-signal-soft shadow-[inset_0_0_0_1px_rgba(79,125,255,0.35)]">
-            الأنيميشن
-          </span>
-          <button
-            type="button"
-            onClick={() => useUI.getState().setRightPanel('transition')}
-            className="rounded-md px-2.5 py-1 text-[11px] font-medium text-ink-400 transition-colors hover:bg-ink-800 hover:text-ink-100"
-          >
-            نقل الشرائح
-          </button>
-          <button
-            type="button"
-            onClick={() => useUI.getState().setLeftPanel('templates')}
-            className="rounded-md px-2.5 py-1 text-[11px] font-medium text-ink-400 transition-colors hover:bg-ink-800 hover:text-ink-100"
-          >
-            القالب
-          </button>
-          <button
-            type="button"
-            onClick={() => useUI.getState().setRightPanel('design')}
-            className="rounded-md px-2.5 py-1 text-[11px] font-medium text-ink-400 transition-colors hover:bg-ink-800 hover:text-ink-100"
-          >
-            الإعدادات
-          </button>
-        </div>
         <button type="button" onClick={playing ? doPause : doPlay} className="aur-fill glow-blue grid size-8 place-items-center rounded-lg text-white transition-all hover:brightness-110 active:scale-95" title={playing ? 'إيقاف مؤقت' : 'تشغيل'}>
           {playing ? <Pause size={14} /> : <Play size={14} />}
         </button>
@@ -493,7 +466,7 @@ export function AnimationDock() {
         <button type="button" onClick={() => setPerfOpen(true)} className="flex items-center gap-1.5 rounded-lg border border-ink-700 px-2.5 py-1.5 text-[12px] text-ink-300 hover:bg-ink-800" title="اختبار الأداء">
           <Gauge size={13} /> Performance
         </button>
-        <button type="button" onClick={() => useUI.getState().setAnimDock(false)} className="grid size-8 place-items-center rounded-lg text-ink-400 hover:bg-ink-800" title="إغلاق شريط الحركة">
+        <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('kadmati:anim-close'))} className="grid size-8 place-items-center rounded-lg text-ink-400 hover:bg-ink-800" title="إغلاق">
           <X size={14} />
         </button>
       </div>

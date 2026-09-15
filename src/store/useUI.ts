@@ -44,10 +44,8 @@ interface UIState {
   ai: AiSettings
   hydrated: boolean
   /** Panel content shown in the left rail (thumbnails by default, browse panels override it). */
-  leftPanel: 'slides' | 'templates' | 'images' | 'shapes' | 'icons' | 'tables-charts' | 'layers' | 'text' | 'history'
+  leftPanel: 'slides' | 'templates' | 'images' | 'shapes' | 'icons' | 'tables-charts' | 'layers'
   rightPanel: 'design' | 'element' | 'animate' | 'transition' | 'brand' | 'notes' | 'ai'
-  /** Bottom animation timeline (open by default, like the reference). */
-  animDock: boolean
   dialog: null | 'new-presentation' | 'import' | 'shortcuts' | 'share' | 'profile' | 'ai-settings' | 'export'
   hydrate: () => Promise<void>
   toast: (t: Omit<Toast, 'id'>) => string
@@ -57,7 +55,6 @@ interface UIState {
   setProfile: (p: Profile | null) => void
   setLeftPanel: (p: UIState['leftPanel']) => void
   setRightPanel: (p: UIState['rightPanel']) => void
-  setAnimDock: (open: boolean) => void
   openDialog: (d: UIState['dialog']) => void
   closeDialog: () => void
 }
@@ -95,7 +92,6 @@ export const useUI = create<UIState>()((set, get) => ({
   hydrated: false,
   leftPanel: 'slides',
   rightPanel: 'design',
-  animDock: true,
   dialog: null,
 
   hydrate: async () => {
@@ -141,7 +137,6 @@ export const useUI = create<UIState>()((set, get) => ({
 
   setLeftPanel: (leftPanel) => set((s) => ({ leftPanel: s.leftPanel === leftPanel ? 'slides' : leftPanel })),
   setRightPanel: (rightPanel) => set({ rightPanel }),
-  setAnimDock: (animDock) => set({ animDock }),
   openDialog: (dialog) => set({ dialog }),
   closeDialog: () => set({ dialog: null }),
 }))

@@ -6,22 +6,21 @@
  * strip is what the canvas and the exporters produce — one renderer, zero drift. Long decks stay
  * smooth because the strip is virtualized.
  */
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import {
   BarChart3,
   Copy,
   Eye,
   EyeOff,
+  FileText,
   GripVertical,
   Image as ImageIcon,
   Layers,
   Lock,
   Plus,
-  Redo2,
   Trash2,
   Type,
-  Undo2,
   ArrowUpToLine,
   ArrowDownToLine,
   Ungroup,
@@ -40,40 +39,51 @@ import { SHAPE_LIBRARY } from '../document/shapes'
 import { LAYOUTS, buildLayout } from '../templates/layouts'
 import { ICON_CATEGORIES, iconSvg } from '../lib/iconLibrary'
 import { fileToDataUrl } from '../store/storage'
-import { createAsset, presentationDuration, presentationWordCount } from '../document/factory'
+import { createAsset } from '../document/factory'
 import { cn } from '../lib/cn'
-import type { AnyElement, ChartKind } from '../document/types'
+import type { AnyElement } from '../document/types'
 
-/**
- * The panel column beside the rail — its content is chosen by the rail
- * (useUI.leftPanel): slides, templates, elements, text, images, shapes,
- * charts & tables, layers, history.
- */
+type Tab = 'slides' | 'layers' | 'shapes' | 'icons' | 'media'
+
+const TABS: { id: Tab; label: string; icon: typeof Layers }[] = [
+  { id: 'slides', label: 'الشرائح', icon: FileText },
+  { id: 'layers', label: 'الطبقات', icon: Layers },
+  { id: 'shapes', label: 'أشكال', icon: Square },
+  { id: 'icons', label: 'أيقونات', icon: GripVertical },
+  { id: 'media', label: 'صور', icon: ImageIcon },
+]
+
 export function LeftPanel() {
   const leftPanel = useUI((s) => s.leftPanel)
+  const setLeftPanel = useUI((s) => s.setLeftPanel)
+  const tab: Tab = (['slides', 'layers', 'shapes', 'icons', 'images'].includes(leftPanel) ? (leftPanel === 'images' ? 'media' : leftPanel) : 'slides') as Tab
+  const setTab = (next: Tab) => setLeftPanel(next === 'media' ? 'images' : next)
 
   return (
-    <aside className="glass flex h-full w-[212px] shrink-0 flex-col border-e border-ink-800/70">
-      {leftPanel === 'slides' ? <SlidesTab /> : null}
-      {leftPanel === 'layers' ? <LayersTab /> : null}
-      {leftPanel === 'shapes' ? <ShapesTab /> : null}
-      {leftPanel === 'icons' ? <IconsTab /> : null}
-      {leftPanel === 'images' ? <MediaTab /> : null}
-      {leftPanel === 'templates' ? <TemplatesColumn /> : null}
-      {leftPanel === 'text' ? <TextColumn /> : null}
-      {leftPanel === 'tables-charts' ? <ChartsColumn /> : null}
-      {leftPanel === 'history' ? <HistoryColumn /> : null}
+    <aside className="glass flex h-full w-[248px] shrink-0 flex-col border-e border-ink-800/70">
+      <nav className="flex shrink-0 items-center gap-0.5 border-b border-ink-800 px-1.5 py-1.5">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setTab(t.id)}
+            title={t.label}
+            className={cn(
+              'flex flex-1 items-center justify-center gap-1 rounded-md py-1.5 text-[11px] font-medium transition-colors',
+              tab === t.id ? 'bg-ink-800 text-ink-50' : 'text-ink-400 hover:bg-ink-850 hover:text-ink-100',
+            )}
+          >
+            <t.icon size={13} />
+            <span className="hidden xl:inline">{t.label}</span>
+          </button>
+        ))}
+      </nav>
+      {tab === 'slides' ? <SlidesTab /> : null}
+      {tab === 'layers' ? <LayersTab /> : null}
+      {tab === 'shapes' ? <ShapesTab /> : null}
+      {tab === 'icons' ? <IconsTab /> : null}
+      {tab === 'media' ? <MediaTab /> : null}
     </aside>
-  )
-}
-
-/** Shared header for the simple library columns. */
-function ColumnHeader({ title, hint }: { title: string; hint?: string }) {
-  return (
-    <div className="shrink-0 border-b border-ink-800 px-3 pb-2 pt-2.5">
-      <p className="text-[12.5px] font-bold text-ink-50">{title}</p>
-      {hint ? <p className="mt-0.5 text-[10.5px] leading-relaxed text-ink-500">{hint}</p> : null}
-    </div>
   )
 }
 
@@ -93,7 +103,7 @@ function SlidesTab() {
   const dragFrom = useRef<number | null>(null)
   const [over, setOver] = useState<number | null>(null)
 
-  const width = 200
+  const width = 216
   const scale = (width - 16) / doc.size.w
   const height = Math.round(doc.size.h * scale) + 34
 
@@ -204,7 +214,7 @@ function SlidesTab() {
       </div>
       <div className="flex shrink-0 items-center gap-1.5 border-t border-ink-800 p-2">
         <Button size="sm" variant="surface" className="flex-1" onClick={() => addSlide(doc.slides.length)}>
-          <Plus size={13} /> إضافة شريحة
+          <Plus size={13} /> شريحة
         </Button>
         <Popover
           align="end"
@@ -602,190 +612,5 @@ function MediaTab() {
         )}
       </div>
     </div>
-  )
-}
-
-/* ------------------------------------------------------------------ templates (rail) */
-
-function TemplatesColumn() {
-  const addSlide = useDoc((s) => s.addSlide)
-  const doc = useDoc((s) => s.doc)
-  const theme = doc.theme
-  const size = doc.size
-  return (
-    <>
-      <ColumnHeader title="القوالب" hint="أضف شريحة من تخطيط جاهز — تبقى قابلة للتعديل بالكامل." />
-      <div className="panel-x min-h-0 flex-1 overflow-y-auto p-2">
-        <div className="grid grid-cols-2 gap-1.5">
-          {LAYOUTS.map((layout) => (
-            <button
-              key={layout.id}
-              type="button"
-              title={layout.hint}
-              onClick={() => addSlide(doc.slides.length, findLayout(layout.id))}
-              className="rounded-md border border-ink-700 p-1.5 text-start transition-colors hover:border-signal/50 hover:bg-ink-800"
-            >
-              <LayoutGlyph layout={layout} theme={theme} size={size} />
-              <span className="mt-1 block truncate text-[10.5px] text-ink-200">{layout.name}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-    </>
-  )
-}
-
-/* ------------------------------------------------------------------ text (rail) */
-
-function TextColumn() {
-  const insertText = useDoc((s) => s.insertText)
-  const items = [
-    { role: 'title' as const, label: 'عنوان رئيسي', hint: 'حجم كبير — بداية الشريحة' },
-    { role: 'subtitle' as const, label: 'عنوان فرعي', hint: 'سطر توضيحي تحت العنوان' },
-    { role: 'body' as const, label: 'نص أساسي', hint: 'فقرة أو قائمة نقاط' },
-  ]
-  return (
-    <>
-      <ColumnHeader title="النص" hint="اختر نوع النص ليُضاف إلى منتصف الشريحة." />
-      <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto p-2">
-        {items.map(({ role, label, hint }) => (
-          <button
-            key={role}
-            type="button"
-            onClick={() => insertText(role)}
-            className="block w-full rounded-lg border border-ink-700 px-2.5 py-2 text-start transition-colors hover:border-signal/50 hover:bg-ink-800"
-          >
-            <span
-              className={cn(
-                'block truncate text-ink-50',
-                role === 'title' ? 'text-[14px] font-bold' : role === 'subtitle' ? 'text-[12.5px] font-semibold text-ink-100' : 'text-[11.5px] text-ink-200',
-              )}
-            >
-              {label}
-            </span>
-            <span className="mt-0.5 block text-[10px] text-ink-500">{hint}</span>
-          </button>
-        ))}
-      </div>
-    </>
-  )
-}
-
-/* ------------------------------------------------------------------ charts & tables (rail) */
-
-const CHART_ITEMS: { kind: ChartKind; label: string }[] = [
-  { kind: 'bar', label: 'أعمدة' },
-  { kind: 'barH', label: 'أعمدة أفقية' },
-  { kind: 'line', label: 'خطي' },
-  { kind: 'area', label: 'مساحة' },
-  { kind: 'pie', label: 'دائري' },
-  { kind: 'donut', label: 'حلقي' },
-  { kind: 'radar', label: 'رادار' },
-  { kind: 'scatter', label: 'نقاط' },
-]
-
-function ChartsColumn() {
-  const insertChart = useDoc((s) => s.insertChart)
-  const insertTable = useDoc((s) => s.insertTable)
-  return (
-    <>
-      <ColumnHeader title="الرسوم البيانية" hint="مخططات حقيقية قابلة للتحرير — تُصدَّر كمخططات PowerPoint." />
-      <div className="min-h-0 flex-1 overflow-y-auto p-2">
-        <div className="grid grid-cols-2 gap-1.5">
-          {CHART_ITEMS.map(({ kind, label }) => (
-            <button
-              key={kind}
-              type="button"
-              onClick={() => insertChart(kind)}
-              className="flex items-center gap-1.5 rounded-lg border border-ink-700 px-2 py-2 text-[11.5px] text-ink-100 transition-colors hover:border-signal/50 hover:bg-ink-800"
-            >
-              <BarChart3 size={13} className="shrink-0 text-signal" /> {label}
-            </button>
-          ))}
-        </div>
-        <p className="mb-1.5 mt-3 text-[11px] font-bold text-ink-400">الجداول</p>
-        <div className="grid grid-cols-3 gap-1.5">
-          {[
-            [3, 3],
-            [4, 3],
-            [5, 4],
-          ].map(([rows, cols]) => (
-            <button
-              key={`${rows}x${cols}`}
-              type="button"
-              onClick={() => insertTable(rows, cols)}
-              className="rounded-lg border border-ink-700 py-2 text-[11px] text-ink-100 transition-colors hover:border-signal/50 hover:bg-ink-800"
-            >
-              {rows}×{cols}
-            </button>
-          ))}
-        </div>
-      </div>
-    </>
-  )
-}
-
-/* ------------------------------------------------------------------ history (rail) */
-
-function HistoryColumn() {
-  const doc = useDoc((s) => s.doc)
-  const saveStatus = useDoc((s) => s.saveStatus)
-  const undo = useDoc((s) => s.undo)
-  const redo = useDoc((s) => s.redo)
-  const subscribe = (cb: () => void) => useDoc.temporal.subscribe(cb)
-  const past = useSyncExternalStore(subscribe, () => useDoc.temporal.getState().pastStates.length, () => 0)
-  const future = useSyncExternalStore(subscribe, () => useDoc.temporal.getState().futureStates.length, () => 0)
-  const elements = doc.slides.reduce((sum, slide) => sum + slide.elements.length, 0)
-  return (
-    <>
-      <ColumnHeader title="التاريخ" hint="سجل التعديلات محلي داخل المتصفح." />
-      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
-        <div className="grid grid-cols-2 gap-1.5">
-          <button
-            type="button"
-            onClick={undo}
-            disabled={!past}
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-ink-700 py-2 text-[11.5px] text-ink-100 transition-colors hover:bg-ink-800 disabled:opacity-35"
-          >
-            <Undo2 size={12} /> تراجع
-          </button>
-          <button
-            type="button"
-            onClick={redo}
-            disabled={!future}
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-ink-700 py-2 text-[11.5px] text-ink-100 transition-colors hover:bg-ink-800 disabled:opacity-35"
-          >
-            <Redo2 size={12} /> إعادة
-          </button>
-        </div>
-        <div className="space-y-1.5 rounded-lg border border-ink-800 bg-ink-900/50 p-2.5 text-[11px] text-ink-300">
-          <p className="flex justify-between">
-            <span className="text-ink-500">خطوات محفوظة</span>
-            <span className="tabular-nums">{past}</span>
-          </p>
-          <p className="flex justify-between">
-            <span className="text-ink-500">الشرائح</span>
-            <span className="tabular-nums">{doc.slides.length}</span>
-          </p>
-          <p className="flex justify-between">
-            <span className="text-ink-500">العناصر</span>
-            <span className="tabular-nums">{elements}</span>
-          </p>
-          <p className="flex justify-between">
-            <span className="text-ink-500">الكلمات</span>
-            <span className="tabular-nums">{presentationWordCount(doc)}</span>
-          </p>
-          <p className="flex justify-between">
-            <span className="text-ink-500">مدة الإلقاء</span>
-            <span className="tabular-nums">{presentationDuration(doc)} د</span>
-          </p>
-          <p className="flex justify-between">
-            <span className="text-ink-500">الحفظ</span>
-            <span>{saveStatus === 'saved' ? 'تم تلقائيًا' : saveStatus === 'saving' ? 'جارٍ…' : 'معلق'}</span>
-          </p>
-        </div>
-        <p className="text-[10px] leading-relaxed text-ink-600">التراجع يغطي كل عمليات التحرير — ⌘Z / ⌘⇧Z.</p>
-      </div>
-    </>
   )
 }

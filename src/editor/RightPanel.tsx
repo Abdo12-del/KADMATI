@@ -14,17 +14,13 @@ import {
   Bold,
   Check,
   Contrast,
-  Copy,
   Italic,
   Link2,
   List,
   ListOrdered,
   Palette,
   RemoveFormatting,
-  Repeat2,
-  Scissors,
   Strikethrough,
-  Trash2,
   Underline,
   Wand2,
 } from 'lucide-react'
@@ -41,12 +37,12 @@ import type { AnyElement, ImageElement, Paint, ShapeElement, Slide, TableElement
 type Tab = 'design' | 'element' | 'animate' | 'transition' | 'notes' | 'ai'
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'design', label: 'التصميم' },
-  { id: 'element', label: 'الخصائص' },
-  { id: 'animate', label: 'الأنيميشن' },
-  { id: 'transition', label: 'الانتقال' },
-  { id: 'notes', label: 'الملاحظات' },
-  { id: 'ai', label: 'المساعد' },
+  { id: 'design', label: 'تصميم' },
+  { id: 'element', label: 'خصائص' },
+  { id: 'animate', label: 'حركة' },
+  { id: 'transition', label: 'انتقال' },
+  { id: 'notes', label: 'ملاحظات' },
+  { id: 'ai', label: 'ذكاء' },
 ]
 
 export function RightPanel() {
@@ -158,29 +154,6 @@ function ElementTab() {
             <NumberLabel label="خلفية" onClick={() => useDoc.getState().zOrder('back')} />
           </div>
         </Row>
-      </Section>
-
-      <Section title="الإجراءات" defaultOpen={false}>
-        <div className="grid grid-cols-4 gap-1.5">
-          {(
-            [
-              ['استبدال', Repeat2, () => useUI.getState().setLeftPanel('images')],
-              ['قص', Scissors, () => useDoc.getState().cutSelected()],
-              ['نسخ', Copy, () => useDoc.getState().duplicateSelected()],
-              ['حذف', Trash2, () => useDoc.getState().removeSelected()],
-            ] as [string, typeof Copy, () => void][]
-          ).map(([label, Icon, run]) => (
-            <button
-              key={label}
-              type="button"
-              onClick={run}
-              className="flex flex-col items-center gap-1 rounded-lg border border-ink-700 py-2 text-[10px] text-ink-200 transition-colors hover:border-red-400/30 hover:bg-ink-800"
-            >
-              <Icon size={13} />
-              {label}
-            </button>
-          ))}
-        </div>
       </Section>
 
       {kinds.size === 1 && kinds.has('text') ? <TextInspection elements={selected as TextElement[]} /> : null}
