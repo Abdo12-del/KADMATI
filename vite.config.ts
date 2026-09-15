@@ -17,6 +17,15 @@ export default defineConfig({
     port: 5173,
     strictPort: false,
     allowedHosts: true,
+    // Aurova Model: the browser calls /api/aurova/* (relative), the dev server forwards it to the
+    // model gateway. In production the same path is served by the reverse proxy in front of the app.
+    proxy: {
+      '/api/aurova': {
+        target: process.env.AUROVA_GATEWAY_URL ?? 'http://127.0.0.1:8787',
+        changeOrigin: true,
+        rewrite: (p: string) => p.replace(/^\/api\/aurova/, ''),
+      },
+    },
   },
   preview: {
     host: '0.0.0.0',

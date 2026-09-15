@@ -14,6 +14,7 @@ import { LAYOUTS } from '../../templates/layouts'
 import type { ArtKind, DeckSpec, SlideSpec, TemplateCategory } from '../../templates/engine'
 import { THEME_PRESETS } from '../../document/factory'
 import { useUI } from '../../store/useUI'
+import { chat, isRemoteReady, toConn } from './providers'
 
 export interface GenerateOptions {
   slides?: number
@@ -49,8 +50,8 @@ export async function generateDeck(prompt: string, opts: GenerateOptions = {}): 
   let engine: 'local' | 'provider' = 'local'
 
   const ai = useUI.getState().ai
-  if (ai.provider === 'custom' && ai.endpoint) {
-    opts.onStage?.('استخدام المزوّد', 1, total)
+  if (isRemoteReady(toConn(ai))) {
+    opts.onStage?.(ai.provider === 'aurova' ? 'نموذج Aurova' : 'استخدام المزوّد', 1, total)
     const remote = await providerOutline({ topic, count, lang, audience, tone, category })
     if (remote?.length) {
       outline = remote
@@ -511,7 +512,6 @@ interface ProviderSlide {
 
 async function providerOutline(input: { topic: string; count: number; lang: 'ar' | 'en'; audience: string; tone: string; category: TemplateCategory }): Promise<OutlineSlide[] | null> {
   const ai = useUI.getState().ai
-  if (!ai.endpoint) return null
   const system = [
     'أنت مخرج عروض تقديمية. أعد JSON فقط، دون شرح أو علامات تنسيق.',
     'الشكل: {"slides":[{"kind":"title|agenda|content|stats|quote|comparison|process|timeline|closing","title":"...","takeaways":["..."]}]}',
@@ -520,26 +520,13 @@ async function providerOutline(input: { topic: string; count: number; lang: 'ar'
     'قواعد: عنوان كل شريحة فكرة لا تسمية قسم؛ نقاط ٢–٤ قصيرة؛ لا حشو ولا إحصاءات مختلقة؛ ضع شريحة title أولًا وشريحة closing أخيرة.',
   ].join('\n')
   try {
-    const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 25000)
-    const res = await fetch(ai.endpoint.replace(/\/$/, ''), {
-      method: 'POST',
-      signal: controller.signal,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: ai.model,
-        temperature: 0.5,
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: `الموضوع: ${input.topic}\nالفئة: ${input.category}` },
-        ],
-      }),
+    const raw = await chat(toConn(ai), {
+      system,
+      user: `الموضوع: ${input.topic}\nالفئة: ${input.category}`,
+      temperature: 0.5,
+      json: true,
+      timeoutMs: 25000,
     })
-    clearTimeout(timer)
-    if (!res.ok) return null
-    const json = (await res.json()) as { choices?: { message?: { content?: string } }[] }
-    const raw = json.choices?.[0]?.message?.content
     if (!raw) return null
     const parsed = parseLooseJson(raw) as { slides?: ProviderSlide[] }
     const list = (parsed?.slides ?? [])
