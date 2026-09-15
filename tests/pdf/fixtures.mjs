@@ -1,8 +1,8 @@
 /**
  * Test PDF fixtures generator (Node, dev-only).
- * Builds real PDFs covering the 8 scenarios from PDF_ANALYSIS_RESEARCH.md §7:
+ * Builds real PDFs covering the 10 scenarios from PDF_ANALYSIS_RESEARCH.md §7:
  * EN simple, FR, tables, Arabic (shaped via pdfkit+fontkit), AR+EN mixed,
- * scanned (image-only), embedded images, complex two-column design.
+ * scanned (image-only), embedded images, vector charts, complex two-column design.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -269,12 +269,38 @@ async function arabicFixtures() {
   return { ar, mixed }
 }
 
+/* ---------------------------------------------------------------- charts fixture (vector bar chart, no text-layer trickery) */
+function chartsFixture() {
+  // One page: title + short paragraph + a drawn bar chart (axes, gridlines,
+  // 10 fill+stroke bars) + caption. Dense path cluster → kind:'chart'.
+  const bar = (x, h) => `q 0.39 0.4 0.95 rg 0.22 0.19 0.64 RG ${x} 301 18 ${h} re f ${x} 301 18 ${h} re S Q `
+  const line = (x1, y1, x2, y2, gray, w) => `q ${gray} ${gray} ${gray} RG ${w} w ${x1} ${y1} m ${x2} ${y2} l S Q `
+  const chart =
+    line(90, 350, 380, 350, 0.87, 0.6) +
+    line(90, 400, 380, 400, 0.87, 0.6) +
+    line(90, 450, 380, 450, 0.87, 0.6) +
+    line(90, 300, 90, 500, 0.25, 1.1) +
+    line(90, 300, 380, 300, 0.25, 1.1) +
+    [40, 70, 55, 95, 80, 120, 105, 140, 125, 160].map((h, i) => bar(100 + i * 26, h)).join('')
+  const p1 =
+    textStream(
+      T('F2', 20, 72, 720, 'Growth Analytics') +
+        T('F1', 11, 72, 690, 'Regional revenue kept climbing through the second half of the year.') +
+        T('F1', 11, 72, 674, 'The chart below tracks the monthly close across all ten markets.') +
+        chart +
+        T('F1', 10, 72, 265, 'Chart 1: quarterly revenue growth by region (vector)') +
+        T('F1', 9, 560, 24, '1'),
+    )
+  return simpleDoc([p1])
+}
+
 /* ---------------------------------------------------------------- write all */
 const files = {
   'en-report.pdf': enFixture(),
   'fr-report.pdf': frFixture(),
   'table.pdf': tableFixture(),
   'image.pdf': imageFixture(),
+  'charts.pdf': chartsFixture(),
   'scanned.pdf': scannedFixture(),
   'complex.pdf': complexFixture(),
 }

@@ -192,7 +192,22 @@ async function main() {
     check('deck built from image page', build.doc.slides.length >= 2, String(build.doc.slides.length))
   }
 
-  /* ---------------- 8. Complex two-column ---------------- */
+  /* ---------------- 9. Vector chart (figure) ---------------- */
+  console.log('\n■ Vector chart (chart figure)')
+  {
+    const buf = readAb(path.join(FIX, 'charts.pdf'))
+    const doc = await runFull(buf, 'charts.pdf')
+    const chart = doc.pages[0].images.find((im) => im.kind !== 'image')
+    check('chart detected as vector cluster', !!chart, JSON.stringify(doc.pages[0].images.map((i) => i.kind)))
+    if (chart) {
+      check('kind = chart (dense ops)', chart.kind === 'chart', chart.kind)
+      check('chart bbox plausible', chart.bbox.w > 150 && chart.bbox.h > 90, JSON.stringify(chart.bbox))
+    }
+    check('caption element typed', doc.pages[0].elements.some((e) => e.type === 'caption'))
+    const { plan, build } = toDeck(doc)
+    check('chart wired into a slide', plan.meta.some((m) => m.imageId?.startsWith('f1_')), JSON.stringify(plan.meta.map((m) => m.imageId)))
+    check('deck built from chart page', build.doc.slides.length >= 2, String(build.doc.slides.length))
+  }
   console.log('\n■ Complex two-column + header')
   {
     const buf = readAb(path.join(FIX, 'complex.pdf'))

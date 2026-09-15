@@ -24,8 +24,22 @@ export function buildDeck(doc: StructuredDocument, plan: PresentationPlan, image
   const presentation = instantiateDeck(spec)
   const assets = presentation.assets
 
-  // ---- brand mode: recolor the chosen theme with the document's own palette/fonts
-  if (plan.mode === 'brand' && doc.brandSuggestion) {
+  // ---- identity modes: 'brand' recolors with the user's BrandKit (when one was
+  // planned), 'preserve' keeps the *document's own* extracted palette/fonts.
+  // Both fall back to the document identity so a preserve-like result never
+  // silently becomes a full redesign.
+  if (plan.brandKit) {
+    const k = plan.brandKit
+    presentation.theme = {
+      ...presentation.theme,
+      palette: { ...presentation.theme.palette, primary: k.colors.primary, secondary: k.colors.secondary, accent: k.colors.accent },
+    }
+    presentation.theme.fonts = {
+      ...presentation.theme.fonts,
+      heading: mapFontFamily(k.fonts.heading),
+      body: mapFontFamily(k.fonts.body),
+    }
+  } else if ((plan.mode === 'brand' || plan.mode === 'preserve') && doc.brandSuggestion) {
     const b = doc.brandSuggestion
     presentation.theme = {
       ...presentation.theme,

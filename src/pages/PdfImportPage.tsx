@@ -13,6 +13,7 @@ import {
   Braces,
   Cpu,
   FileText,
+  Layers,
   LayoutTemplate,
   Loader2,
   Palette,
@@ -41,6 +42,7 @@ const STAGES = [
 
 export function PdfImportPage() {
   const library = useLibrary()
+  const brandKits = library.brandKits
   const inputRef = useRef<HTMLInputElement>(null)
   const bufferRef = useRef<ArrayBuffer | null>(null)
 
@@ -51,7 +53,7 @@ export function PdfImportPage() {
   const [dragOver, setDragOver] = useState(false)
   const [ocrBusyPage, setOcrBusyPage] = useState<number | null>(null)
 
-  const [mode, setMode] = useState<'redesign' | 'brand'>('redesign')
+  const [mode, setMode] = useState<'preserve' | 'redesign' | 'brand'>('redesign')
   const [targetSlides, setTargetSlides] = useState(10)
   const [generating, setGenerating] = useState(false)
   const [preview, setPreview] = useState<{ build: import('../services/pdf').BuildResult; warnings: string[] } | null>(null)
@@ -121,7 +123,19 @@ export function PdfImportPage() {
     try {
       const sections = buildSections(structured.pages)
       attachVisuals(sections, structured.pages)
-      const plan = planPresentation(structured, sections, { targetSlides, mode })
+      const kit = brandKits[0]
+      const plan = planPresentation(structured, sections, {
+        targetSlides,
+        mode,
+        brandKit:
+          mode === 'brand' && kit
+            ? {
+                name: kit.name,
+                colors: { primary: kit.colors.primary, secondary: kit.colors.secondary, accent: kit.colors.accent },
+                fonts: { heading: kit.fonts.heading, body: kit.fonts.body },
+              }
+            : undefined,
+      })
       const imagesById = new Map(structured.pages.flatMap((p) => p.images).map((im) => [im.id, im]))
       const tablesById = new Map(structured.pages.flatMap((p) => p.tables).map((t) => [t.id, t]))
       const build = buildDeck(structured, plan, imagesById, tablesById)
@@ -133,7 +147,7 @@ export function PdfImportPage() {
     } finally {
       setGenerating(false)
     }
-  }, [structured, targetSlides, mode])
+  }, [structured, targetSlides, mode, brandKits])
 
   const openInEditor = useCallback(async () => {
     if (!preview) return
@@ -261,7 +275,7 @@ export function PdfImportPage() {
                 <Sparkles className="h-4 w-4 text-ai" />
                 خيارات التوليد
               </p>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-3">
                 <ModeCard
                   active={mode === 'redesign'}
                   onClick={() => setMode('redesign')}
@@ -270,12 +284,24 @@ export function PdfImportPage() {
                   desc="نظام تصميم من قوالب المنصة مع الحفاظ على بنية المحتوى"
                 />
                 <ModeCard
+                  active={mode === 'preserve'}
+                  onClick={() => setMode('preserve')}
+                  icon={Layers}
+                  title="الحفاظ على الهوية"
+                  desc="ألوان وخطوط مستخلصة من ملف PDF نفسه"
+                  disabled={!structured.brandSuggestion}
+                />
+                <ModeCard
                   active={mode === 'brand'}
                   onClick={() => setMode('brand')}
                   icon={Palette}
-                  title="هوية المستند"
-                  desc="ألوان وخطوط مستخلصة من ملف PDF نفسه"
-                  disabled={!structured.brandSuggestion}
+                  title="هوية علامتي"
+                  desc={
+                    brandKits.length
+                      ? `تطبيق Brand Kit: ${brandKits[0].name}`
+                      : 'أنشئ هوية من صفحة «الهوية» أولًا'
+                  }
+                  disabled={!brandKits.length}
                 />
               </div>
               <div className="mt-4 flex flex-wrap items-center gap-4">

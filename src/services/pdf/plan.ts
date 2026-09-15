@@ -20,9 +20,23 @@ import type { StructuredDocument } from './types'
 export interface PlanOptions {
   /** Target slide count (the planner compresses/expands to approach it). */
   targetSlides?: number
-  /** Design mode. */
-  mode?: 'redesign' | 'brand'
+  /**
+   * Design mode:
+   *  - 'redesign' → a platform theme picked from the detected content category
+   *  - 'preserve' → the document's OWN identity (palette/fonts extracted from the PDF)
+   *  - 'brand'    → the user's BrandKit (falls back to the document identity)
+   */
+  mode?: 'preserve' | 'redesign' | 'brand'
+  /** User brand kit applied when mode === 'brand'. */
+  brandKit?: BrandKitInput
   lang?: 'ar' | 'en' | 'fr'
+}
+
+/** Minimal structural view of the platform BrandKit (avoids a heavy import). */
+export interface BrandKitInput {
+  name?: string
+  colors: { primary: string; secondary: string; accent: string }
+  fonts: { heading: string; body: string }
 }
 
 export interface PlannedSlide extends SlideSpec {
@@ -32,7 +46,9 @@ export interface PlannedSlide extends SlideSpec {
 
 export interface PresentationPlan {
   spec: DeckSpec
-  mode: 'redesign' | 'brand'
+  mode: 'preserve' | 'redesign' | 'brand'
+  /** Brand kit carried to the deck builder (mode === 'brand'). */
+  brandKit?: BrandKitInput
   /** Extra mapping the deck builder needs (real images / tables per slide). */
   meta: Array<{
     slideIndex: number
@@ -103,7 +119,7 @@ export function planPresentation(doc: StructuredDocument, sections: SectionConte
       kicker: undefined,
     },
     sourcePage: 0,
-  }, { imageId: doc.pages[0]?.images.find((im) => im.kind === 'image')?.id })
+  }, { imageId: doc.pages[0]?.images.find((im) => im.kind !== 'figure')?.id })
 
   // ---- agenda (top-level headings, capped)
   const agenda = doc.outline.filter((o) => o.level <= 2).map((o) => o.text)
@@ -151,7 +167,7 @@ export function planPresentation(doc: StructuredDocument, sections: SectionConte
   const lowConf = sections.filter((s) => s.paragraphs.length + s.bullets.length === 0).length
   if (lowConf > 0) warnings.push(`${lowConf} قسمًا بلا محتوى نصي كافٍ — راجع فاحص البنية.`)
 
-  return { spec, meta, warnings, mode }
+  return { spec, meta, warnings, mode, brandKit: opts.brandKit }
 }
 
 function emitSection(

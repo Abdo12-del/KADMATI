@@ -134,13 +134,26 @@ export async function parsePdf(data: ArrayBuffer, opts: ParseOptions = {}): Prom
       }
     }
 
-    // ---- thumbnail
+    // ---- thumbnail (+ pixel crops for visuals pdf.js can't hand us as objects:
+    // vector figures/charts are cropped from the rendered page into real assets)
     let thumbnail: string | undefined
     if (thumbnails && hasDom) {
       try {
         thumbnail = (await renderPageToCanvas(page, Math.min(1.2, 640 / Math.max(W, H)))).toDataURL('image/jpeg', 0.72)
       } catch {
         thumbnail = undefined
+      }
+      if (extractImages && !scanned && images.some((im) => !im.dataUrl)) {
+        try {
+          const sc = Math.min(1.6, 1100 / Math.max(W, H))
+          const canvas = await renderPageToCanvas(page, sc)
+          for (const im of images) {
+            if (im.dataUrl) continue
+            im.dataUrl = cropRegionDataUrl(canvas, im.bbox, sc)
+          }
+        } catch {
+          // cropping is best-effort; bbox+caption still flow through
+        }
       }
     }
 
@@ -222,7 +235,7 @@ function buildLines(frags: Frag[], page: number): TextLine[] {
   }).filter((l) => l.text.length > 0)
 }
 
-/** Extract embedded images with placement bboxes via the operator list. */
+/** Extract embedded images AND vector-figure/chart regions via the operator list. */
 async function extractPageImages(OPS: Record<string, number>, page: PDFPageProxy, pageIndex: number, pageW: number, pageH: number): Promise<PdfImageData[]> {
   const ops = await page.getOperatorList()
   const fnArray = ops.fnArray
@@ -231,6 +244,45 @@ async function extractPageImages(OPS: Record<string, number>, page: PDFPageProxy
   const images: PdfImageData[] = []
   let ctm: number[] = [1, 0, 0, 1, 0, 0]
   const stack: number[][] = []
+
+  // ---- vector-figure tracking: cluster consecutive path paints (bars, axes,
+  // gridlines, boxes). Text and state ops don't break a cluster (charts carry
+  // labels); a large spatial gap does. Dense clusters become kind:'chart'.
+  const PAINT_PATH = new Set([OPS.fill, OPS.eoFill, OPS.stroke, OPS.closeStroke, OPS.fillStroke, OPS.eoFillStroke, OPS.closeFillStroke])
+  let pathBox: { x0: number; y0: number; x1: number; y1: number } | null = null
+  let cur: { n: number; bbox: BBox } | null = null
+  const runs: Array<{ n: number; bbox: BBox }> = []
+  const toPageXY = (x: number, y: number): [number, number] => [ctm[0] * x + ctm[2] * y + ctm[4], ctm[1] * x + ctm[3] * y + ctm[5]]
+  const growPath = (px: number, py: number) => {
+    if (!pathBox) pathBox = { x0: px, y0: py, x1: px, y1: py }
+    else {
+      pathBox.x0 = Math.min(pathBox.x0, px)
+      pathBox.y0 = Math.min(pathBox.y0, py)
+      pathBox.x1 = Math.max(pathBox.x1, px)
+      pathBox.y1 = Math.max(pathBox.y1, py)
+    }
+  }
+  const nearBox = (a: BBox, b: BBox, tol: number): boolean =>
+    a.x - tol <= b.x + b.w && b.x - tol <= a.x + a.w && a.y - tol <= b.y + b.h && b.y - tol <= a.y + a.h
+  const mergeBox = (a: BBox, b: BBox): BBox => {
+    const x0 = Math.min(a.x, b.x)
+    const y0 = Math.min(a.y, b.y)
+    const x1 = Math.max(a.x + a.w, b.x + b.w)
+    const y1 = Math.max(a.y + a.h, b.y + b.h)
+    return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }
+  }
+  const flushPath = () => {
+    if (!pathBox) return
+    const b: BBox = { x: pathBox.x0, y: pathBox.y0, w: pathBox.x1 - pathBox.x0, h: pathBox.y1 - pathBox.y0 }
+    pathBox = null
+    if (cur && nearBox(b, cur.bbox, 40)) {
+      cur.bbox = mergeBox(cur.bbox, b)
+      cur.n += 1
+    } else {
+      if (cur) runs.push(cur)
+      cur = { n: 1, bbox: b }
+    }
+  }
 
   const mul = (m: number[], t: number[]): number[] => [
     m[0] * t[0] + m[2] * t[1],
@@ -250,7 +302,35 @@ async function extractPageImages(OPS: Record<string, number>, page: PDFPageProxy
       ctm = stack.pop() ?? ctm
     } else if (fn === OPS.transform) {
       ctm = mul(ctm, args as number[])
+    } else if (fn === OPS.constructPath) {
+      // pdf.js v6 folds the paint into constructPath itself:
+      //   args = [paintOp, pathData, minMax: [minX,minY,maxX,maxY] (path space)]
+      // older builds: args = [segmentOps, flatCoords] + separate fill/stroke fns.
+      try {
+        const paint = args[0]
+        const minMax = args[2] as ArrayLike<number> | undefined
+        if (minMax && minMax.length >= 4) {
+          for (const [u, v] of [[minMax[0], minMax[1]], [minMax[2], minMax[3]]] as Array<[number, number]>) {
+            const [px, py] = toPageXY(u, v)
+            if (Number.isFinite(px) && Number.isFinite(py)) growPath(px, py)
+          }
+        } else {
+          const coords = args[1] as ArrayLike<number> | undefined
+          if (coords && coords.length >= 2) {
+            for (let k = 0; k + 1 < coords.length; k += 2) {
+              const [px, py] = toPageXY(coords[k], coords[k + 1])
+              if (Number.isFinite(px) && Number.isFinite(py)) growPath(px, py)
+            }
+          }
+        }
+        if (typeof paint === 'number' && PAINT_PATH.has(paint)) flushPath()
+      } catch {
+        // path tracking is best-effort only
+      }
+    } else if (PAINT_PATH.has(fn)) {
+      flushPath()
     } else if (fn === OPS.paintImageXObject || fn === OPS.paintImageXObjectRepeat || fn === OPS.paintInlineImageXObject ) {
+      flushPath()
       // unit square → page space
       const corners = [pt(0, 0), pt(1, 0), pt(1, 1), pt(0, 1)].map(([u, v]) => ({
         x: ctm[0] * u + ctm[2] * v + ctm[4],
@@ -296,11 +376,68 @@ async function extractPageImages(OPS: Record<string, number>, page: PDFPageProxy
       })
     }
   }
+  if (cur) runs.push(cur)
+
+  // merge pass: re-join clusters split by interleaved text labels, then keep
+  // only regions that look like real figures (dense, sizeable, not a page frame,
+  // not duplicating an extracted raster)
+  let merged = true
+  while (merged) {
+    merged = false
+    outer: for (let a = 0; a < runs.length; a++) {
+      for (let b = a + 1; b < runs.length; b++) {
+        if (nearBox(runs[a].bbox, runs[b].bbox, 22)) {
+          runs[a] = { n: runs[a].n + runs[b].n, bbox: mergeBox(runs[a].bbox, runs[b].bbox) }
+          runs.splice(b, 1)
+          merged = true
+          break outer
+        }
+      }
+    }
+  }
+  const pageArea = pageW * pageH
+  for (const r of runs) {
+    const area = r.bbox.w * r.bbox.h
+    if (r.n < 10 || r.bbox.w < 60 || r.bbox.h < 45) continue
+    if (area < pageArea * 0.035) continue
+    if (r.bbox.w > pageW * 0.94 && r.bbox.h > pageH * 0.94) continue
+    if (images.some((im) => im.kind === 'image' && overlapArea(im.bbox, r.bbox) > 0.6 * area)) continue
+    images.push({
+      id: `f${pageIndex}_${images.length}`,
+      page: pageIndex - 1,
+      bbox: r.bbox,
+      width: Math.round(r.bbox.w),
+      height: Math.round(r.bbox.h),
+      kind: r.n >= 24 ? 'chart' : 'figure',
+    })
+  }
   return images
+}
+
+function overlapArea(a: BBox, b: BBox): number {
+  const w = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)
+  const h = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y)
+  return w > 0 && h > 0 ? w * h : 0
 }
 
 function pt(u: number, v: number): [number, number] {
   return [u, v]
+}
+
+/** Crop a bbox (page space, top-down) from a rendered page canvas → data URL. */
+function cropRegionDataUrl(canvas: HTMLCanvasElement, bbox: BBox, scale: number): string | undefined {
+  const sx = Math.max(0, Math.floor(bbox.x * scale) - 2)
+  const sy = Math.max(0, Math.floor(bbox.y * scale) - 2)
+  const sw = Math.min(canvas.width - sx, Math.ceil(bbox.w * scale) + 4)
+  const sh = Math.min(canvas.height - sy, Math.ceil(bbox.h * scale) + 4)
+  if (sw < 8 || sh < 8) return undefined
+  const out = document.createElement('canvas')
+  out.width = sw
+  out.height = sh
+  const ctx = out.getContext('2d')
+  if (!ctx) return undefined
+  ctx.drawImage(canvas, sx, sy, sw, sh, 0, 0, sw, sh)
+  return out.toDataURL('image/png')
 }
 
 async function fetchImageObject(page: unknown, objId: string): Promise<{ width: number; height: number; data?: unknown; bitmap?: unknown } | null> {

@@ -64,7 +64,14 @@ export interface PdfImageData {
   height: number
   dataUrl?: string
   caption?: string
-  kind: 'image' | 'figure'
+  /**
+   * 'image'  = embedded raster XObject (original bytes recoverable)
+   * 'figure' = vector-drawing cluster (sparse)
+   * 'chart'  = vector-drawing cluster dense enough to be a chart/diagram —
+   *            kept as a figure (pixels cropped from the rendered page in the
+   *            browser); original series data is not recoverable.
+   */
+  kind: 'image' | 'figure' | 'chart'
 }
 
 export interface PdfPage {
