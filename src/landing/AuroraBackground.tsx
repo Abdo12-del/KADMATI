@@ -40,11 +40,11 @@ export function AuroraBackground() {
       />
       <div
         className="slf-glow"
-        style={{ top: '30%', insetInlineEnd: '-8%', width: '44%', height: 480, background: 'radial-gradient(closest-side, rgba(139,92,246,0.24), transparent)', animationDelay: '-7s' }}
+        style={{ top: '30%', insetInlineEnd: '-8%', width: '44%', height: 480, background: 'radial-gradient(closest-side, rgba(139,92,246,0.3), transparent)', animationDelay: '-7s' }}
       />
       <div
         className="slf-glow"
-        style={{ top: '64%', insetInlineStart: '-6%', width: '42%', height: 460, background: 'radial-gradient(closest-side, rgba(34,211,238,0.17), transparent)', animationDelay: '-3s' }}
+        style={{ top: '64%', insetInlineStart: '-6%', width: '42%', height: 460, background: 'radial-gradient(closest-side, rgba(168,85,247,0.18), transparent)', animationDelay: '-3s' }}
       />
 
       {/* Stars — two layers, subtle twinkle */}

@@ -1,173 +1,132 @@
 /**
- * AISection — "مساعدك الذكي في كل خطوة".
- * Right: headline + the four AI capabilities.
- * Left: a futuristic AI generation interface (prompt, settings, create)
- * with floating generated-slide cards — integrated into the platform,
- * not a chatbot.
+ * AISection — matching the reference.
+ * Right: "مساعدك الذكي في كل خطوة" + paragraph with a gradient phrase,
+ * four capability chips in one row (تنظيم المحتوى / اقتراح التصميم /
+ * تحسين النصوص / مراجعة العرض) and an "اكتشف كيف تعمل" link.
+ * Left: floating composition — aurora image cards with an "A+" glass badge
+ * and the AI generation form ("Create with AI" chip, idea input, three
+ * setting rows, إنشاء button) tilted over a violet bloom.
  */
-import { Check, ChevronDown, ListChecks, Palette, PenLine, Sparkles, Wand2 } from 'lucide-react'
+import { ArrowLeft, ChevronDown, ClipboardCheck, ListChecks, Palette, PenLine, Sparkles, X } from 'lucide-react'
+import { AuroraScene } from './AuroraScene'
 import { Reveal } from './Reveal'
 
 const CAPABILITIES = [
-  { icon: ListChecks, title: 'تنظيم المحتوى', desc: 'حوّل نقاطك المتناثرة إلى هيكل واضح ومتسلسل.' },
-  { icon: Palette, title: 'اقتراح التصميم', desc: 'تخطيطات وألوان تناسب فكرتك وجمهورك.' },
-  { icon: PenLine, title: 'تحسين النصوص', desc: 'صياغة أوضح وأقوى بضغطة واحدة.' },
-  { icon: Sparkles, title: 'إنشاء العرض', desc: 'شرائح كاملة قابلة للتعديل، جاهزة فورًا.' },
+  { icon: ListChecks, title: 'تنظيم المحتوى' },
+  { icon: Palette, title: 'اقتراح التصميم' },
+  { icon: PenLine, title: 'تحسين النصوص' },
+  { icon: ClipboardCheck, title: 'مراجعة العرض' },
 ]
-
-const COUNTS = ['6', '10', '14']
 
 export function AISection() {
   return (
-    <section id="features" className="relative mx-auto max-w-7xl scroll-mt-24 px-6 py-24 md:py-32">
-      {/* section aurora accents */}
+    <section id="features" className="relative mx-auto max-w-7xl scroll-mt-24 px-6 py-20 md:py-24">
+      {/* dramatic violet field, as in the reference */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
         <div
           className="slf-glow"
-          style={{ top: '12%', insetInlineEnd: '2%', width: '38%', height: 380, background: 'radial-gradient(closest-side, rgba(124,92,252,0.2), transparent)' }}
+          style={{ top: '0%', left: '6%', width: '52%', height: '90%', background: 'radial-gradient(closest-side, rgba(124,92,252,0.28), transparent)' }}
         />
         <div
           className="slf-glow"
-          style={{ bottom: '4%', insetInlineStart: '0%', width: '34%', height: 320, background: 'radial-gradient(closest-side, rgba(34,211,238,0.14), transparent)', animationDelay: '-8s' }}
+          style={{ bottom: '-6%', right: '4%', width: '38%', height: '70%', background: 'radial-gradient(closest-side, rgba(232,121,249,0.14), transparent)', animationDelay: '-8s' }}
         />
       </div>
 
-      <div className="relative grid items-center gap-14 lg:grid-cols-2 lg:gap-10 xl:gap-16">
+      <div className="relative grid items-center gap-16 lg:grid-cols-2 lg:gap-10 xl:gap-14">
         {/* ---- headline + capabilities (right in the reference) ---- */}
         <Reveal className="lg:order-1">
-          <span className="inline-flex items-center gap-2 rounded-full border border-[#8b5cf6]/30 bg-[#7c5cfc]/10 px-4 py-1.5 text-[12.5px] font-semibold text-[#cdbcff] shadow-[0_0_24px_-8px_rgba(124,92,252,0.8)]">
-            <Sparkles className="h-3.5 w-3.5" aria-hidden />
-            الذكاء الاصطناعي داخل المنصة
-          </span>
-          <h2 className="slf-display mt-5 text-[34px] font-extrabold leading-snug text-white drop-shadow-[0_0_30px_rgba(170,190,255,0.2)] md:text-[46px]">
-            مساعدك الذكي <span className="slf-grad">في كل خطوة</span>
+          <h2 className="slf-display text-[28px] font-extrabold leading-snug text-white md:text-[34px]">
+            مساعدك الذكي في كل خطوة
           </h2>
-          <p className="mt-4 max-w-lg text-[15.5px] leading-8 text-[#9dabcd] md:text-[16.5px]">
-            من الفكرة الأولى إلى الشريحة الأخيرة — الذكاء الاصطناعي يعمل داخل محرر العروض نفسه،
-            ومخرجاته عناصر حقيقية يمكنك تعديلها بالكامل.
+          <p className="mt-4 max-w-lg text-[14.5px] leading-8 text-[#93a2cb] md:text-[15.5px]">
+            من توليد الفكرة وتنظيم المحتوى، إلى اقتراح التصميم وتحسين النصوص —{' '}
+            <span className="slf-grad-soft font-semibold">الذكاء الاصطناعي مدمج في قلب المنصة</span>{' '}
+            ليحوّل أفكارك إلى عرضٍ يستحق أن يُعرض.
           </p>
 
-          <div className="mt-9 grid gap-3.5 sm:grid-cols-2">
-            {CAPABILITIES.map(({ icon: Icon, title, desc }, i) => (
-              <Reveal key={title} delay={`${i * 90}ms`} className="h-full">
-                <div className="slf-glass-soft flex h-full items-start gap-3.5 rounded-2xl p-4 transition-colors duration-300 hover:border-[#8ea6ff]/30">
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {CAPABILITIES.map(({ icon: Icon, title }, i) => (
+              <Reveal key={title} delay={`${i * 80}ms`} className="h-full">
+                <div className="flex h-full items-center gap-2.5 rounded-xl border border-white/8 bg-white/[0.04] px-3 py-2.5">
                   <span
-                    className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-white/12 bg-white/[0.06]"
-                    style={{ boxShadow: '0 0 18px -6px rgba(124,92,252,0.7), inset 0 1px 0 rgba(255,255,255,0.12)' }}
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-white/12 bg-white/[0.05]"
+                    style={{ boxShadow: '0 0 16px -6px rgba(139,92,246,0.8), inset 0 1px 0 rgba(255,255,255,0.1)' }}
                   >
-                    <Icon className="h-[18px] w-[18px] text-[#cdbcff]" strokeWidth={2} aria-hidden />
+                    <Icon className="h-4 w-4 text-[#cdbcff]" strokeWidth={2} aria-hidden />
                   </span>
-                  <div>
-                    <p className="slf-display text-[15.5px] font-bold text-white">{title}</p>
-                    <p className="mt-1 text-[12.5px] leading-6 text-[#9dabcd]">{desc}</p>
-                  </div>
+                  <span className="text-[11.5px] font-semibold leading-5 text-[#dbe4ff]">{title}</span>
                 </div>
               </Reveal>
             ))}
           </div>
+
+          <a href="#features" className="mt-9 inline-flex items-center gap-2 text-[13px] font-medium text-[#93a2cb] transition-colors hover:text-white">
+            اكتشف كيف تعمل
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
+          </a>
         </Reveal>
 
-        {/* ---- AI generation interface (left in the reference) ---- */}
+        {/* ---- floating visual + generation form (left in the reference) ---- */}
         <Reveal delay="140ms" className="lg:order-2">
-          <div className="relative mx-auto w-full max-w-[520px]">
-            {/* glow pool */}
+          <div className="relative mx-auto w-full max-w-[600px]">
             <div
               aria-hidden
-              className="absolute -bottom-10 left-1/2 h-28 w-[80%] -translate-x-1/2 rounded-full blur-3xl"
-              style={{ background: 'radial-gradient(50% 100% at 50% 50%, rgba(124,92,252,0.45), rgba(80,110,255,0.3) 55%, transparent 80%)' }}
+              className="slf-glow"
+              style={{ top: '4%', left: '8%', width: '72%', height: '92%', background: 'radial-gradient(closest-side, rgba(139,92,246,0.4), transparent)', filter: 'blur(60px)' }}
             />
 
-            <div className="slf-glass relative rounded-3xl p-5 md:p-6">
-              {/* header */}
-              <div className="flex items-center gap-3">
-                <span className="slf-ai-orb grid h-11 w-11 place-items-center rounded-2xl">
-                  <Sparkles className="h-5 w-5 text-white" strokeWidth={2.2} aria-hidden />
-                </span>
-                <div>
-                  <p className="slf-display text-[15.5px] font-bold text-white">المساعد الذكي</p>
-                  <p className="text-[11.5px] text-[#8d9cc6]">توليد عروض تقديمية كاملة</p>
+            <div dir="ltr" className="relative flex items-center justify-center">
+              {/* small aurora card — far left */}
+              <div aria-hidden className="slf-glass z-0 hidden w-[96px] -rotate-6 rounded-xl p-1.5 sm:block md:-me-6 md:mt-20">
+                <div className="relative aspect-[3/4] overflow-hidden rounded-lg">
+                  <AuroraScene variant="blue" />
                 </div>
-                <span className="slf-display-en ms-auto rounded-full border border-[#8b5cf6]/35 bg-[#7c5cfc]/15 px-2.5 py-1 text-[10.5px] font-bold tracking-widest text-[#cdbcff]">
-                  AI
-                </span>
               </div>
 
-              {/* prompt */}
-              <div className="mt-5 rounded-2xl border border-[#8ea6ff]/18 bg-[#0a122a]/70 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_0_30px_-14px_rgba(99,125,255,0.6)]">
-                <p className="text-[15px] leading-7 text-[#e6ecff]">
-                  أنشئ عرضًا عن التسويق الرقمي<span className="slf-caret" aria-hidden />
-                </p>
-              </div>
-
-              {/* settings */}
-              <div className="mt-4 space-y-3.5">
-                <SettingRow label="عدد الشرائح">
-                  <div className="flex items-center gap-1.5">
-                    {COUNTS.map((c) => (
-                      <span
-                        key={c}
-                        className={
-                          c === '10'
-                            ? 'slf-display-en grid h-7 w-9 place-items-center rounded-lg text-[12px] font-bold text-white'
-                            : 'slf-display-en grid h-7 w-9 place-items-center rounded-lg border border-white/12 bg-white/[0.05] text-[12px] font-semibold text-[#8d9cc6]'
-                        }
-                        style={c === '10' ? { backgroundImage: 'linear-gradient(120deg,#3e6dff,#8b5cf6)', boxShadow: '0 0 16px -4px rgba(99,125,255,0.9)' } : undefined}
-                      >
-                        {c}
-                      </span>
-                    ))}
+              {/* big aurora card + A+ badge */}
+              <div className="relative z-10 -rotate-3">
+                <div className="slf-glass w-[186px] rounded-2xl p-2 md:w-[210px]">
+                  <div className="relative aspect-[4/5] overflow-hidden rounded-xl">
+                    <AuroraScene variant="pink" />
                   </div>
-                </SettingRow>
-
-                <SettingRow label="نوع العرض">
-                  <span className="flex items-center gap-2 rounded-lg border border-white/12 bg-white/[0.05] px-3 py-1.5 text-[12.5px] font-medium text-[#dbe4ff]">
-                    عرض أعمال احترافي
-                    <ChevronDown className="h-3.5 w-3.5 text-[#8d9cc6]" aria-hidden />
+                </div>
+                <div
+                  aria-hidden
+                  className="slf-glass absolute -right-9 -top-8 grid h-14 w-14 rotate-6 place-items-center rounded-2xl"
+                  style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 0 34px -6px rgba(139,92,246,0.9)' }}
+                >
+                  <span className="slf-display-en relative text-[19px] font-extrabold text-white">
+                    A+
+                    <Sparkles className="absolute -left-2.5 -top-2 h-3.5 w-3.5 text-[#cdbcff]" />
                   </span>
-                </SettingRow>
-
-                <SettingRow label="الأسلوب البصري">
-                  <span className="flex items-center gap-2">
-                    <span className="flex items-center gap-1">
-                      {['#3e6dff', '#7c5cfc', '#2fd4f6', '#e879f9'].map((c, i) => (
-                        <i
-                          key={c}
-                          className={`h-4 w-4 rounded-full ${i === 1 ? 'ring-[1.5px] ring-[#cdbcff] ring-offset-1 ring-offset-[#0b1226]' : ''}`}
-                          style={{ background: c, boxShadow: '0 0 10px -2px rgba(150,130,255,0.8)' }}
-                        />
-                      ))}
-                    </span>
-                    <span className="text-[12px] font-medium text-[#dbe4ff]">أورورا</span>
-                  </span>
-                </SettingRow>
-              </div>
-
-              {/* create */}
-              <button type="button" className="slf-btn slf-btn-primary mt-5 h-12 w-full text-[15.5px]">
-                <Wand2 className="h-[17px] w-[17px]" strokeWidth={2.2} aria-hidden />
-                إنشاء
-              </button>
-            </div>
-
-            {/* floating: generated slide */}
-            <div aria-hidden className="slf-glass-soft absolute -top-8 end-[-14px] hidden w-[132px] rotate-[4deg] rounded-2xl p-2.5 slf-float sm:block">
-              <div className="relative h-16 overflow-hidden rounded-lg slf-canvas">
-                <div dir="rtl" className="absolute inset-0 p-2">
-                  <i className="block h-1 w-3/4 rounded bg-white/70" />
-                  <i className="mt-1 block h-1 w-1/2 rounded bg-white/30" />
-                  <i className="absolute bottom-1.5 right-2 h-4 w-4 rounded-full bg-gradient-to-br from-[#4f7dff] to-[#2fd4f6]" />
                 </div>
               </div>
-              <p className="mt-1.5 flex items-center gap-1 text-[10px] font-semibold text-[#8ee6b8]">
-                <Check className="h-3 w-3" /> جاهز للتعديل
-              </p>
-            </div>
 
-            {/* floating: refine chip */}
-            <div aria-hidden className="slf-glass-soft absolute -bottom-7 start-[-10px] hidden items-center gap-2 rounded-full px-4 py-2.5 slf-float slf-float-late sm:flex">
-              <PenLine className="h-3.5 w-3.5 text-[#9db4ff]" aria-hidden />
-              <span className="text-[11.5px] font-medium text-[#dbe4ff]">تحسين النص</span>
-              <span className="h-1.5 w-1.5 rounded-full bg-[#8ee6b8] shadow-[0_0_8px_rgba(142,230,184,0.9)]" />
+              {/* generation form */}
+              <div dir="rtl" className="slf-glass relative z-20 ms-4 w-[272px] shrink-0 rotate-[1.5deg] rounded-2xl p-4 md:ms-5">
+                <span
+                  dir="ltr"
+                  className="absolute -top-3.5 end-4 flex items-center gap-1.5 rounded-full border border-[#8ea6ff]/40 bg-[#141d40] px-3 py-1 text-[10.5px] font-semibold text-[#cfe0ff]"
+                  style={{ boxShadow: '0 0 22px -6px rgba(99,140,255,0.9)' }}
+                >
+                  <Sparkles className="h-3 w-3 text-[#9db4ff]" aria-hidden />
+                  Create with AI
+                </span>
+
+                <div className="mt-1.5 space-y-3">
+                  <div className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-[#0a122a]/70 px-3 py-2.5">
+                    <span className="text-[11.5px] text-[#c3cdea]">أضف فكرة العرض التقديمي الخاص بك</span>
+                    <X className="h-3.5 w-3.5 shrink-0 text-[#8d9cc6]" aria-hidden />
+                  </div>
+                  <FormRow label="عدد الشرائح" value="10" />
+                  <FormRow label="نوع العرض" value="احترافي" />
+                  <FormRow label="الأسلوب البصري" value="حيوي" />
+                  <button type="button" className="slf-btn slf-btn-primary mt-1 h-11 w-full text-[14px]">
+                    إنشاء
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </Reveal>
@@ -176,11 +135,14 @@ export function AISection() {
   )
 }
 
-function SettingRow({ label, children }: { label: string; children: React.ReactNode }) {
+function FormRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="shrink-0 text-[12.5px] font-medium text-[#8d9cc6]">{label}</span>
-      {children}
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-[11.5px] text-[#8d9cc6]">{label}</span>
+      <span className="flex items-center gap-1.5 rounded-lg border border-white/12 bg-white/[0.06] px-2.5 py-1.5 text-[11.5px] font-medium text-[#dbe4ff]">
+        {value}
+        <ChevronDown className="h-3 w-3 text-[#8d9cc6]" aria-hidden />
+      </span>
     </div>
   )
 }
