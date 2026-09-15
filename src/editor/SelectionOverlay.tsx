@@ -90,13 +90,18 @@ export const SelectionOverlay = memo(function SelectionOverlay({ slide, doc, sel
         />
       ) : null}
 
-      {/* quick Animate action — opens the effect library for the current selection */}
+      {/* quick Animate action — opens the effect library for the current selection.
+          For a single element it is offset left of the top-center rotate handle. */}
       {bounds && els.length && !els.every((e) => e.locked) ? (
         <button
           type="button"
           onPointerDown={openAnimate}
-          className="pointer-events-auto absolute z-10 flex items-center gap-1 rounded-full border border-signal/50 bg-ink-1000/92 px-2 py-0.5 text-[10.5px] font-semibold text-signal-soft shadow-lg transition-transform hover:scale-105"
-          style={{ left: px(bounds.x + bounds.w / 2), top: px(bounds.y) - 26, transform: 'translateX(-50%)' }}
+          className="pointer-events-auto absolute z-10 flex items-center gap-1 whitespace-nowrap rounded-full border border-signal/50 bg-ink-1000/92 px-2 py-0.5 text-[10.5px] font-semibold text-signal-soft shadow-lg transition-transform hover:scale-105"
+          style={
+            single
+              ? { left: px(bounds.x), top: px(bounds.y) - 26, transform: 'translateY(-100%)' }
+              : { left: px(bounds.x + bounds.w / 2), top: px(bounds.y) - 26, transform: 'translateX(-50%)' }
+          }
           title="إضافة حركة إلى التحديد"
         >
           <Spline size={11} /> حركة{els.length > 1 ? ` (${els.length})` : ''}
