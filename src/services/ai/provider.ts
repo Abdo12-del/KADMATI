@@ -81,7 +81,19 @@ export async function detectOllama(url = OLLAMA_DEFAULT, timeoutMs = 2500): Prom
       models: (tags.models ?? []).map((m) => ({ name: String(m.name ?? ''), sizeBytes: m.size })).filter((m) => m.name),
     }
   } catch (err) {
-    return { ok: false, models: [], error: (err as Error).name === 'AbortError' ? 'timeout' : 'unreachable' }
+    if ((err as Error).name === 'AbortError') return { ok: false, models: [], error: 'timeout' }
+    // The browser hides a cross-origin answer as a TypeError — but the server may be alive.
+    // An opaque no-cors probe resolves only if something is listening: that is CORS, not a
+    // missing install, and the fix is OLLAMA_ORIGINS (not reinstalling Ollama).
+    try {
+      const probe = new AbortController()
+      setTimeout(() => probe.abort(), timeoutMs)
+      await fetch(`${base}/api/version`, { mode: 'no-cors', signal: probe.signal })
+      return { ok: false, models: [], error: 'cors' }
+    } catch {
+      /* nothing is listening */
+    }
+    return { ok: false, models: [], error: 'unreachable' }
   }
 }
 
@@ -260,20 +272,36 @@ export async function resolveProvider(ai: AiSettings): Promise<ResolvedProvider>
 
 /** Extract JSON from a model answer: direct parse, fenced block, or first balanced object. */
 export function parseLooseJson(raw: string): unknown {
-  const text = raw.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim()
-  try {
-    return JSON.parse(text)
-  } catch {
-    /* keep digging */
-  }
-  const start = text.indexOf('{')
-  const end = text.lastIndexOf('}')
-  if (start >= 0 && end > start) {
+  // Thinking models (Qwen3, DeepSeek-R1…) leak a reasoning trace before the JSON — with or
+  // without braces inside. Strip it; what remains is (usually) the plan.
+  let text = raw
+    .replace(/<think>[\s\S]*?<\/think>/gi, '')
+    .replace(/<\/?think>/gi, '')
+    .trim()
+    .replace(/^```(?:json)?/i, '')
+    .replace(/```$/, '')
+    .trim()
+  const attempt = (chunk: string): unknown | null => {
     try {
-      return JSON.parse(text.slice(start, end + 1))
+      return JSON.parse(chunk)
     } catch {
-      /* give up below */
+      return null
     }
+  }
+  const direct = attempt(text)
+  if (direct !== null) return direct
+  const first = text.indexOf('{')
+  const last = text.lastIndexOf('}')
+  if (first >= 0 && last > first) {
+    const sliced = attempt(text.slice(first, last + 1))
+    if (sliced !== null) return sliced
+  }
+  // Reasoning text full of unbalanced braces: the answer is the LAST object in the stream.
+  const start = text.lastIndexOf('{')
+  if (start > 0 && last > start) {
+    text = text.slice(start, last + 1)
+    const tail = attempt(text)
+    if (tail !== null) return tail
   }
   return null
 }

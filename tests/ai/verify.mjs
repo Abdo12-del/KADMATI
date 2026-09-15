@@ -148,6 +148,16 @@ console.log('— عقد JSON المنظم —')
   ok(v.ok && v.plan.slides.length === 4, 'JSON داخل أسوار markdown يُقرأ ويُصلح')
   ok(v.plan.slides[1].type === 'statistics', "نوع 'stats' يُطابق إلى 'statistics'")
 
+  // Thinking models (Qwen3 / DeepSeek-R1) leak a <think> trace before the JSON.
+  const think = '<think>المستخدم يريد عرضًا، سأخطط {"عنوان": تجربة} ثم أخرج JSON.\n</think>\n{"title":"بعد التفكير","lang":"ar","slides":[{"type":"title","title":"غلاف"},{"type":"closing","title":"نهاية"}]}'
+  const tv = validatePlan(parseLooseJson(think))
+  ok(tv.ok && tv.plan.title === 'بعد التفكير', 'JSON بعد <think>…</think> كامل يُقرأ')
+  const thinkBraces = '<think>خطتي {"له": أقسام} غير متزنة…</think>{"title":"السطر الأخير","lang":"ar","slides":[{"type":"title","title":"غلاف"},{"type":"closing","title":"نهاية"}]}'
+  const tb = validatePlan(parseLooseJson(thinkBraces))
+  ok(tb.ok && tb.plan.title === 'السطر الأخير', 'أقواس غير متزنة داخل <think> لا تفسد القراءة')
+  const thinkOpen = '<think>تفكير بلا إغلاق {"مقطوع"'
+  ok(parseLooseJson(thinkOpen) === null, '<think> غير مغلق بلا JSON سليم → null بلا crash')
+
   // Garbage → rejected (caller falls back to local planner).
   ok(!validatePlan({ hello: 'world' }).ok, 'كائن بلا slides يُرفض')
   ok(!validatePlan(null).ok, 'null يُرفض')

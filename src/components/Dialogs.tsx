@@ -561,8 +561,15 @@ function AiSettingsDialog() {
               {ollama ? (
                 ollama.ok ? (
                   <span className="text-[11.5px] text-good">✓ {ollama.models.length} نموذجًا مثبّتًا — أُقترح «{ai.model}»</span>
+                ) : ollama.error === 'cors' ? (
+                  <span className="text-[11.5px] text-warn">
+                    الخادم يعمل لكن المتصفح يحجب الطلب بين الأصول. أعد تشغيله بالسماح لهذا التطبيق:{' '}
+                    <code className="rounded bg-ink-900 px-1 py-0.5 font-mono text-[10.5px]">OLLAMA_ORIGINS="*" ollama serve</code> ثم أعد الفحص.
+                  </span>
+                ) : ollama.error === 'timeout' ? (
+                  <span className="text-[11.5px] text-warn">الخادم بطيء أو مشغول — تأكد من أن Ollama يعمل ثم أعد الفحص.</span>
                 ) : (
-                  <span className="text-[11.5px] text-warn">لا استجابة ({ollama.error}) — ثبّت Ollama من ollama.com</span>
+                  <span className="text-[11.5px] text-warn">لا استجابة على {ai.ollamaUrl || 'http://localhost:11434'} — ثبّت Ollama من ollama.com ثم <code className="font-mono">ollama pull qwen3:8b</code></span>
                 )
               ) : null}
             </div>
@@ -576,6 +583,7 @@ function AiSettingsDialog() {
               </Field>
             )}
             <p className="rounded-lg border border-good/30 bg-good/8 p-2.5 text-[11.5px] leading-relaxed text-ink-200">
+              أول تشغيل: <code className="rounded bg-ink-900 px-1 font-mono text-[10.5px]">ollama pull qwen3:8b</code> — وإن فتحت التطبيق من نطاق مختلف عن الخادم، شغّله مع <code className="rounded bg-ink-900 px-1 font-mono text-[10.5px]">OLLAMA_ORIGINS="*"</code>.{' '}
               Private AI: المحتوى يُولَّد على جهازك ولا يُرسل لأي خدمة خارجية. يُفضَّل نموذج Qwen3 المكمّم (8B على أجهزة 16GB، 4B على أقل من ذلك) لدعمه العربية والفرنسية وإخراجه JSON منظمًا.
             </p>
           </>
