@@ -11,7 +11,8 @@ import { importPptxFile } from '../services/importPptx'
 import { LAYOUTS } from '../templates/layouts'
 import { cn } from '../lib/cn'
 import { animRegistry } from './anim/registry'
-import { cubicToPathD, pointsToCubic } from '../animation/path'
+import { stopPreview } from './anim/preview'
+import { cubicToPathD, motionPathDrawD, pointsToCubic } from '../animation/path'
 import type { LayoutDef } from '../templates/layouts'
 
 /**
@@ -35,6 +36,19 @@ export function CanvasStage() {
   const spacePanning = useRef(false)
   const [dropping, setDropping] = useState(false)
   const [draw, setDraw] = useState<{ animId: string; points: { x: number; y: number }[] } | null>(null)
+  const [motionGuides, setMotionGuides] = useState(false)
+
+  // The animation dock asks us to show/hide the motion-path guides overlay.
+  useEffect(() => {
+    const on = () => setMotionGuides(true)
+    const off = () => setMotionGuides(false)
+    window.addEventListener('kadmati:anim-visible', on)
+    window.addEventListener('kadmati:anim-hidden', off)
+    return () => {
+      window.removeEventListener('kadmati:anim-visible', on)
+      window.removeEventListener('kadmati:anim-hidden', off)
+    }
+  }, [])
   const registerAnim = useCallback((id: string, n: HTMLDivElement | null) => animRegistry.register(id, n), [])
 
   const interaction = useInteraction(slideRef, slide, doc, zoom)
@@ -42,6 +56,7 @@ export function CanvasStage() {
   useEffect(() => {
     const node = slideRef.current?.querySelector<HTMLElement>('[data-slide-root]') ?? slideRef.current
     registerSlideNode(node)
+    stopPreview()
     return () => registerSlideNode(null)
   }, [slide])
 
@@ -365,6 +380,27 @@ export function CanvasStage() {
                     انقر 2–4 نقاط · نقر مزدوج للإنهاء · Esc للإلغاء
                   </text>
                 </g>
+              </svg>
+            ) : null}
+
+            {/* motion-path guides (shown while the animation studio is open) */}
+            {motionGuides && !draw && slide ? (
+              <svg className="pointer-events-none absolute inset-0 z-20" style={{ width: doc.size.w, height: doc.size.h }} viewBox={`0 0 ${doc.size.w} ${doc.size.h}`}>
+                {slide.animations?.map((a, ai) => {
+                  if (!a.motionPath) return null
+                  const el = slide.elements.find((x) => x.id === a.target)
+                  if (!el) return null
+                  const center = { x: el.x + el.w / 2, y: el.y + el.h / 2 }
+                  const d = motionPathDrawD(a.motionPath, center)
+                  if (!d) return null
+                  const color = ['#818cf8', '#f59e0b', '#34d399', '#f472b6', '#38bdf8', '#a78bfa'][ai % 6]
+                  return (
+                    <g key={a.id}>
+                      <path d={d} fill="none" stroke={color} strokeWidth={2.5} strokeDasharray="9 7" opacity={0.75} />
+                      <circle cx={center.x} cy={center.y} r={5} fill={color} stroke="#0c0c0e" strokeWidth={2} />
+                    </g>
+                  )
+                })}
               </svg>
             ) : null}
           </div>

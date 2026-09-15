@@ -1,0 +1,11 @@
+/** Aggregator for the animation runtime verification (bundled by esbuild). */
+export { PRESETS, ANIMATION_BUNDLES, presetById } from '../../src/animation/presets'
+export { buildSlideEngine, sampleKeyframes } from '../../src/animation/engine'
+export { scheduleAnims } from '../../src/animation/schedule'
+export { buildMorphSpecs, MORPH_OLD_PREFIX } from '../../src/animation/morph'
+export { parseSlideAnims, slideAnimsJson, cloneAnim } from '../../src/animation/serialize'
+export { animHasContent, animSpan, normalizeAnim } from '../../src/animation/types'
+export { sampleMotionPath } from '../../src/animation/path'
+export { applyPreset, applyBundle, enableMorph } from '../../src/editor/anim/library'
+export { useDoc } from '../../src/store/useDoc'
+export { createShape, createText } from '../../src/document/factory'

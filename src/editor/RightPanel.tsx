@@ -14,19 +14,26 @@ import {
   Bold,
   Check,
   Contrast,
+  Copy,
   Italic,
   Link2,
   List,
   ListOrdered,
   Palette,
+  Play,
   RemoveFormatting,
+  Spline,
   Strikethrough,
+  Trash2,
   Underline,
   Wand2,
 } from 'lucide-react'
 import { useDoc } from '../store/useDoc'
 import { toast, useUI } from '../store/useUI'
 import { Button, Chip, ColorField, Divider, Field, NumberField, Row, Section, Segmented, Select, Slider, Switch, TextArea, TextField } from '../components/ui'
+import { AnimationLibrary } from './anim/AnimationLibrary'
+import { previewOnCanvas } from './anim/preview'
+import { cloneAnim } from '../animation/serialize'
 import { FONTS } from '../lib/fonts'
 import { THEME_PRESETS } from '../document/factory'
 import { LAYOUTS } from '../templates/layouts'
@@ -1264,80 +1271,92 @@ function BackgroundEditor({ value, onApply, onApplyAll }: { value: Slide['backgr
 /* ------------------------------------------------------------------ animate / transition / notes */
 
 function AnimateTab() {
-  const doc = useDoc((s) => s.doc)
+  const slide = useDoc((s) => s.doc.slides[s.slideIndex])
   const selection = useDoc((s) => s.selection)
-  const updateSelected = useDoc((s) => s.updateSelected)
-  const slide = doc.slides[useDoc.getState().slideIndex]
-  const el = slide?.elements.find((item) => item.id === selection[0])
-  const anim = el?.animation ?? { enter: 'none', duration: 400, delay: 0, direction: 'bottom' }
+  const targets = selection.filter((id) => slide?.elements.some((e) => e.id === id))
+  const targetSet = new Set(targets)
+  const ownAnims = (slide?.animations ?? []).filter((a) => targetSet.has(a.target))
+
+  const openStudio = () => window.dispatchEvent(new CustomEvent('kadmati:anim-open'))
+
+  const removeAnim = (id: string) => {
+    if (!slide) return
+    useDoc.getState().updateSlide(
+      slide.id,
+      (s) => {
+        s.animations = (s.animations ?? []).filter((a) => a.id !== id)
+      },
+      'حذف الحركة',
+    )
+  }
+  const duplicateAnim = (id: string) => {
+    if (!slide) return
+    const src = slide.animations?.find((a) => a.id === id)
+    if (!src) return
+    useDoc.getState().updateSlide(
+      slide.id,
+      (s) => {
+        s.animations ??= []
+        s.animations.push(cloneAnim(src, src.target))
+      },
+      'نسخ الحركة',
+    )
+    toast({ kind: 'success', title: 'نُسخت الحركة' })
+  }
+
   return (
-    <div>
-      <Section title="حركة العنصر">
-        {!el ? (
-          <p className="text-[12px] leading-relaxed text-ink-400">حدّد عنصرًا لإضافة حركة دخول.</p>
+    <div className="space-y-3 py-1">
+      <Section title={selection.length > 1 ? `تحريك التحديد (${selection.length})` : 'مكتبة الحركات'}>
+        {!slide?.elements.length ? (
+          <p className="text-[12px] leading-relaxed text-ink-400">أضف عناصر إلى الشريحة أولًا.</p>
         ) : (
           <>
-            <Select
-              value={anim.enter}
-              onChange={(v) => updateSelected({ animation: { ...anim, enter: v as never } })}
-              options={[
-                { value: 'none', label: 'بدون' },
-                { value: 'fade', label: 'تلاشٍ' },
-                { value: 'appear', label: 'ظهور' },
-                { value: 'slide', label: 'انزلاق' },
-                { value: 'zoom', label: 'تكبير' },
-                { value: 'scale', label: 'توسّع' },
-              ]}
-            />
-            {anim.enter !== 'none' ? (
-              <>
-                <Slider label="المدة" value={anim.duration} min={100} max={2000} step={50} suffix="م.ث" onChange={(v) => updateSelected({ animation: { ...anim, duration: v } })} />
-                <Slider label="التأخير" value={anim.delay} min={0} max={3000} step={50} suffix="م.ث" onChange={(v) => updateSelected({ animation: { ...anim, delay: v } })} />
-                <Field label="الاتجاه">
-                  <Segmented
-                    size="sm"
-                    value={anim.direction ?? 'bottom'}
-                    onChange={(v) => updateSelected({ animation: { ...anim, direction: v as never } })}
-                    options={[
-                      { value: 'left', label: 'يسار' },
-                      { value: 'right', label: 'يمين' },
-                      { value: 'top', label: 'أعلى' },
-                      { value: 'bottom', label: 'أسفل' },
-                    ]}
-                  />
-                </Field>
-                <div className="flex gap-1">
-                  <Button size="sm" variant="surface" onClick={() => previewAnimation(el.id)}>
-                    معاينة
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      const targets = slide?.elements.filter((item) => item.role === 'body' || item.role === 'list') ?? []
-                      targets.forEach((item, i) => useDoc.getState().updateElement(item.id, { animation: { ...anim, delay: anim.delay + i * 120 } }, 'تسلسل حركات'))
-                      toast({ kind: 'success', title: 'وُزِّعت الحركة بتسلسل', body: `${targets.length} عناصر` })
-                    }}
-                  >
-                    تسلسل تلقائي
-                  </Button>
-                </div>
-              </>
+            {!selection.length ? (
+              <p className="mb-2 rounded-lg border border-dashed border-ink-700 px-2.5 py-2 text-[11px] leading-relaxed text-ink-400">
+                حدد عنصرًا واحدًا أو أكثر — نص، صورة، شكل، أيقونة، مخطط، جدول، أو مجموعة — ثم اختر حركة. تُطبَّق فورًا مع معاينة على اللوحة.
+              </p>
             ) : null}
+            <AnimationLibrary targets={targets} />
           </>
         )}
       </Section>
-      <Section title="ما يحدث عند العرض">
-        <p className="text-[11.5px] leading-relaxed text-ink-400">الحركات تعمل في وضع العرض وفي معاينة المحرر. عند التصدير إلى PPTX تُعرَّف حركات الدخول الأصلية إن كان العنصر نصًا أو صورة.</p>
-      </Section>
+
+      {ownAnims.length ? (
+        <Section title={`حركات العنصر المحدد (${ownAnims.length})`}>
+          <div className="space-y-1">
+            {ownAnims.map((a, i) => {
+              const el = slide?.elements.find((x) => x.id === a.target)
+              return (
+                <div key={a.id} className="flex items-center gap-1.5 rounded-lg border border-ink-750 bg-ink-900/50 px-2 py-1.5">
+                  <span className="grid size-6 shrink-0 place-items-center rounded-md bg-signal-dim font-mono text-[10px] text-signal-soft">{i + 1}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[11.5px] font-semibold text-ink-100">{a.name ?? a.kind}</p>
+                    <p className="truncate text-[10px] text-ink-500">
+                      {el?.name ?? el?.kind} · {(a.duration / 1000).toFixed(1)}s{a.delay ? ` · +${(a.delay / 1000).toFixed(1)}s` : ''}
+                      {a.start === 'onClick' ? ' · بالنقر' : a.start === 'after' ? ' · بعد السابقة' : ''}
+                    </p>
+                  </div>
+                  <button type="button" onClick={() => slide && previewOnCanvas(slide, { onlyIds: [a.id] })} className="grid size-6 place-items-center rounded-md text-ink-400 hover:bg-ink-800 hover:text-signal-soft" title="معاينة">
+                    <Play size={11} />
+                  </button>
+                  <button type="button" onClick={() => duplicateAnim(a.id)} className="grid size-6 place-items-center rounded-md text-ink-400 hover:bg-ink-800" title="نسخ">
+                    <Copy size={11} />
+                  </button>
+                  <button type="button" onClick={() => removeAnim(a.id)} className="grid size-6 place-items-center rounded-md text-ink-400 hover:bg-signal-dim hover:text-signal-soft" title="حذف">
+                    <Trash2 size={11} />
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        </Section>
+      ) : null}
+
+      <Button size="sm" variant="surface" className="w-full" onClick={openStudio}>
+        <Spline size={13} /> فتح استوديو الحركة (Timeline + Keyframes)
+      </Button>
     </div>
   )
-}
-
-function previewAnimation(id: string) {
-  const node = document.querySelector<HTMLElement>(`[data-element-shell="${id}"] .el-content`)
-  if (!node) return
-  node.animate([{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.2,.9,.3,1)' })
 }
 
 function TransitionTab() {
@@ -1358,8 +1377,14 @@ function TransitionTab() {
             { value: 'slide', label: 'انزلاق' },
             { value: 'push', label: 'دفع' },
             { value: 'zoom', label: 'تكبير' },
+            { value: 'morph', label: 'Morph' },
           ]}
         />
+        {t.type === 'morph' ? (
+          <p className="rounded-lg border border-fuchsia-500/25 bg-fuchsia-500/5 px-2.5 py-2 text-[11px] leading-relaxed text-ink-300">
+            Morph يطابق عناصر الشريحة الحالية مع التالية (نفس المعرف أو الاسم) ويحرّكها بين موضعيها تلقائيًا — كرّر الشريحة وعدّلها لنتيجة مثالية. يعمل أثناء الانتقال إلى هذه الشريحة في وضع العرض.
+          </p>
+        ) : null}
         <Slider label="المدة" value={t.duration} min={0} max={2000} step={50} suffix="م.ث" onChange={(v) => setSlideTransition({ duration: v })} />
         {t.type === 'slide' || t.type === 'push' ? (
           <Field label="الاتجاه">

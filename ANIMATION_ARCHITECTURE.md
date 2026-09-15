@@ -408,3 +408,36 @@ interface Slide { …, animations?: AnimSpec[] }
 1. **مرحلة 2**: Canvas2D renderer + تصدير WebM/MP4/GIF + "عرض كامل العرض" (تسلسل + انتقالات) + transitions الموسعة (wipe/cover/perspective/morph) + drag-spring في المحرر.
 2. **مرحلة 3**: كاتب `p:timing` (subset) + استيراد Lottie/Rive + Morph متقدم (مطابقة ذكية بأشكال/ألوان) + AI suggestion عبر JSON.
 3. **مرحلة 4 (شروط فقط)**: WebGL (Pixi) أو 3D (Three) للانتقالات إذا ظهرت حاجة قياسها.
+
+---
+
+## 16. مراجعة شاملة وتوسيع — Animation Studio (2026-09-15)
+
+مراجعة فعلية للنظام القائم بدل إعادة بنائه، مع إصلاح الأزرار الشكلية (تأثيرات تظهر ولا تحرّك شيئًا) واختبار كل تأثير عبر المحرك الحقيقي.
+
+### 16.1 نتائج الفحص (ما كان معطلًا فعلًا)
+
+| المشكلة المكتشفة | السبب | الإصلاح |
+|---|---|---|
+| **كل حركات الدوران صامتة** (Swing/Rotate/Tada/rotate-in/out/Motion Path autoRotate) | anime.js v4 يحرّك الخاصية `rotate` بينما النموذج يمرّر `rotation` (خاصية غير معروفة → لا كتابة transform) | `cssKey(rotation) → rotate` في المحرك + اختبار DOM يفشل إن لم يظهر `rotate(deg)` |
+| **Blur لا يفعل شيئًا** | كان يُمرَّر كرقم على خاصية `blur` غير الموجودة | يُترجَم إلى خاصية CSS `filter: blur(…px)` + اختبار `filter` |
+| **لوحة «حركة» في الخصائص مزدوجة ومهجورة** | كانت تكتب `element.animation` (CSS keyframes قديم) بلا ربط بالمحرك الجديد | استُبدلت بـ `AnimationLibrary` الحقيقي (تطبّق AnimSpec وتعاين فورًا)؛ المصنع لم يعد ينشئ الحقل القديم والترحيل يحوّل القديم تلقائيًا |
+| التقطيع النصي معطّل في المحرر | `TextSplitter` كان يُمرَّر `{words:false,chars:true}` (الحروف تُغلَّف داخل كلمات) | chars تُفعّل مع الكلمات؛ lines بـ `{lines:true}`؛ التقطيع يعمل في المحرر والعرض |
+| التطبيق على عدة عناصر غير موجود | — | أوضاع Same/Simultaneous/Sequence/Stagger مع فارق زمني قابل للضبط |
+| غياب Start/End/Intensity/Direction | — | الحقول في النموذج والمفتش + المجدول `scheduleAnims` (onClick/with/after بأسلوب PowerPoint) |
+
+### 16.2 الكتالوج النهائي (45 تأثيرًا — كلها مختبرة فعليًا)
+
+- **Entrance (12):** Fade In · Slide In ×4 اتجاهات · Zoom In · Zoom Out · Scale In · Bounce In · Rotate In · Blur In · Rise · Typewriter.
+- **Exit (10):** Fade Out · Slide Out ×4 · Drop · Zoom Out · Scale Out · Rotate Out · Blur Out.
+- **Emphasis (12):** Pulse · Bounce · Shake · Swing · Float · Grow · Shrink · Rotate · Glow · Flash · Tada · Wobble · Heartbeat.
+- **Reveal (6):** Wipe ×4 اتجاهات (clip-path + متغيرات CSS) · Mask Reveal دائري · Text Reveal سطرًا سطرًا.
+- **Motion (3):** Bezier (يُرسم على اللوحة) · Circle · Custom SVG Path.
+- **Presets جاهزة بضغطة:** Elegant (Fade+Rise) · Dynamic (Slide+Scale) · Presentation (Fade+Slide) · Cinematic (Blur+Zoom).
+- **Advanced:** Morph بين الشرائح (مطابقة id/الاسم — محرك `buildMorphSpecs` فوق نفس المحرك) · Motion Paths · Stagger · Click Sequence.
+
+### 16.3 الملفات
+
+- نموذج/محرك: `animation/{types,presets,engine,schedule,morph,easing,path,serialize,migrate}.ts`.
+- واجهة: `editor/anim/{AnimationLibrary,AnimationDock,EasingEditor,preview,library,registry,perf}.tsx?` + زر «حركة» عائم على التحديد في `SelectionOverlay` + تبويب «حركة» في `RightPanel` + Morph في تبويب الانتقال.
+- **اختبار حقيقي يمنع الأزرار الميتة:** `npm run test:anim` (`tests/animations/`) — يبني كل تأثير عبر المحرك داخل jsdom ويؤكد تغيّر DOM (transform/opacity/filter/clip)، إضافةً للجدولة وMorph وJSON ودورة المتجر الكاملة. **474 تحققًا، 0 فشل.**
