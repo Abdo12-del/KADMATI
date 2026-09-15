@@ -83,6 +83,8 @@ export type ElementRole =
   | 'footer'
   | 'list'
 
+import type { AnimSpec } from '../animation/types'
+
 export type TextAlign = 'start' | 'center' | 'end' | 'justify'
 export type VAlign = 'start' | 'center' | 'end'
 
@@ -322,6 +324,8 @@ export interface Slide {
   hidden: boolean
   /** Master overrides: hide the theme background, force an accent, etc. */
   accent?: string
+  /** Data-driven animations (engine). Migrated automatically from the legacy per-element field. */
+  animations?: AnimSpec[]
 }
 
 /* ------------------------------------------------------------------ theme */

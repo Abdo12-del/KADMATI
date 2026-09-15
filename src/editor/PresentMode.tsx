@@ -7,6 +7,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, FileText, Minimize2, Moon, Play, Square } from 'lucide-react'
 import { SlideView } from '../render/SlideView'
+import { buildSlideEngine, type ElementBaseInfo } from '../animation/engine'
 import { useDoc } from '../store/useDoc'
 import { cn } from '../lib/cn'
 import type { Presentation } from '../document/types'
@@ -37,6 +38,28 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
   const hideTimer = useRef<number | null>(null)
   const slide = visible[Math.min(index, visible.length - 1)] ?? doc.slides[0]
   const dir = doc.metadata.dir === 'rtl' ? 'rtl' : 'ltr'
+
+  /* ------------------------------------------------- engine playback (data-driven animations) */
+  const animTargets = useRef(new Map<string, HTMLDivElement>())
+  const registerAnim = useCallback((id: string, n: HTMLDivElement | null) => {
+    if (n) animTargets.current.set(id, n)
+    else animTargets.current.delete(id)
+  }, [])
+
+  useEffect(() => {
+    const anims = slide?.animations
+    if (!slide || !anims?.length) return
+    const targets: Record<string, HTMLElement> = {}
+    animTargets.current.forEach((n, id) => {
+      targets[id] = n
+    })
+    const elements: Record<string, ElementBaseInfo> = {}
+    for (const el of slide.elements) elements[el.id] = { x: el.x, y: el.y, w: el.w, h: el.h, rotation: el.rotation ?? 0 }
+    const engine = buildSlideEngine({ targets, elements, anims, textSplit: true })
+    engine.play()
+    return () => engine.destroy()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slide?.id, slide?.animations])
 
   const go = useCallback(
     (delta: number) => {
@@ -181,7 +204,7 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
             animationDuration: `${transition.duration ?? 400}ms`,
           }}
         >
-          <SlideView slide={slide} doc={doc} mode="present" static style={{ width: doc.size.w, height: doc.size.h, borderRadius: 0 }} />
+          <SlideView slide={slide} doc={doc} mode="present" static animRegistry={registerAnim} style={{ width: doc.size.w, height: doc.size.h, borderRadius: 0 }} />
         </div>
       </div>
 

@@ -7,6 +7,10 @@ import { ElementView, type RenderMode } from './ElementView'
  * Renders one slide at *design scale* (1280×720 logical px). The parent applies zoom as a CSS
  * transform, so zooming never re-lays-out slide content — that is what keeps a 50-slide deck
  * smooth. Frames are real containers here: children are offset into the frame box and clipped.
+ *
+ * Animation wrappers: when `animRegistry` is passed, every element is wrapped in an
+ * absolutely-positioned node that the animation engine owns (transform/opacity). The base
+ * position/rotation stays on the outer shell, so the two layers never fight over a transform.
  */
 
 export interface SlideViewProps {
@@ -22,16 +26,19 @@ export interface SlideViewProps {
   onElementPointerDown?: (e: React.PointerEvent, id: string) => void
   style?: CSSProperties
   showHidden?: boolean
+  /** Registers per-element animation wrapper nodes (editor canvas + presenter). */
+  animRegistry?: (id: string, node: HTMLDivElement | null) => void
   /** Frameless render for thumbnails: skip per-element pointer plumbing entirely. */
   static?: boolean
 }
 
-function SlideViewImpl({ slide, doc, mode, editingId, selection, onTextInput, onTextCommit, onStartEdit, onTableText, onElementPointerDown, style, showHidden, static: isStatic }: SlideViewProps) {
+function SlideViewImpl({ slide, doc, mode, editingId, selection, onTextInput, onTextCommit, onStartEdit, onTableText, onElementPointerDown, style, showHidden, animRegistry, static: isStatic }: SlideViewProps) {
   const bg = slide.background
   const backgroundAsset = bg.type === 'image' && bg.image ? doc.assets[bg.image.assetId] : undefined
   const overlay: Paint | undefined = bg.type === 'image' ? bg.image?.overlay : undefined
 
   const handleText = useCallback((id: string) => (html: string) => onTextInput?.(id, html), [onTextInput])
+  const registerAnim = isStatic ? undefined : animRegistry
 
   const childrenByFrame = new Map<string, AnyElement[]>()
   const roots: AnyElement[] = []
@@ -60,6 +67,7 @@ function SlideViewImpl({ slide, doc, mode, editingId, selection, onTextInput, on
         onStartEdit={onStartEdit ? () => onStartEdit(el.id) : undefined}
         onTableText={onTableText ? (r: number, c: number, t: string) => onTableText(el.id, r, c, t) : undefined}
         onElementPointerDown={isStatic ? undefined : onElementPointerDown}
+        animRegistry={registerAnim}
       >
         {kids ? (
           <div
@@ -106,6 +114,7 @@ function ElementShell({
   onStartEdit,
   onTableText,
   onElementPointerDown,
+  animRegistry,
   children,
 }: {
   el: AnyElement
@@ -117,8 +126,9 @@ function ElementShell({
   onTextInput: (html: string) => void
   onTextCommit?: () => void
   onStartEdit?: () => void
-  onTableText?: (r: number, c: number, t: string) => void
+  onTableText?: (row: number, col: number, text: string) => void
   onElementPointerDown?: (e: React.PointerEvent, id: string) => void
+  animRegistry?: (id: string, node: HTMLDivElement | null) => void
   children?: React.ReactNode
 }) {
   const asset = el.kind === 'image' ? doc.assets[el.assetId] : el.kind === 'video' ? doc.assets[el.posterAssetId ?? ''] : undefined
@@ -148,45 +158,65 @@ function ElementShell({
       }
       data-selected={selected || undefined}
     >
-      {el.kind === 'frame' ? (
-        <>
-          <ElementView
-            el={el}
-            asset={asset}
-            mode={mode}
-            editing={editing}
-            selected={selected}
-            order={index}
-            onTextInput={onTextInput}
-            onTextCommit={onTextCommit}
-            onStartEdit={onStartEdit}
-            onTableText={onTableText}
-            pointerEvents="none"
-          />
-          {children}
-        </>
-      ) : (
-        <>
-          <ElementView
-            el={el}
-            asset={asset}
-            mode={mode}
-            editing={editing}
-            selected={selected}
-            order={index}
-            onTextInput={onTextInput}
-            onTextCommit={onTextCommit}
-            onStartEdit={onStartEdit}
-            onTableText={onTableText}
-          />
-          {children}
-        </>
-      )}
+      {/* animation wrapper — owned by the motion engine (transform/opacity/filter), React never touches it */}
+      <div
+        ref={animRegistry ? (n) => animRegistry(el.id, n) : undefined}
+        data-anim-wrapper={el.id}
+        style={{ position: 'absolute', inset: 0, transformOrigin: 'center' }}
+      >
+        {el.kind === 'frame' ? (
+          <>
+            <ElementView
+              el={el}
+              asset={asset}
+              mode={mode}
+              editing={editing}
+              selected={selected}
+              order={index}
+              onTextInput={onTextInput}
+              onTextCommit={onTextCommit}
+              onStartEdit={onStartEdit}
+              onTableText={onTableText}
+              pointerEvents="none"
+            />
+            {children}
+          </>
+        ) : (
+          <>
+            <ElementView
+              el={el}
+              asset={asset}
+              mode={mode}
+              editing={editing}
+              selected={selected}
+              order={index}
+              onTextInput={onTextInput}
+              onTextCommit={onTextCommit}
+              onStartEdit={onStartEdit}
+              onTableText={onTableText}
+            />
+            {children}
+          </>
+        )}
+      </div>
     </div>
   )
 }
 
-export const SlideView = memo(SlideViewImpl, (a, b) => a.slide === b.slide && a.doc === b.doc && a.mode === b.mode && a.editingId === b.editingId && a.selection === b.selection && a.static === b.static && a.onTextInput === b.onTextInput && a.onElementPointerDown === b.onElementPointerDown && styleEq(a.style, b.style))
+export const SlideView = memo(
+  SlideViewImpl,
+  (a, b) =>
+    a.slide === b.slide &&
+    a.doc === b.doc &&
+    a.mode === b.mode &&
+    a.editingId === b.editingId &&
+    a.selection === b.selection &&
+    a.static === b.static &&
+    a.onTextInput === b.onTextInput &&
+    a.onElementPointerDown === b.onElementPointerDown &&
+    a.animRegistry === b.animRegistry &&
+    styleEq(a.style, b.style),
+)
 
 function styleEq(a?: CSSProperties, b?: CSSProperties) {
   if (a === b) return true

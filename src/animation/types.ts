@@ -1,0 +1,149 @@
+/**
+ * The animation data model — pure types, no React, no DOM.
+ * This model is the single source of truth for all motion in a presentation:
+ * it is what gets saved, undone/Redone, copied, exported and (later) fed to AI.
+ *
+ * Units: ms for time, design-px (1280×720 space) for distances, degrees for angles.
+ *
+ * Value semantics (what makes presets portable between elements):
+ *  - x / y      → RELATIVE offset from the element's base position (dx, dy)
+ *  - scale      → absolute (1 = base size)
+ *  - rotation   → RELATIVE delta in degrees
+ *  - opacity    → absolute 0..1
+ *  - blur       → absolute px (CSS filter)
+ */
+
+export type AnimProp = 'x' | 'y' | 'scale' | 'rotation' | 'opacity' | 'blur'
+
+export const ANIM_PROPS: AnimProp[] = ['x', 'y', 'scale', 'rotation', 'opacity', 'blur']
+
+export type EasingName =
+  | 'linear'
+  | 'quadIn' | 'quadOut' | 'quadInOut'
+  | 'cubicIn' | 'cubicOut' | 'cubicInOut'
+  | 'quartIn' | 'quartOut' | 'quartInOut'
+  | 'quintIn' | 'quintOut' | 'quintInOut'
+  | 'sineIn' | 'sineOut' | 'sineInOut'
+  | 'expoIn' | 'expoOut' | 'expoInOut'
+  | 'circIn' | 'circOut' | 'circInOut'
+  | 'backIn' | 'backOut' | 'backInOut'
+  | 'elasticIn' | 'elasticOut' | 'elasticInOut'
+  | 'bounceIn' | 'bounceOut' | 'bounceInOut'
+
+export interface EasingSpec {
+  type: 'named' | 'bezier' | 'spring'
+  /** type='named' */
+  name?: EasingName
+  /** type='bezier' — cubic-bezier(x1, y1, x2, y2) */
+  bezier?: [number, number, number, number]
+  /** type='spring' */
+  stiffness?: number
+  damping?: number
+}
+
+/** One keyframe. `ease` (when set) is the easing of the segment FROM this keyframe to the next. */
+export interface Keyframe {
+  t: number
+  v: number
+  ease?: EasingSpec
+}
+
+export interface Pt {
+  x: number
+  y: number
+}
+
+export interface MotionPathSpec {
+  kind: 'bezier' | 'circle' | 'svg'
+  /** bezier: 2–4 points (user-drawn on the canvas). svg: ignored. circle: ignored. */
+  points?: Pt[]
+  /** circle: radius around the element center */
+  radius?: number
+  /** svg: path data */
+  d?: string
+  /** orient the element along the path tangent */
+  autoRotate?: boolean
+}
+
+export interface TextAnimSpec {
+  mode: 'text' | 'words' | 'chars' | 'lines'
+  /** ms between successive text units */
+  stagger: number
+  from: 'start' | 'center' | 'end'
+}
+
+export type AnimKind = 'entrance' | 'exit' | 'emphasis' | 'motion' | 'custom'
+
+export interface AnimSpec {
+  id: string
+  /** element id within the slide */
+  target: string
+  kind: AnimKind
+  name?: string
+  /** start offset, ms */
+  delay: number
+  /** ms */
+  duration: number
+  /** default easing for segments without their own */
+  easing: EasingSpec
+  /** 0 = once, n = n+1 plays, -1 = infinite */
+  repeat: number
+  /** alternate direction on each repeat */
+  yoyo: boolean
+  /** per-property keyframes, t in [0, duration] */
+  properties: Partial<Record<AnimProp, Keyframe[]>>
+  /** takes precedence over x/y keyframes when set */
+  motionPath?: MotionPathSpec
+  /** text-split animation (text elements) */
+  text?: TextAnimSpec
+}
+
+/** The default easing everywhere: a gentle, professional deceleration. */
+export function defaultEasing(): EasingSpec {
+  return { type: 'named', name: 'cubicOut' }
+}
+
+export function isNamedEasing(v: unknown): v is EasingSpec {
+  const e = v as EasingSpec | null
+  return !!e && (e.type === 'named' || e.type === 'bezier' || e.type === 'spring')
+}
+
+/** Sort keyframes by t and clamp into [0, duration]. Returns a new array. */
+export function normalizeKeyframes(kfs: Keyframe[], duration: number): Keyframe[] {
+  const d = Math.max(1, duration)
+  return [...kfs]
+    .sort((a, b) => a.t - b.t)
+    .map((k) => ({ ...k, t: Math.max(0, Math.min(d, Math.round(k.t))) }))
+}
+
+/** Normalize one AnimSpec (defensive, used by factory + JSON import). */
+export function normalizeAnim(a: AnimSpec): AnimSpec {
+  const duration = Math.max(1, Math.round(a.duration ?? 500))
+  const properties: AnimSpec['properties'] = {}
+  for (const [p, kfs] of Object.entries(a.properties ?? {})) {
+    if (Array.isArray(kfs) && kfs.length) {
+      properties[p as AnimProp] = normalizeKeyframes(kfs, duration)
+    }
+  }
+  return {
+    ...a,
+    duration,
+    delay: Math.max(0, Math.round(a.delay ?? 0)),
+    repeat: typeof a.repeat === 'number' && isFinite(a.repeat) ? Math.round(a.repeat) : 0,
+    yoyo: !!a.yoyo,
+    easing: isNamedEasing(a.easing) ? a.easing : defaultEasing(),
+    properties,
+  }
+}
+
+/** Does this spec actually animate anything? */
+export function animHasContent(a: AnimSpec): boolean {
+  if (a.motionPath) return true
+  return Object.values(a.properties ?? {}).some((kfs) => (kfs?.length ?? 0) >= 1)
+}
+
+/** Effective total time the spec occupies on the (finite) timeline. */
+export function animSpan(a: AnimSpec): number {
+  const plays = a.repeat > 0 ? a.repeat + 1 : 1
+  return a.delay + a.duration * plays
+}
