@@ -6,9 +6,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AlertTriangle, Loader2 } from 'lucide-react'
 import { TopBar } from '../editor/TopBar'
+import { EditorRail } from '../editor/EditorRail'
 import { LeftPanel } from '../editor/LeftPanel'
 import { RightPanel } from '../editor/RightPanel'
-import { StatusBar } from '../editor/StatusBar'
+import { CanvasToolbar } from '../editor/CanvasToolbar'
 import { CanvasStage } from '../editor/CanvasStage'
 import { PresentMode } from '../editor/PresentMode'
 import { useKeyboard } from '../editor/useKeyboard'
@@ -25,7 +26,7 @@ export function EditorPage() {
   const navigate = useNavigate()
   const [state, setState] = useState<'loading' | 'ready' | 'missing'>('loading')
   const [presenting, setPresenting] = useState(false)
-  const [animOpen, setAnimOpen] = useState(false)
+  const animOpen = useUI((s) => s.animDock)
   const load = useDoc((s) => s.load)
   const projectId = useDoc((s) => s.projectId)
   const doc = useDoc((s) => s.doc)
@@ -65,12 +66,6 @@ export function EditorPage() {
     const start = () => setPresenting(true)
     window.addEventListener('kadmati:present', start)
     return () => window.removeEventListener('kadmati:present', start)
-  }, [])
-
-  useEffect(() => {
-    const close = () => setAnimOpen(false)
-    window.addEventListener('kadmati:anim-close', close)
-    return () => window.removeEventListener('kadmati:anim-close', close)
   }, [])
 
   useKeyboard({
@@ -126,16 +121,17 @@ export function EditorPage() {
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-ink-950">
-      <TopBar onPresent={() => setPresenting(true)} animOpen={animOpen} onToggleAnim={() => setAnimOpen((v) => !v)} />
+      <TopBar onPresent={() => setPresenting(true)} />
       <div className="flex min-h-0 flex-1">
+        <EditorRail />
         <LeftPanel />
         <main className="relative flex min-w-0 flex-1 flex-col">
+          <CanvasToolbar />
           <CanvasStage />
           {animOpen && doc ? <AnimationDock /> : null}
         </main>
         <RightPanel />
       </div>
-      <StatusBar />
       <DialogHost />
       {presenting ? <PresentMode doc={doc ?? createEmptyDoc()} startAt={useDoc.getState().slideIndex} onExit={exitPresent} /> : null}
     </div>
