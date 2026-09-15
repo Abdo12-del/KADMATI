@@ -10,6 +10,8 @@ import { toast, useUI } from '../store/useUI'
 import { importPptxFile } from '../services/importPptx'
 import { LAYOUTS } from '../templates/layouts'
 import { cn } from '../lib/cn'
+import { animRegistry } from './anim/registry'
+import { cubicToPathD, pointsToCubic } from '../animation/path'
 import type { LayoutDef } from '../templates/layouts'
 
 /**
@@ -32,6 +34,8 @@ export function CanvasStage() {
   const dropPoint = useRef<{ x: number; y: number } | null>(null)
   const spacePanning = useRef(false)
   const [dropping, setDropping] = useState(false)
+  const [draw, setDraw] = useState<{ animId: string; points: { x: number; y: number }[] } | null>(null)
+  const registerAnim = useCallback((id: string, n: HTMLDivElement | null) => animRegistry.register(id, n), [])
 
   const interaction = useInteraction(slideRef, slide, doc, zoom)
 
@@ -87,6 +91,54 @@ export function CanvasStage() {
       return { x: (client.clientX - rect.left) / zoom, y: (client.clientY - rect.top) / zoom }
     },
     [zoom],
+  )
+
+  /* ------------------------------------------------ motion path drawing (from the animation dock) */
+  const cancelDraw = useCallback(() => {
+    setDraw(null)
+    window.dispatchEvent(new Event('kadmati:anim-draw-cancel'))
+  }, [])
+
+  useEffect(() => {
+    const start = (e: Event) => {
+      const d = (e as CustomEvent).detail as { animId?: string }
+      if (d?.animId) setDraw({ animId: d.animId, points: [] })
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') cancelDraw()
+    }
+    window.addEventListener('kadmati:anim-draw', start)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('kadmati:anim-draw', start)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [cancelDraw])
+
+  const finishDraw = useCallback(() => {
+    setDraw((cur) => {
+      if (cur && cur.points.length >= 2) {
+        window.dispatchEvent(new CustomEvent('kadmati:anim-draw-done', { detail: { animId: cur.animId, points: cur.points } }))
+      }
+      return null
+    })
+  }, [])
+
+  const onDrawPointerDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      setDraw((cur) => {
+        if (!cur) return cur
+        const pt = pointOf(e)
+        const next = [...cur.points, { x: Math.round(pt.x), y: Math.round(pt.y) }]
+        if (next.length >= 4) {
+          window.dispatchEvent(new CustomEvent('kadmati:anim-draw-done', { detail: { animId: cur.animId, points: next } }))
+          return null
+        }
+        return { ...cur, points: next }
+      })
+    },
+    [pointOf],
   )
 
   const onTextInput = useCallback(
@@ -241,7 +293,10 @@ export function CanvasStage() {
     <div
       ref={viewportRef}
       className={cn('relative min-h-0 flex-1 overflow-auto', editingId && 'text-editing')}
-      style={{ background: 'radial-gradient(120% 120% at 50% 0%, #14141a 0%, #0c0c0e 60%)' }}
+      style={{
+        background:
+          'radial-gradient(120% 70% at 50% -8%, rgba(79,125,255,0.13) 0%, transparent 58%), radial-gradient(90% 70% at 50% 112%, rgba(139,92,246,0.10) 0%, transparent 60%), radial-gradient(60% 50% at 85% 100%, rgba(47,212,246,0.05), transparent 70%), #070b16',
+      }}
       onPointerDown={surfaceDown}
       onPointerMove={interaction.onPointerMove}
       onPointerUp={interaction.onPointerUp}
@@ -274,6 +329,7 @@ export function CanvasStage() {
                 onStartEdit={startEdit}
                 onTableText={onTableText}
                 onElementPointerDown={interaction.onElementPointerDown}
+                animRegistry={registerAnim}
               />
             ) : null}
             {gridOn ? <div className="grid-overlay pointer-events-none absolute inset-0" style={{ ['--grid-size' as string]: `${doc.settings.gridSize}px` }} /> : null}
@@ -282,6 +338,34 @@ export function CanvasStage() {
                 className="pointer-events-none absolute border border-dashed border-[rgba(255,90,54,0.28)]"
                 style={{ left: m.left, top: m.top, right: m.right, bottom: m.bottom }}
               />
+            ) : null}
+
+            {draw ? (
+              <svg
+                className="absolute inset-0 z-30 cursor-crosshair"
+                style={{ width: doc.size.w, height: doc.size.h }}
+                viewBox={`0 0 ${doc.size.w} ${doc.size.h}`}
+                onPointerDown={onDrawPointerDown}
+                onDoubleClick={finishDraw}
+              >
+                <rect x={0} y={0} width={doc.size.w} height={doc.size.h} fill="transparent" />
+                {draw.points.length >= 2 ? (
+                  (() => {
+                    const [p0, p1, p2, p3] = pointsToCubic(draw.points)
+                    return <path d={cubicToPathD(p0, p1, p2, p3)} fill="none" stroke="#34d399" strokeWidth={2.5} opacity={0.85} />
+                  })()
+                ) : null}
+                {draw.points.length >= 2 ? <polyline points={draw.points.map((p) => `${p.x},${p.y}`).join(' ')} fill="none" stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="6 5" opacity={0.6} /> : null}
+                {draw.points.map((p, i) => (
+                  <circle key={i} cx={p.x} cy={p.y} r={7} fill="#f59e0b" stroke="#0c0c0e" strokeWidth={2.5} />
+                ))}
+                <g>
+                  <rect x={doc.size.w / 2 - 215} y={12} width={430} height={34} rx={8} fill="rgba(12,12,14,0.85)" />
+                  <text x={doc.size.w / 2} y={34} textAnchor="middle" fill="#f5d7a1" fontSize={15}>
+                    انقر 2–4 نقاط · نقر مزدوج للإنهاء · Esc للإلغاء
+                  </text>
+                </g>
+              </svg>
             ) : null}
           </div>
 

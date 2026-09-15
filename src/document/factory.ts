@@ -41,6 +41,8 @@ import { containsArabic } from '../lib/fonts'
 
 const uid = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', 10)
 
+import { migrateSlideAnimations } from '../animation/migrate'
+
 export function newId(prefix = 'e'): string {
   return `${prefix}_${uid()}${nanoid(4).slice(0, 4)}`
 }
@@ -480,14 +482,19 @@ export function normalizePresentation(doc: Presentation): Presentation {
   const source = doc.theme ?? MINIMAL_THEME
   // Saved decks predating guardPalette may hold an invisible palette — heal it on load.
   const theme: Theme = { ...source, palette: guardPalette(source.palette) }
-  const slides: Slide[] = (doc.slides ?? []).map((slide) => ({
-    ...createBlankSlide(theme),
-    ...slide,
-    id: slide.id || newId('s'),
-    background: slide.background ?? { type: 'solid', color: theme.palette.background },
-    transition: { ...defaultTransition(), ...(slide.transition ?? {}) },
-    elements: (slide.elements ?? []).filter((e) => e && typeof e === 'object' && 'id' in e && 'kind' in e).map(normalizeElement),
-  }))
+  const slides: Slide[] = (doc.slides ?? []).map((slide) => {
+    const s: Slide = {
+      ...createBlankSlide(theme),
+      ...slide,
+      id: slide.id || newId('s'),
+      background: slide.background ?? { type: 'solid', color: theme.palette.background },
+      transition: { ...defaultTransition(), ...(slide.transition ?? {}) },
+      elements: (slide.elements ?? []).filter((e) => e && typeof e === 'object' && 'id' in e && 'kind' in e).map(normalizeElement),
+    }
+    // legacy element.animation (CSS entrance specs) → data-driven slide.animations
+    migrateSlideAnimations(s)
+    return s
+  })
   if (!slides.length) slides.push(createBlankSlide(theme))
   return {
     ...doc,

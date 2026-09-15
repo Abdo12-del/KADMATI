@@ -63,7 +63,7 @@ function useHistoryFlags() {
   return { canUndo: past > 0, canRedo: future > 0, depth: past }
 }
 
-export function TopBar({ onPresent }: { onPresent: () => void }) {
+export function TopBar({ onPresent, animOpen, onToggleAnim }: { onPresent: () => void; animOpen?: boolean; onToggleAnim?: () => void }) {
   const doc = useDoc((s) => s.doc)
   const tool = useDoc((s) => s.tool)
   const setTool = useDoc((s) => s.setTool)
@@ -108,9 +108,9 @@ export function TopBar({ onPresent }: { onPresent: () => void }) {
   }
 
   return (
-    <header className="relative z-30 flex h-12 shrink-0 items-center gap-1.5 border-b border-ink-800 bg-ink-900 px-2">
+    <header className="glass aur-hairline-b relative z-30 flex h-12 shrink-0 items-center gap-1.5 border-b border-ink-800/70 px-2">
       <Link to="/" className="flex shrink-0 items-center gap-2 rounded-lg px-1.5 py-1 transition-colors hover:bg-ink-800" title="الخروج إلى المكتبة">
-        <span className="grid size-6 place-items-center rounded-md bg-signal text-[12px] font-black text-white">ك</span>
+        <span className="aur-fill glow-blue grid size-6 place-items-center rounded-md text-[12px] font-black text-white">ك</span>
         <span className="hidden font-display text-[13px] font-semibold tracking-tight text-ink-100 lg:inline">KADMATI</span>
       </Link>
 
@@ -227,6 +227,9 @@ export function TopBar({ onPresent }: { onPresent: () => void }) {
           <Grid3x3 size={14} />
         </IconButton>
         <SaveBadge status={saveStatus} />
+        <Button size="sm" variant={animOpen ? 'primary' : 'subtle'} tip="الحركة — Timeline و Keyframes" onClick={onToggleAnim}>
+          <Spline size={13} /> الحركة
+        </Button>
         <Button size="sm" variant="subtle" tip="تصدير · ⌘E" onClick={() => useUI.getState().openDialog('export')}>
           <Download size={13} /> تصدير
         </Button>

@@ -60,7 +60,7 @@ export function LeftPanel() {
   const setTab = (next: Tab) => setLeftPanel(next === 'media' ? 'images' : next)
 
   return (
-    <aside className="flex h-full w-[248px] shrink-0 flex-col border-e border-ink-800 bg-ink-900">
+    <aside className="glass flex h-full w-[248px] shrink-0 flex-col border-e border-ink-800/70">
       <nav className="flex shrink-0 items-center gap-0.5 border-b border-ink-800 px-1.5 py-1.5">
         {TABS.map((t) => (
           <button

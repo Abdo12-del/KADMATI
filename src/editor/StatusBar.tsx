@@ -29,7 +29,7 @@ export function StatusBar() {
   const minutes = presentationDuration(doc)
 
   return (
-    <footer className="flex h-8 shrink-0 items-center gap-2 border-t border-ink-800 bg-ink-900 px-2 text-[11px] text-ink-400">
+    <footer className="glass flex h-8 shrink-0 items-center gap-2 border-t border-ink-800/70 px-2 text-[11px] text-ink-400">
       <div className="flex items-center gap-1">
         <IconButton size="iconSm" className="size-6" tip="الشريحة السابقة" onClick={() => gotoSlide(Math.max(0, slideIndex - 1))}>
           <span className="text-[13px] leading-none">‹</span>

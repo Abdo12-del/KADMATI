@@ -185,7 +185,7 @@ function IconLibrary() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="ابحث عن أيقونة…"
-          className="h-8 w-56 rounded-lg border border-ink-800 bg-ink-900 px-2.5 text-[12.5px] outline-none transition-colors focus:border-ink-600"
+          className="h-8 w-56 rounded-lg border border-ink-700/60 bg-ink-900/50 px-2.5 text-[12.5px] outline-none transition-all placeholder:text-ink-500 focus:border-signal/70 focus:shadow-[0_0_0_3px_rgba(79,125,255,0.12)]"
         />
         <div className="flex flex-wrap gap-1">
           <Chip active={cat === 'all'} onClick={() => setCat('all')}>

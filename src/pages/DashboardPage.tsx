@@ -86,9 +86,9 @@ export function DashboardPage() {
 
   return (
     <div className="flex min-h-full bg-ink-950 text-ink-50">
-      <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-e border-ink-800 bg-ink-900/60 p-3 lg:flex">
+      <aside className="glass sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-e border-ink-800/70 p-3 lg:flex">
         <Link to="/" className="mb-4 flex items-center gap-2.5 px-1">
-          <span className="grid size-7 place-items-center rounded-lg bg-signal text-[13px] font-black text-white">ك</span>
+          <span className="aur-fill glow-blue grid size-7 place-items-center rounded-lg text-[13px] font-black text-white">ك</span>
           <span className="font-display text-[15px] font-semibold tracking-tight">KADMATI</span>
         </Link>
         <nav className="space-y-0.5">
@@ -100,10 +100,10 @@ export function DashboardPage() {
                 to={item.to}
                 className={cn(
                   'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[12.5px] font-medium transition-colors',
-                  active ? 'bg-ink-800 text-ink-50' : 'text-ink-400 hover:bg-ink-850 hover:text-ink-100',
+                  active ? 'bg-ink-800/70 text-white shadow-[0_0_16px_-6px_rgba(79,125,255,0.45)] ring-1 ring-signal/30' : 'text-ink-400 hover:bg-ink-850/70 hover:text-ink-100',
                 )}
               >
-                <item.icon size={14} className={active ? 'text-signal' : 'text-ink-500'} />
+                <item.icon size={14} className={active ? 'text-signal-soft' : 'text-ink-500'} />
                 {item.label}
               </Link>
             )
@@ -130,7 +130,7 @@ export function DashboardPage() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-2 border-b border-ink-800/80 bg-ink-950/85 px-4 backdrop-blur-xl">
+        <header className="glass aur-hairline-b sticky top-0 z-20 flex h-16 shrink-0 items-center gap-2 border-b border-ink-800/70 px-4">
           <Link to="/" className="grid size-8 place-items-center rounded-lg border border-ink-800 lg:hidden">
             <span className="text-[12px] font-black text-signal">ك</span>
           </Link>
@@ -140,7 +140,7 @@ export function DashboardPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="ابحث في عروضك…"
-              className="h-9 w-full rounded-lg border border-ink-800 bg-ink-900 ps-8 pe-2.5 text-[12.5px] outline-none transition-colors placeholder:text-ink-500 focus:border-ink-600"
+              className="h-9 w-full rounded-lg border border-ink-700/60 bg-ink-900/50 ps-8 pe-2.5 text-[12.5px] outline-none transition-all placeholder:text-ink-500 focus:border-signal/70 focus:shadow-[0_0_0_3px_rgba(79,125,255,0.12)]"
             />
           </div>
           <Popover
@@ -183,7 +183,7 @@ export function DashboardPage() {
             <p className="mb-4 text-[12.5px] text-ink-400">تُجهَّز العروض التجريبية الحقيقية لأول مرة…</p>
           ) : null}
           {demosMissing && !seeding ? (
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-ink-800 bg-ink-900/60 p-4">
+            <div className="glass mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4">
               <div>
                 <p className="text-[13.5px] font-semibold">لا عروض بعد</p>
                 <p className="mt-1 text-[12px] text-ink-400">أضف أربعة عروض تجريبية حقيقية (٣٤ شريحة بمحتوى عربي وإنجليزي قابل للتحرير) أو ابدأ من الصفر.</p>
@@ -311,9 +311,9 @@ function Greeting() {
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h1 className="font-display text-[clamp(1.3rem,2.6vw,1.9rem)] font-semibold tracking-tight">
+        <h1 className="font-display text-[clamp(1.3rem,2.6vw,1.9rem)] font-semibold tracking-tight text-white">
           {part}
-          {profile?.name ? `، ${profile.name.split(' ')[0]}` : ''}
+          {profile?.name ? <span className="aur-text">، {profile.name.split(' ')[0]}</span> : ''}
         </h1>
         <p className="mt-1.5 text-[13px] text-ink-400">
           {decks} عرض {decks ? `· ${slides} شريحة` : '— ابدأ أول عرض الآن'} · كل شيء محفوظ في هذا الجهاز
@@ -418,7 +418,7 @@ function TrashPane() {
       {trashed.length ? (
         <div className="mt-3 space-y-2">
           {trashed.map((record) => (
-            <div key={record.id} className="flex items-center gap-3 rounded-xl border border-ink-800 bg-ink-900/60 p-2.5">
+            <div key={record.id} className="glass-soft flex items-center gap-3 rounded-xl border p-2.5">
               <div className="w-28 shrink-0 overflow-hidden rounded-lg border border-ink-800">
                 <DeckThumbSmall doc={record.doc} />
               </div>
@@ -483,7 +483,7 @@ function QuickStart() {
             key={item.label}
             type="button"
             onClick={() => void item.run()}
-            className="group rounded-xl border border-ink-800 bg-ink-900/60 p-3.5 text-start transition-[border-color,transform] hover:-translate-y-0.5 hover:border-signal/40 hover:bg-ink-900"
+            className="group glass rounded-xl border p-3.5 text-start transition-all hover:-translate-y-0.5 hover:border-signal/40 hover:shadow-aurora"
           >
             <span className="block text-[13.5px] font-semibold text-ink-50">{item.label}</span>
             <span className="mt-1 block text-[11.5px] text-ink-500">{item.hint}</span>

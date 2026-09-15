@@ -18,12 +18,14 @@ import { useUI } from '../store/useUI'
 import { useAutosave } from '../store/autosave'
 import { createEmptyDoc } from '../document/factory'
 import { DialogHost } from '../components/Dialogs'
+import { AnimationDock } from '../editor/anim/AnimationDock'
 
 export function EditorPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [state, setState] = useState<'loading' | 'ready' | 'missing'>('loading')
   const [presenting, setPresenting] = useState(false)
+  const [animOpen, setAnimOpen] = useState(false)
   const load = useDoc((s) => s.load)
   const projectId = useDoc((s) => s.projectId)
   const doc = useDoc((s) => s.doc)
@@ -63,6 +65,12 @@ export function EditorPage() {
     const start = () => setPresenting(true)
     window.addEventListener('kadmati:present', start)
     return () => window.removeEventListener('kadmati:present', start)
+  }, [])
+
+  useEffect(() => {
+    const close = () => setAnimOpen(false)
+    window.addEventListener('kadmati:anim-close', close)
+    return () => window.removeEventListener('kadmati:anim-close', close)
   }, [])
 
   useKeyboard({
@@ -107,7 +115,7 @@ export function EditorPage() {
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="mt-4 rounded-lg bg-signal px-4 py-2 text-[13px] font-semibold text-white transition-transform hover:-translate-y-0.5"
+            className="aur-fill mt-4 rounded-lg px-4 py-2 text-[13px] font-semibold text-white transition-all hover:-translate-y-0.5 hover:brightness-110"
           >
             العودة إلى المكتبة
           </button>
@@ -118,11 +126,12 @@ export function EditorPage() {
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-ink-950">
-      <TopBar onPresent={() => setPresenting(true)} />
+      <TopBar onPresent={() => setPresenting(true)} animOpen={animOpen} onToggleAnim={() => setAnimOpen((v) => !v)} />
       <div className="flex min-h-0 flex-1">
         <LeftPanel />
         <main className="relative flex min-w-0 flex-1 flex-col">
           <CanvasStage />
+          {animOpen && doc ? <AnimationDock /> : null}
         </main>
         <RightPanel />
       </div>

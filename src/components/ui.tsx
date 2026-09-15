@@ -10,14 +10,14 @@ const button = cva(
   {
     variants: {
       variant: {
-        primary: 'bg-signal text-white hover:brightness-110 shadow-[0_1px_0_rgba(255,255,255,0.18)_inset,0_6px_18px_-8px_rgba(255,90,54,0.75)]',
+        primary: 'aur-fill text-white hover:brightness-110 shadow-[0_1px_0_rgba(255,255,255,0.28)_inset,0_8px_24px_-10px_rgba(79,125,255,0.75)]',
         solid: 'bg-ink-50 text-ink-950 hover:bg-white',
-        surface: 'bg-ink-800 text-ink-50 hover:bg-ink-750 border border-ink-700/70',
-        ghost: 'text-ink-200 hover:bg-ink-800 hover:text-ink-50',
-        subtle: 'bg-ink-850 text-ink-200 hover:bg-ink-800 hover:text-ink-50',
-        ai: 'bg-ai/15 text-[#cfc6ff] hover:bg-ai/25 border border-ai/30',
+        surface: 'bg-ink-800/55 text-ink-50 hover:bg-ink-750/70 border border-ink-700/50 backdrop-blur-md',
+        ghost: 'text-ink-200 hover:bg-ink-800/60 hover:text-ink-50',
+        subtle: 'bg-ink-850/60 text-ink-200 hover:bg-ink-800/80 hover:text-ink-50 backdrop-blur-md',
+        ai: 'bg-ai/15 text-[#d5c9ff] hover:bg-ai/25 border border-ai/30',
         danger: 'bg-red-500/12 text-red-300 hover:bg-red-500/20 border border-red-500/25',
-        outline: 'border border-ink-700 text-ink-100 hover:border-ink-600 hover:bg-ink-850',
+        outline: 'border border-ink-700/70 text-ink-100 hover:border-signal/50 hover:bg-ink-850/60',
       },
       size: {
         sm: 'h-7 px-2.5 text-[12px]',
@@ -38,7 +38,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>, Va
 
 export function Button({ variant, size, className, tip, active, children, ...rest }: ButtonProps) {
   return (
-    <button type="button" data-tip={tip} className={cn(button({ variant, size }), active && 'bg-ink-750 text-ink-50 ring-1 ring-ink-600/60', 'tip', className)} {...rest}>
+    <button type="button" data-tip={tip} className={cn(button({ variant, size }), active && 'bg-ink-750/80 text-ink-50 ring-1 ring-signal/50', 'tip', className)} {...rest}>
       {children}
     </button>
   )
@@ -127,7 +127,7 @@ export function NumberField({
   return (
     <div
       className={cn(
-        'group flex items-center gap-1 rounded-[7px] border border-ink-700/70 bg-ink-850 px-1.5 transition-colors focus-within:border-signal/70 focus-within:bg-ink-900',
+        'group flex items-center gap-1 rounded-[7px] border border-ink-700/60 bg-ink-850/55 px-1.5 backdrop-blur-md transition-all focus-within:border-signal/70 focus-within:bg-ink-900/70 focus-within:shadow-[0_0_0_3px_rgba(79,125,255,0.12)]',
         compact ? 'h-7' : 'h-8',
         disabled && 'opacity-50',
       )}
@@ -187,7 +187,7 @@ export function TextField({ value, onChange, placeholder, className, onEnter }: 
         if (e.key === 'Enter') onEnter?.()
         e.stopPropagation()
       }}
-      className={cn('h-8 w-full rounded-[7px] border border-ink-700/70 bg-ink-850 px-2 text-[12.5px] text-ink-50 outline-none placeholder:text-ink-500 focus:border-signal/70 focus:bg-ink-900', className)}
+      className={cn('h-8 w-full rounded-[7px] border border-ink-700/60 bg-ink-850/55 px-2 text-[12.5px] text-ink-50 outline-none backdrop-blur-md placeholder:text-ink-500 focus:border-signal/70 focus:bg-ink-900/70 focus:shadow-[0_0_0_3px_rgba(79,125,255,0.12)]', className)}
     />
   )
 }
@@ -201,14 +201,14 @@ export function TextArea({ value, onChange, rows = 4, placeholder, dir }: { valu
       placeholder={placeholder}
       onChange={(e) => onChange(e.target.value)}
       onKeyDown={(e) => e.stopPropagation()}
-      className="w-full resize-none rounded-[9px] border border-ink-700/70 bg-ink-850 p-2.5 text-[12.5px] leading-relaxed text-ink-50 outline-none placeholder:text-ink-500 focus:border-signal/70 focus:bg-ink-900"
+      className="w-full resize-none rounded-[9px] border border-ink-700/60 bg-ink-850/55 p-2.5 text-[12.5px] leading-relaxed text-ink-50 outline-none backdrop-blur-md placeholder:text-ink-500 focus:border-signal/70 focus:bg-ink-900/70 focus:shadow-[0_0_0_3px_rgba(79,125,255,0.12)]"
     />
   )
 }
 
 export function Segmented<T extends string>({ value, onChange, options, size = 'md', className }: { value: T; onChange: (v: T) => void; options: { value: T; label?: ReactNode; tip?: string }[]; size?: 'sm' | 'md'; className?: string }) {
   return (
-    <div className={cn('inline-flex items-center gap-0.5 rounded-[8px] border border-ink-700/60 bg-ink-900/80 p-0.5', className)}>
+    <div className={cn('inline-flex items-center gap-0.5 rounded-[8px] border border-ink-700/50 bg-ink-900/55 p-0.5 backdrop-blur-md', className)}>
       {options.map((o) => (
         <button
           key={o.value}
@@ -218,7 +218,7 @@ export function Segmented<T extends string>({ value, onChange, options, size = '
           className={cn(
             'tip rounded-[6px] font-medium transition-colors',
             size === 'sm' ? 'h-6 px-2 text-[11px]' : 'h-7 px-2.5 text-[12px]',
-            value === o.value ? 'bg-ink-700 text-white shadow-[0_1px_0_rgba(255,255,255,0.08)_inset]' : 'text-ink-300 hover:bg-ink-800 hover:text-ink-100',
+            value === o.value ? 'bg-ink-750/90 text-white shadow-[0_1px_0_rgba(255,255,255,0.1)_inset,0_0_12px_-2px_rgba(79,125,255,0.35)] ring-1 ring-signal/25' : 'text-ink-300 hover:bg-ink-800/70 hover:text-ink-100',
           )}
         >
           {o.label ?? o.value}
@@ -231,7 +231,7 @@ export function Segmented<T extends string>({ value, onChange, options, size = '
 export function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label?: string }) {
   return (
     <button type="button" onClick={() => onChange(!checked)} className="group flex items-center gap-2" role="switch" aria-checked={checked}>
-      <span className={cn('relative h-[18px] w-[32px] rounded-full border transition-colors', checked ? 'border-signal/50 bg-signal/85' : 'border-ink-600 bg-ink-800')}>
+      <span className={cn('relative h-[18px] w-[32px] rounded-full border transition-all', checked ? 'aur-fill border-transparent glow-blue' : 'border-ink-600 bg-ink-800/70')}>
         <span className={cn('absolute top-[2px] size-[12px] rounded-full bg-white transition-all', checked ? 'start-[16px]' : 'start-[3px]')} />
       </span>
       {label ? <span className="text-[12px] text-ink-200 group-hover:text-ink-50">{label}</span> : null}
@@ -268,7 +268,7 @@ export function Select<T extends string>({ value, onChange, options, className }
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as T)}
-        className="h-8 w-full appearance-none rounded-[7px] border border-ink-700/70 bg-ink-850 ps-2 pe-7 text-[12.5px] text-ink-50 outline-none focus:border-signal/70"
+        className="h-8 w-full appearance-none rounded-[7px] border border-ink-700/60 bg-ink-850/55 ps-2 pe-7 text-[12.5px] text-ink-50 outline-none backdrop-blur-md focus:border-signal/70 focus:shadow-[0_0_0_3px_rgba(79,125,255,0.12)]"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value} className="bg-ink-900 text-ink-50">
@@ -336,7 +336,7 @@ function ColorPopover({ value, onPick, onClear, onClose }: { value: string; onPi
     }
   }, [onClose])
   return (
-    <div ref={ref} className="absolute bottom-9 end-0 z-50 w-[212px] animate-pop-in rounded-xl border border-ink-700 bg-ink-850 p-3 shadow-float">
+    <div ref={ref} className="absolute bottom-9 end-0 z-50 w-[212px] animate-pop-in rounded-xl glass p-3 shadow-float">
       <input type="color" value={toHexColor(value)} onChange={(e) => onPick(e.target.value)} className="h-8 w-full cursor-pointer rounded-md border border-ink-700 bg-transparent" />
       <div className="mt-2.5 grid grid-cols-9 gap-1.5">
         {PALETTE.map((c) => (
@@ -399,8 +399,8 @@ export function Modal({ open, onClose, title, children, width = 620, footer }: {
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-ink-1000/72 backdrop-blur-[2px]" onPointerDown={onClose} />
-      <div className="relative flex max-h-[86vh] w-full animate-pop-in flex-col overflow-hidden rounded-2xl border border-ink-700/80 bg-ink-900 shadow-float" style={{ maxWidth: width }}>
-        <header className="flex h-12 shrink-0 items-center justify-between border-b border-ink-800 px-4">
+      <div className="relative flex max-h-[86vh] w-full animate-pop-in flex-col overflow-hidden rounded-2xl glass shadow-float" style={{ maxWidth: width }}>
+        <header className="flex h-12 shrink-0 items-center justify-between border-b border-ink-700/50 px-4">
           <h2 className="text-[14px] font-semibold text-ink-50">{title}</h2>
           <IconButton size="iconSm" onClick={onClose} tip="إغلاق">
             <X className="size-4" />
@@ -428,7 +428,7 @@ export function Popover({ trigger, children, align = 'start', className }: { tri
     <div ref={ref} className="relative">
       {trigger({ open, toggle: () => setOpen((v) => !v) })}
       {open ? (
-        <div className={cn('absolute top-[calc(100%+6px)] z-50 min-w-[190px] animate-pop-in rounded-xl border border-ink-700 bg-ink-850 p-1.5 shadow-float', align === 'end' ? 'end-0' : 'start-0', className)}>
+        <div className={cn('absolute top-[calc(100%+6px)] z-50 min-w-[190px] animate-pop-in rounded-xl glass p-1.5 shadow-float', align === 'end' ? 'end-0' : 'start-0', className)}>
           {typeof children === 'function' ? children(() => setOpen(false)) : children}
         </div>
       ) : null}
@@ -444,8 +444,8 @@ export function MenuItem({ children, onClick, icon, danger, disabled, active, sh
       onClick={onClick}
       className={cn(
         'flex w-full items-center gap-2 rounded-[7px] px-2 py-1.5 text-start text-[12.5px] transition-colors disabled:opacity-40',
-        danger ? 'text-red-300 hover:bg-red-500/12' : 'text-ink-100 hover:bg-ink-750',
-        active && 'bg-ink-750 text-white',
+        danger ? 'text-red-300 hover:bg-red-500/12' : 'text-ink-100 hover:bg-ink-750/70',
+        active && 'bg-ink-750/80 text-white ring-1 ring-signal/30',
       )}
     >
       <span className="grid w-4 shrink-0 place-items-center text-ink-400">{icon}</span>
@@ -465,7 +465,7 @@ export function Chip({ children, onClick, active, className, style, title, disab
       disabled={disabled}
       className={cn(
         'rounded-full border px-2.5 py-[3px] text-[11.5px] font-medium transition-colors disabled:opacity-40',
-        active ? 'border-signal/60 bg-signal/15 text-signal-soft' : 'border-ink-700/70 bg-ink-850 text-ink-300 hover:border-ink-600 hover:text-ink-100',
+        active ? 'border-signal/60 bg-signal/15 text-signal-soft shadow-[0_0_14px_-4px_rgba(79,125,255,0.5)]' : 'border-ink-700/60 bg-ink-850/55 text-ink-300 hover:border-ink-600 hover:text-ink-100',
         className,
       )}
     >

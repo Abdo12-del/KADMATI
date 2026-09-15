@@ -33,10 +33,10 @@ export function TemplatesPage() {
 
   return (
     <div className="min-h-full bg-ink-950 text-ink-50">
-      <header className="sticky top-0 z-20 border-b border-ink-800/80 bg-ink-950/88 backdrop-blur-xl">
+      <header className="glass aur-hairline-b sticky top-0 z-20 border-b border-ink-800/70">
         <div className="mx-auto flex max-w-6xl items-center gap-4 px-6 py-4">
           <Link to="/" className="flex items-center gap-2.5">
-            <span className="grid size-7 place-items-center rounded-lg bg-signal text-[12px] font-black text-white">ك</span>
+            <span className="aur-fill glow-blue grid size-7 place-items-center rounded-lg text-[12px] font-black text-white">ك</span>
             <span className="font-display text-[15px] font-semibold tracking-tight">KADMATI</span>
           </Link>
           <div className="ms-auto flex items-center gap-2">
@@ -55,7 +55,9 @@ export function TemplatesPage() {
       <div className="mx-auto max-w-6xl px-6 py-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="font-display text-[clamp(1.5rem,3vw,2.1rem)] font-semibold tracking-tight">قوالب مبنية، لا مرسومة</h1>
+            <h1 className="font-display text-[clamp(1.5rem,3vw,2.1rem)] font-semibold tracking-tight text-white">
+              قوالب <span className="aur-text">مبنية، لا مرسومة</span>
+            </h1>
             <p className="mt-2 max-w-2xl text-[13.5px] leading-[1.95] text-ink-400">
               كل قالب = سمة ألوان + خطوط + تخطيطات + شرائح افتتاح/محتوى/فصل/ختام. بعد الاستخدام تحصل على عناصر نص وأشكال وجداول ومخططات قابلة للتحرير بالكامل.
             </p>
@@ -89,7 +91,7 @@ export function TemplatesPage() {
 function TemplateCard({ template, onOpen }: { template: TemplateDef; onOpen: () => void }) {
   const doc = useMemo(() => instantiateDeck(template, { templateId: template.id, category: template.category }), [template])
   return (
-    <article className="group overflow-hidden rounded-xl border border-ink-800 bg-ink-900/50 transition-[border-color,transform] hover:-translate-y-0.5 hover:border-ink-600">
+    <article className="glass group overflow-hidden rounded-xl border transition-all hover:-translate-y-0.5 hover:border-signal/40 hover:shadow-aurora">
       <button type="button" onClick={onOpen} className="block w-full">
         <SlidePreview doc={doc} index={0} />
       </button>
@@ -144,10 +146,10 @@ function TemplateModal({ template, onClose }: { template: TemplateDef; onClose: 
   return (
     <div className="fixed inset-0 z-40 grid place-items-center bg-ink-1000/80 p-4 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="max-h-[92vh] w-full max-w-4xl overflow-hidden rounded-2xl border border-ink-700 bg-ink-900 shadow-float"
+        className="glass max-h-[92vh] w-full max-w-4xl overflow-hidden rounded-2xl shadow-float"
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="flex items-center gap-3 border-b border-ink-800 px-4 py-3">
+        <header className="flex items-center gap-3 border-b border-ink-700/50 px-4 py-3">
           <div className="min-w-0 flex-1">
             <h2 className="truncate font-display text-[16px] font-semibold">{template.name}</h2>
             <p className="mt-0.5 truncate text-[12px] text-ink-400">{template.description}</p>
@@ -195,7 +197,7 @@ function TemplateModal({ template, onClose }: { template: TemplateDef; onClose: 
           </div>
         </div>
 
-        <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-ink-800 bg-ink-950/60 px-4 py-3">
+        <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-ink-700/50 bg-ink-950/40 px-4 py-3">
           <Row className="gap-1.5">
             <Palette size={13} className="text-ink-500" />
             <span className="text-[11.5px] text-ink-400">يطبَّق كنظام كامل: سمة + تخطيطات + محتوى</span>
