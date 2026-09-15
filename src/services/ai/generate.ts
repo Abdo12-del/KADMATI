@@ -69,7 +69,7 @@ export async function generateDeck(prompt: string, opts: GenerateOptions = {}): 
     id: `ai-${Date.now().toString(36)}`,
     title: cleanTitle(topic, lang),
     subject: subtitleFor(outline, lang, audience),
-    author: 'KADMATI AI',
+    author: 'SHAFAQ AI',
     lang,
     dir: lang === 'ar' ? 'rtl' : 'ltr',
     themeId: themeFor(style, category),

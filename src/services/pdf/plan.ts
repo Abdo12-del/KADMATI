@@ -152,7 +152,7 @@ export function planPresentation(doc: StructuredDocument, sections: SectionConte
     id: `pdf-${Date.now().toString(36)}`,
     title: firstTitle.slice(0, 80),
     subject: rtl ? 'مُنشأ تلقائيًا من ملف PDF' : 'Auto-generated from a PDF document',
-    author: 'KADMATI PDF Import',
+    author: 'SHAFAQ PDF Import',
     lang: lang === 'fr' ? 'fr' : lang,
     dir: rtl ? 'rtl' : 'ltr',
     themeId: themeForCategory(category),

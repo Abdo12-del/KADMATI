@@ -63,18 +63,18 @@ export function EditorPage() {
 
   useEffect(() => {
     const start = () => setPresenting(true)
-    window.addEventListener('kadmati:present', start)
-    return () => window.removeEventListener('kadmati:present', start)
+    window.addEventListener('shafaq:present', start)
+    return () => window.removeEventListener('shafaq:present', start)
   }, [])
 
   useEffect(() => {
     const close = () => setAnimOpen(false)
     const open = () => setAnimOpen(true)
-    window.addEventListener('kadmati:anim-close', close)
-    window.addEventListener('kadmati:anim-open', open)
+    window.addEventListener('shafaq:anim-close', close)
+    window.addEventListener('shafaq:anim-open', open)
     return () => {
-      window.removeEventListener('kadmati:anim-close', close)
-      window.removeEventListener('kadmati:anim-open', open)
+      window.removeEventListener('shafaq:anim-close', close)
+      window.removeEventListener('shafaq:anim-open', open)
     }
   }, [])
 

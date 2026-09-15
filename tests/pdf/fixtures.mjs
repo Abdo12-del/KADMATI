@@ -21,7 +21,7 @@ class PdfBuilder {
     return this.objects.length // 1-based id
   }
   build({ root = 1 } = {}) {
-    const infoId = this.add('<< /Producer (KADMATI fixtures) >>')
+    const infoId = this.add('<< /Producer (SHAFAQ fixtures) >>')
     let out = '%PDF-1.4\n'
     const offsets = [0]
     this.objects.forEach((body, i) => {
@@ -262,7 +262,7 @@ async function arabicFixtures() {
   const mixed = await make('mixed.pdf', (doc) => {
     doc.font(bold).fontSize(24).text('الذكاء الاصطناعي و Machine Learning')
     doc.moveDown(0.5).font(regular).fontSize(12)
-    doc.text('يستخدم نظام KADMATI نماذج Deep Learning لتحليل المستندات واستخراج الجداول والصور تلقائيًا.')
+    doc.text('يستخدم نظام شفق نماذج Deep Learning لتحليل المستندات واستخراج الجداول والصور تلقائيًا.')
     doc.text('يمكن للفريق الهندسي مراجعة النتائج وتصديرها بصيغة PPTX أو PDF خلال دقائق.')
   })
 

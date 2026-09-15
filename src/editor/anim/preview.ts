@@ -38,7 +38,7 @@ export function previewOnCanvas(slide: Slide, opts: { anims?: AnimSpec[]; onlyId
   if (typeof document === 'undefined') return
   if (studioOpen) {
     // the dock owns a live engine on the same wrappers — ask it to replay
-    window.dispatchEvent(new CustomEvent('kadmati:anim-preview', { detail: { onlyIds: opts.onlyIds ?? null } }))
+    window.dispatchEvent(new CustomEvent('shafaq:anim-preview', { detail: { onlyIds: opts.onlyIds ?? null } }))
     return
   }
   clear()

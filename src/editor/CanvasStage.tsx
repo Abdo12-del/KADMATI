@@ -42,11 +42,11 @@ export function CanvasStage() {
   useEffect(() => {
     const on = () => setMotionGuides(true)
     const off = () => setMotionGuides(false)
-    window.addEventListener('kadmati:anim-visible', on)
-    window.addEventListener('kadmati:anim-hidden', off)
+    window.addEventListener('shafaq:anim-visible', on)
+    window.addEventListener('shafaq:anim-hidden', off)
     return () => {
-      window.removeEventListener('kadmati:anim-visible', on)
-      window.removeEventListener('kadmati:anim-hidden', off)
+      window.removeEventListener('shafaq:anim-visible', on)
+      window.removeEventListener('shafaq:anim-hidden', off)
     }
   }, [])
   const registerAnim = useCallback((id: string, n: HTMLDivElement | null) => animRegistry.register(id, n), [])
@@ -111,7 +111,7 @@ export function CanvasStage() {
   /* ------------------------------------------------ motion path drawing (from the animation dock) */
   const cancelDraw = useCallback(() => {
     setDraw(null)
-    window.dispatchEvent(new Event('kadmati:anim-draw-cancel'))
+    window.dispatchEvent(new Event('shafaq:anim-draw-cancel'))
   }, [])
 
   useEffect(() => {
@@ -122,10 +122,10 @@ export function CanvasStage() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') cancelDraw()
     }
-    window.addEventListener('kadmati:anim-draw', start)
+    window.addEventListener('shafaq:anim-draw', start)
     window.addEventListener('keydown', onKey)
     return () => {
-      window.removeEventListener('kadmati:anim-draw', start)
+      window.removeEventListener('shafaq:anim-draw', start)
       window.removeEventListener('keydown', onKey)
     }
   }, [cancelDraw])
@@ -133,7 +133,7 @@ export function CanvasStage() {
   const finishDraw = useCallback(() => {
     setDraw((cur) => {
       if (cur && cur.points.length >= 2) {
-        window.dispatchEvent(new CustomEvent('kadmati:anim-draw-done', { detail: { animId: cur.animId, points: cur.points } }))
+        window.dispatchEvent(new CustomEvent('shafaq:anim-draw-done', { detail: { animId: cur.animId, points: cur.points } }))
       }
       return null
     })
@@ -147,7 +147,7 @@ export function CanvasStage() {
         const pt = pointOf(e)
         const next = [...cur.points, { x: Math.round(pt.x), y: Math.round(pt.y) }]
         if (next.length >= 4) {
-          window.dispatchEvent(new CustomEvent('kadmati:anim-draw-done', { detail: { animId: cur.animId, points: next } }))
+          window.dispatchEvent(new CustomEvent('shafaq:anim-draw-done', { detail: { animId: cur.animId, points: next } }))
           return null
         }
         return { ...cur, points: next }
@@ -291,7 +291,7 @@ export function CanvasStage() {
       for (const file of files) await ingestFile(file)
       return
     }
-    const payload = e.dataTransfer.getData('application/x-kadmati')
+    const payload = e.dataTransfer.getData('application/x-shafaq')
     if (!payload) return
     try {
       applyDropPayload(JSON.parse(payload), at)

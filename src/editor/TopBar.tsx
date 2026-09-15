@@ -111,7 +111,7 @@ export function TopBar({ onPresent, animOpen, onToggleAnim }: { onPresent: () =>
     <header className="glass aur-hairline-b relative z-30 flex h-12 shrink-0 items-center gap-1.5 border-b border-ink-800/70 px-2">
       <Link to="/" className="flex shrink-0 items-center gap-2 rounded-lg px-1.5 py-1 transition-colors hover:bg-ink-800" title="الخروج إلى المكتبة">
         <span className="aur-fill glow-blue grid size-6 place-items-center rounded-md text-[12px] font-black text-white">ك</span>
-        <span className="hidden font-display text-[13px] font-semibold tracking-tight text-ink-100 lg:inline">KADMATI</span>
+        <span className="hidden font-display text-[13px] font-semibold tracking-tight text-ink-100 lg:inline">شفق</span>
       </Link>
 
       <Divider vertical />
