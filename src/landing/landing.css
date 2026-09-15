@@ -1,0 +1,480 @@
+/* ==================================================================
+ * SlideFlow landing — scoped styles
+ * Aurora / northern-lights aesthetic: deep midnight navy, luminous
+ * ribbons (blue → cyan, violet → purple, purple → magenta), glass
+ * panels, cinematic glow. Everything here is namespaced `slf-` so it
+ * never leaks into the editor.
+ * ================================================================== */
+
+.slf-root {
+  font-family: 'IBM Plex Sans Arabic', 'Tajawal', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color: #e9eefc;
+  scroll-behavior: smooth;
+  background: #030817;
+}
+
+/* Display typography — premium Arabic headlines */
+.slf-display {
+  font-family: 'Tajawal', 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+  letter-spacing: 0;
+}
+.slf-display-en {
+  font-family: 'Inter', 'Space Grotesk', system-ui, sans-serif;
+}
+
+/* ------------------------------------------------------------------
+ * Base atmosphere
+ * ------------------------------------------------------------------ */
+.slf-bg-base {
+  background:
+    linear-gradient(180deg,
+      #030817 0%,
+      #040c1f 26%,
+      #06102a 52%,
+      #071233 74%,
+      #08133a 100%);
+}
+
+/* Huge blurred aurora ribbons. `rotate`/`translate`/`scale` are set as
+   independent properties so the drift keyframes can animate movement
+   without clobbering each ribbon's own rotation. */
+.slf-ribbon {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(72px);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  will-change: transform;
+}
+.slf-ribbon-blue {
+  rotate: -14deg;
+  background: linear-gradient(90deg, transparent 6%, rgba(37, 99, 235, 0.42) 32%, rgba(59, 130, 246, 0.34) 58%, transparent 86%);
+  animation: slf-drift-a 46s ease-in-out infinite;
+}
+.slf-ribbon-cyan {
+  rotate: -10deg;
+  background: linear-gradient(90deg, transparent 8%, rgba(34, 211, 238, 0.30) 40%, rgba(103, 232, 249, 0.18) 62%, transparent 88%);
+  animation: slf-drift-b 58s ease-in-out infinite;
+}
+.slf-ribbon-violet {
+  rotate: 12deg;
+  background: linear-gradient(90deg, transparent 8%, rgba(124, 92, 252, 0.36) 38%, rgba(139, 92, 246, 0.26) 60%, transparent 86%);
+  animation: slf-drift-b 52s ease-in-out infinite reverse;
+}
+.slf-ribbon-purple {
+  rotate: 8deg;
+  background: linear-gradient(90deg, transparent 10%, rgba(168, 85, 247, 0.26) 42%, rgba(192, 132, 252, 0.16) 64%, transparent 88%);
+  animation: slf-drift-a 64s ease-in-out infinite reverse;
+}
+.slf-ribbon-magenta {
+  rotate: -18deg;
+  background: linear-gradient(90deg, transparent 12%, rgba(232, 121, 249, 0.17) 46%, transparent 78%);
+  animation: slf-drift-b 70s ease-in-out infinite;
+}
+
+@keyframes slf-drift-a {
+  0%, 100% { translate: -1.5% 0; scale: 1; }
+  50% { translate: 2% 26px; scale: 1.05; }
+}
+@keyframes slf-drift-b {
+  0%, 100% { translate: 2% 12px; scale: 1.03; }
+  50% { translate: -2.5% -22px; scale: 1; }
+}
+
+/* Soft radial light fields */
+.slf-glow {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(60px);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  animation: slf-pulse 16s ease-in-out infinite;
+}
+@keyframes slf-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.95; }
+}
+
+/* Star fields — two parallax layers of tiny dots, gentle twinkle */
+.slf-stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1.4px 1.4px at 18% 22%, rgba(255, 255, 255, 0.85) 45%, transparent 58%),
+    radial-gradient(1px 1px at 42% 68%, rgba(190, 215, 255, 0.65) 45%, transparent 58%),
+    radial-gradient(1.6px 1.6px at 67% 12%, rgba(255, 255, 255, 0.6) 45%, transparent 58%),
+    radial-gradient(1px 1px at 82% 42%, rgba(160, 200, 255, 0.6) 45%, transparent 58%),
+    radial-gradient(1.3px 1.3px at 8% 78%, rgba(220, 235, 255, 0.5) 45%, transparent 58%),
+    radial-gradient(1px 1px at 55% 88%, rgba(255, 255, 255, 0.45) 45%, transparent 58%),
+    radial-gradient(1.2px 1.2px at 92% 76%, rgba(200, 225, 255, 0.5) 45%, transparent 58%);
+  background-size: 520px 460px;
+  background-repeat: repeat;
+  animation: slf-twinkle 9s ease-in-out infinite alternate;
+}
+.slf-stars-2 {
+  background-size: 700px 610px;
+  opacity: 0.45;
+  animation-duration: 14s;
+  animation-delay: -5s;
+}
+@keyframes slf-twinkle {
+  from { opacity: 0.35; }
+  to { opacity: 0.8; }
+}
+.slf-stars-2 { animation-name: slf-twinkle-soft; }
+@keyframes slf-twinkle-soft {
+  from { opacity: 0.22; }
+  to { opacity: 0.5; }
+}
+
+/* Vignette — keeps the edges cinematic and the text readable */
+.slf-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 60% at 50% 0%, transparent 55%, rgba(2, 5, 14, 0.5) 100%),
+    linear-gradient(180deg, transparent 82%, rgba(2, 5, 14, 0.55) 100%);
+}
+
+/* ------------------------------------------------------------------
+ * Glass & surfaces
+ * ------------------------------------------------------------------ */
+.slf-glass {
+  background: linear-gradient(165deg, rgba(16, 26, 48, 0.72), rgba(7, 14, 32, 0.58));
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  backdrop-filter: blur(14px) saturate(1.3);
+  border: 1px solid rgba(151, 173, 255, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 24px 64px -28px rgba(1, 4, 14, 0.9);
+}
+.slf-glass-soft {
+  background: linear-gradient(165deg, rgba(15, 24, 45, 0.55), rgba(7, 14, 32, 0.4));
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+  backdrop-filter: blur(10px) saturate(1.2);
+  border: 1px solid rgba(151, 173, 255, 0.11);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 18px 44px -24px rgba(1, 4, 14, 0.85);
+}
+
+/* Luminous gradient text — blue → violet with a cyan breath */
+.slf-grad {
+  background-image: linear-gradient(98deg, #6fa5ff 4%, #7c5cfc 46%, #a55ef9 72%, #59d8f7 104%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.slf-grad-soft {
+  background-image: linear-gradient(98deg, #9db9ff, #b9a5ff 60%, #8fdcf5);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Gradient hairline (top or bottom edge of glass sections) */
+.slf-hairline-t {
+  position: relative;
+}
+.slf-hairline-t::before {
+  content: '';
+  position: absolute;
+  inset-inline: 8%;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(124, 145, 255, 0.45), transparent);
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------
+ * Buttons — glowing futuristic pills
+ * ------------------------------------------------------------------ */
+.slf-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease, filter 0.3s ease,
+    background-color 0.3s ease, border-color 0.3s ease;
+}
+.slf-btn:focus-visible {
+  outline: 2px solid rgba(139, 160, 255, 0.8);
+  outline-offset: 3px;
+}
+
+.slf-btn-primary {
+  color: #fff;
+  background-image: linear-gradient(120deg, #3e6dff 0%, #6157ff 52%, #8b5cf6 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 0 0 1px rgba(170, 190, 255, 0.22),
+    0 10px 32px -8px rgba(80, 110, 255, 0.65),
+    0 4px 18px -6px rgba(126, 92, 252, 0.55);
+}
+.slf-btn-primary:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.09) saturate(1.05);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 0 0 1px rgba(180, 198, 255, 0.3),
+    0 16px 44px -8px rgba(88, 120, 255, 0.8),
+    0 8px 30px -6px rgba(140, 100, 255, 0.65),
+    0 0 60px -12px rgba(105, 130, 255, 0.7);
+}
+.slf-btn-primary:active {
+  transform: translateY(0);
+}
+
+.slf-btn-glass {
+  color: #dfe7ff;
+  background: rgba(120, 145, 255, 0.08);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(160, 180, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.slf-btn-glass:hover {
+  transform: translateY(-2px);
+  background: rgba(120, 145, 255, 0.14);
+  border-color: rgba(160, 190, 255, 0.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 10px 32px -10px rgba(88, 120, 255, 0.45);
+}
+
+/* ------------------------------------------------------------------
+ * Motion — floats, reveals
+ * ------------------------------------------------------------------ */
+@keyframes slf-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -12px; }
+}
+.slf-float { animation: slf-float 7s ease-in-out infinite; }
+.slf-float-slow { animation-duration: 11s; }
+.slf-float-late { animation-delay: -3.6s; }
+.slf-float-later { animation-delay: -5.4s; }
+
+@keyframes slf-float-x {
+  0%, 100% { translate: 0 0; rotate: 0deg; }
+  50% { translate: 8px -10px; rotate: 0.6deg; }
+}
+.slf-float-tilt { animation: slf-float-x 9s ease-in-out infinite; }
+
+.slf-reveal {
+  opacity: 0;
+  translate: 0 30px;
+  transition: opacity 0.95s cubic-bezier(0.22, 1, 0.36, 1), translate 0.95s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, translate;
+}
+.slf-reveal.is-visible {
+  opacity: 1;
+  translate: 0 0;
+}
+
+/* ------------------------------------------------------------------
+ * Hero editor mockup — perspective tilt + ambient float
+ * ------------------------------------------------------------------ */
+.slf-tilt-wrap {
+  perspective: 1700px;
+}
+.slf-tilt {
+  transform: rotateX(6deg) rotateY(-11deg) rotate(1.4deg);
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.slf-tilt-wrap:hover .slf-tilt {
+  transform: rotateX(4deg) rotateY(-7deg) rotate(0.8deg);
+}
+.slf-editor-float {
+  animation: slf-editor-bob 9s ease-in-out infinite;
+}
+@keyframes slf-editor-bob {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -10px; }
+}
+
+/* Editor surface helpers */
+.slf-editor {
+  background: linear-gradient(170deg, rgba(13, 21, 40, 0.92), rgba(6, 12, 28, 0.92));
+  border: 1px solid rgba(151, 173, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 40px 90px -30px rgba(1, 4, 14, 0.95),
+    0 0 80px -30px rgba(80, 110, 255, 0.35);
+}
+.slf-thumb-active {
+  outline: 1.5px solid rgba(96, 140, 255, 0.9);
+  outline-offset: 1px;
+  box-shadow: 0 0 14px -2px rgba(80, 130, 255, 0.7);
+}
+.slf-canvas {
+  background:
+    radial-gradient(90% 70% at 80% 10%, rgba(124, 92, 252, 0.32), transparent 60%),
+    radial-gradient(80% 70% at 12% 88%, rgba(34, 211, 238, 0.2), transparent 62%),
+    radial-gradient(60% 55% at 40% 30%, rgba(59, 130, 246, 0.24), transparent 65%),
+    linear-gradient(150deg, #0a1330 0%, #0b1040 55%, #131b4d 100%);
+}
+
+/* ------------------------------------------------------------------
+ * Template card previews
+ * ------------------------------------------------------------------ */
+.slf-card {
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.45s ease, border-color 0.45s ease;
+}
+.slf-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(151, 173, 255, 0.32);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 30px 70px -26px rgba(1, 4, 14, 0.95),
+    0 0 60px -18px rgba(88, 120, 255, 0.5);
+}
+.slf-card-arrow {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.35s ease, box-shadow 0.35s ease;
+}
+.slf-card:hover .slf-card-arrow {
+  transform: translateX(-4px);
+  background: rgba(99, 125, 255, 0.32);
+  box-shadow: 0 0 18px -4px rgba(99, 125, 255, 0.8);
+}
+
+/* ------------------------------------------------------------------
+ * AI section
+ * ------------------------------------------------------------------ */
+.slf-ai-orb {
+  background:
+    radial-gradient(60% 60% at 32% 28%, rgba(190, 205, 255, 0.9), transparent 55%),
+    linear-gradient(140deg, #4f7dff 0%, #7c5cfc 55%, #b06ef8 100%);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.5),
+    0 0 26px -2px rgba(124, 92, 252, 0.75),
+    0 0 60px -8px rgba(80, 110, 255, 0.5);
+  animation: slf-orb-breathe 5.5s ease-in-out infinite;
+}
+@keyframes slf-orb-breathe {
+  0%, 100% { box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5), 0 0 26px -2px rgba(124, 92, 252, 0.75), 0 0 60px -8px rgba(80, 110, 255, 0.5); }
+  50% { box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5), 0 0 36px 0px rgba(124, 92, 252, 0.9), 0 0 84px -6px rgba(80, 110, 255, 0.65); }
+}
+
+.slf-caret {
+  display: inline-block;
+  width: 1.5px;
+  height: 1.05em;
+  margin-inline-start: 2px;
+  vertical-align: -0.15em;
+  background: #7da2ff;
+  animation: slf-caret 1.2s steps(1) infinite;
+}
+@keyframes slf-caret {
+  0%, 55% { opacity: 1; }
+  56%, 100% { opacity: 0; }
+}
+
+/* ------------------------------------------------------------------
+ * Product showcase — central glowing visual
+ * ------------------------------------------------------------------ */
+.slf-showcase-glow {
+  position: absolute;
+  inset-inline: 10%;
+  bottom: -6%;
+  height: 46%;
+  border-radius: 999px;
+  background:
+    radial-gradient(50% 100% at 50% 50%, rgba(80, 110, 255, 0.5), transparent 70%),
+    radial-gradient(30% 70% at 32% 55%, rgba(124, 92, 252, 0.4), transparent 70%),
+    radial-gradient(30% 70% at 68% 55%, rgba(34, 211, 238, 0.3), transparent 70%);
+  filter: blur(46px);
+  mix-blend-mode: screen;
+  animation: slf-pulse 12s ease-in-out infinite;
+}
+
+/* ------------------------------------------------------------------
+ * Final CTA — cinematic aurora landscape
+ * ------------------------------------------------------------------ */
+.slf-horizon-glow {
+  position: absolute;
+  left: 50%;
+  bottom: 24%;
+  width: 130%;
+  height: 34%;
+  translate: -50% 0;
+  background:
+    radial-gradient(42% 58% at 50% 62%, rgba(56, 189, 248, 0.34), transparent 70%),
+    radial-gradient(30% 46% at 34% 58%, rgba(124, 92, 252, 0.3), transparent 72%),
+    radial-gradient(26% 42% at 66% 58%, rgba(168, 85, 247, 0.22), transparent 72%);
+  filter: blur(34px);
+  mix-blend-mode: screen;
+  animation: slf-pulse 14s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.slf-water {
+  background: linear-gradient(180deg,
+    rgba(56, 189, 248, 0.2) 0%,
+    rgba(80, 110, 255, 0.14) 22%,
+    rgba(124, 92, 252, 0.12) 48%,
+    rgba(3, 8, 23, 0.2) 100%);
+}
+.slf-water::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(180deg,
+    rgba(190, 220, 255, 0.09) 0px,
+    rgba(190, 220, 255, 0.09) 1px,
+    transparent 1px,
+    transparent 7px);
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9), transparent 88%);
+  -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9), transparent 88%);
+  animation: slf-water-shift 16s ease-in-out infinite alternate;
+}
+/* Reflected light column under the aurora */
+.slf-water::after {
+  content: '';
+  position: absolute;
+  top: -6%;
+  left: 50%;
+  translate: -50% 0;
+  width: 58%;
+  height: 80%;
+  background:
+    radial-gradient(46% 60% at 50% 30%, rgba(103, 232, 249, 0.2), transparent 72%),
+    radial-gradient(30% 46% at 42% 42%, rgba(139, 92, 246, 0.16), transparent 70%);
+  filter: blur(18px);
+  mix-blend-mode: screen;
+  animation: slf-pulse 11s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes slf-water-shift {
+  from { background-position-y: 0; }
+  to { background-position-y: 14px; }
+}
+
+.slf-horizon-line {
+  position: absolute;
+  inset-inline: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 4%, rgba(140, 225, 255, 0.5) 30%, rgba(190, 205, 255, 0.65) 50%, rgba(170, 150, 255, 0.45) 70%, transparent 96%);
+  box-shadow: 0 0 18px 1px rgba(120, 190, 255, 0.45);
+}
+
+/* ------------------------------------------------------------------
+ * Reduced motion — still beautiful, just still
+ * ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  .slf-root *,
+  .slf-root *::before,
+  .slf-root *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+  .slf-reveal {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
