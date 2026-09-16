@@ -59,6 +59,18 @@ export function plateFor(f: HandFrame): HandAssetKey {
   return f.asset
 }
 
+/**
+ * The ink that tool leaves at its working point, or null when it leaves none. Keyed by the
+ * resolved plate, so a sleeved eraser has to be recognised as an eraser rather than a marker.
+ */
+export function inkDotFor(key: HandAssetKey): string | null {
+  if (key.startsWith('eraser')) return null // an eraser wipes, it does not ink
+  if (key === 'palm') return null // and the flat palm only pushes
+  if (key.startsWith('chalk')) return 'rgba(248,250,252,0.95)'
+  if (key === 'marker-blue') return 'rgba(37,99,235,0.55)'
+  return 'rgba(17,24,39,0.5)' // marker-dark, pale, sleeve + graphite
+}
+
 /** The height the hand rig is authored at (design px) — the reference for `scale`. */
 const BASE_HAND_H = handDrawHeight(handAsset('marker-dark'))
 

@@ -13,28 +13,13 @@
  * (docs/WHITEBOARD_HAND.md §2).
  */
 import { memo, useEffect, useState } from 'react'
-import { getHandFrame, plateFor, subscribeHandFrame, type HandFrame } from './hand'
-import { handAsset, handDrawHeight, handDrawWidth, type HandAssetKey } from './handAssets'
+import { getHandFrame, inkDotFor, plateFor, subscribeHandFrame, type HandFrame } from './hand'
+import { handAsset, handDrawHeight, handDrawWidth } from './handAssets'
 
 /**
  * Which photo to show. `style` picks the tool; the pose (pen vs flat palm) decides between
  * the pen grips and the bare palm used for the "push" effect, and an eraser always wins.
  */
-/** The ink a tool leaves at the working point, or null when it leaves none (eraser). */
-function inkDot(key: HandAssetKey): string | null {
-  switch (key) {
-    case 'marker-blue':
-      return 'rgba(37,99,235,0.55)'
-    case 'chalk':
-      return 'rgba(248,250,252,0.95)'
-    case 'eraser':
-    case 'palm':
-      return null // no ink at the working point: one wipes, the other pushes
-    default:
-      return 'rgba(17,24,39,0.5)' // marker-dark + graphite
-  }
-}
-
 export const HandOverlay = memo(function HandOverlay({ slideId }: { slideId?: string }) {
   void slideId
   // Starting from the live frame (not a blank one) matters: when several slide previews
@@ -53,7 +38,7 @@ export const HandOverlay = memo(function HandOverlay({ slideId }: { slideId?: st
   const k = h / asset.natH
   const ax = asset.ax * k
   const ay = asset.ay * k
-  const dot = inkDot(key)
+  const dot = inkDotFor(key)
   const flip = frame.side === 'left' ? -1 : 1
   // a pressed tool sits ~1% closer to the board: the nib stays, the hand eases in
   const press = frame.pressing ? 0.99 : 1

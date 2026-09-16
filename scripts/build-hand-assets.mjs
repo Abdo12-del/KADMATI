@@ -38,6 +38,9 @@ const ASSETS = [
   // the same rig in another skin tone / with a sleeve: the *hand* varies, the tool does not
   { name: 'marker-pale', file: 'marker-light', anchor: 'nib', angle: 42, designH: 340 },
   { name: 'marker-sleeve', file: 'marker-sleeve', anchor: 'nib', angle: 42, designH: 340 },
+  { name: 'pencil-sleeve', file: 'pencil-sleeve', anchor: 'nib', angle: 42, designH: 340 },
+  { name: 'chalk-sleeve', file: 'chalk-sleeve', anchor: 'nib', angle: 42, designH: 330 },
+  { name: 'eraser-sleeve', file: 'eraser-sleeve', anchor: 'felt', angle: 0, designW: 430 },
   { name: 'marker-blue', file: 'marker-light', anchor: 'nib', angle: 42, designH: 340, recolorBarrel: '#2f6bd8' },
   { name: 'pencil', file: 'pencil-light', anchor: 'nib', angle: 42, designH: 340 },
   { name: 'chalk', file: 'chalk-light', anchor: 'nib', angle: 42, designH: 330 },
@@ -315,7 +318,18 @@ ${entries}
 }
 
 /** Copy from the surveyed engines: one main hand, one off hand (docs/WHITEBOARD_HAND.md §2). */
-export type HandAssetKey = 'marker-dark' | 'marker-blue' | 'marker-pale' | 'marker-sleeve' | 'pencil' | 'chalk' | 'eraser' | 'palm'
+export type HandAssetKey =
+  | 'marker-dark'
+  | 'marker-blue'
+  | 'marker-pale'
+  | 'marker-sleeve'
+  | 'pencil'
+  | 'pencil-sleeve'
+  | 'chalk'
+  | 'chalk-sleeve'
+  | 'eraser'
+  | 'eraser-sleeve'
+  | 'palm'
 
 export function handAsset(key: HandAssetKey): HandAsset {
   return HAND_ASSETS[key] ?? HAND_ASSETS['marker-dark']
@@ -325,9 +339,9 @@ export function handAsset(key: HandAssetKey): HandAsset {
 export type HandTone = 'default' | 'pale' | 'sleeve'
 const TONE_KEYS: Record<HandTone, Partial<Record<HandAssetKey, HandAssetKey>>> = {
   default: {},
-  // only the marker is photographed in other tones; every other tool falls back to its plate
+  // only the tools we have photographed in another tone; anything else falls back to its plate
   pale: { 'marker-dark': 'marker-pale' },
-  sleeve: { 'marker-dark': 'marker-sleeve' },
+  sleeve: { 'marker-dark': 'marker-sleeve', pencil: 'pencil-sleeve', chalk: 'chalk-sleeve', eraser: 'eraser-sleeve' },
 }
 
 export function handKeyFor(key: HandAssetKey, tone: HandTone = 'default'): HandAssetKey {

@@ -24,6 +24,9 @@ export const HAND_ASSETS: Record<string, HandAsset> = {
   'marker-dark': { src: '/hands/marker-dark.png', natW: 954, natH: 760, ax: 1, ay: 2, designH: 340 },
   'marker-pale': { src: '/hands/marker-pale.png', natW: 819, natH: 760, ax: 1, ay: 20, designH: 340 },
   'marker-sleeve': { src: '/hands/marker-sleeve.png', natW: 876, natH: 760, ax: 3, ay: 26, designH: 340 },
+  'pencil-sleeve': { src: '/hands/pencil-sleeve.png', natW: 975, natH: 760, ax: 0, ay: 0, designH: 340 },
+  'chalk-sleeve': { src: '/hands/chalk-sleeve.png', natW: 954, natH: 760, ax: 9, ay: 3, designH: 330 },
+  'eraser-sleeve': { src: '/hands/eraser-sleeve.png', natW: 760, natH: 493, ax: 405, ay: 492, designW: 430 },
   'marker-blue': { src: '/hands/marker-blue.png', natW: 819, natH: 760, ax: 1, ay: 20, designH: 340 },
   'pencil': { src: '/hands/pencil.png', natW: 926, natH: 760, ax: 0, ay: 0, designH: 340 },
   'chalk': { src: '/hands/chalk.png', natW: 957, natH: 760, ax: 10, ay: 4, designH: 330 },
@@ -32,7 +35,18 @@ export const HAND_ASSETS: Record<string, HandAsset> = {
 }
 
 /** Copy from the surveyed engines: one main hand, one off hand (docs/WHITEBOARD_HAND.md §2). */
-export type HandAssetKey = 'marker-dark' | 'marker-blue' | 'marker-pale' | 'marker-sleeve' | 'pencil' | 'chalk' | 'eraser' | 'palm'
+export type HandAssetKey =
+  | 'marker-dark'
+  | 'marker-blue'
+  | 'marker-pale'
+  | 'marker-sleeve'
+  | 'pencil'
+  | 'pencil-sleeve'
+  | 'chalk'
+  | 'chalk-sleeve'
+  | 'eraser'
+  | 'eraser-sleeve'
+  | 'palm'
 
 export function handAsset(key: HandAssetKey): HandAsset {
   return HAND_ASSETS[key] ?? HAND_ASSETS['marker-dark']
@@ -42,9 +56,9 @@ export function handAsset(key: HandAssetKey): HandAsset {
 export type HandTone = 'default' | 'pale' | 'sleeve'
 const TONE_KEYS: Record<HandTone, Partial<Record<HandAssetKey, HandAssetKey>>> = {
   default: {},
-  // only the marker is photographed in other tones; every other tool falls back to its plate
+  // only the tools we have photographed in another tone; anything else falls back to its plate
   pale: { 'marker-dark': 'marker-pale' },
-  sleeve: { 'marker-dark': 'marker-sleeve' },
+  sleeve: { 'marker-dark': 'marker-sleeve', pencil: 'pencil-sleeve', chalk: 'chalk-sleeve', eraser: 'eraser-sleeve' },
 }
 
 export function handKeyFor(key: HandAssetKey, tone: HandTone = 'default'): HandAssetKey {
