@@ -18,7 +18,7 @@
  * Output: JSONL in OpenAI chat format (system/user/assistant) under model/data/, split
  * train/valid, plus a stats file. Run with `npm run model:dataset`.
  */
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { TEMPLATES } from '../src/templates/catalog'
 import { DEMO_DECKS } from '../src/demo/decks'
 import type { DeckSpec, SlideSpec, TemplateCategory } from '../src/templates/engine'
@@ -300,6 +300,66 @@ function reviewExamples(golden: { deck: DeckSpec; slides: OutlineSlide[] }[]): E
   return out
 }
 
+/* ------------------------------------------------------------------ 5. user feedback (opt-in export from the app) */
+
+interface FeedbackRecord {
+  prompt: string
+  lang: 'ar' | 'en'
+  category: string
+  engine: 'local' | 'provider'
+  generated: { slides: { layout: string; title: string; points: string[] }[] }
+  edited?: { slides: { layout: string; title: string; points: string[] }[] }
+  rating?: 'up' | 'down'
+}
+
+function snapshotToOutline(snap: FeedbackRecord['generated']): OutlineSlide[] {
+  return snap.slides
+    .map((s, i): OutlineSlide | null => {
+      if (!s.title) return null
+      const kind: OutlineSlide['kind'] = i === 0 ? 'title' : i === snap.slides.length - 1 ? 'closing' : LAYOUT_TO_KIND[s.layout] ?? 'content'
+      if (kind === 'stats') return { kind: 'content', title: s.title, takeaways: s.points.slice(0, 4) }
+      if (kind === 'quote') return s.points[0] ? { kind, title: s.title, quote: { text: s.points[0] } } : null
+      if (kind === 'process') return { kind, title: s.title, steps: s.points.slice(0, 5) }
+      if (kind === 'comparison' || kind === 'timeline') return { kind: 'content', title: s.title, takeaways: s.points.slice(0, 4) }
+      return { kind, title: s.title, takeaways: s.points.slice(0, kind === 'title' ? 1 : 4) }
+    })
+    .filter((x): x is OutlineSlide => !!x)
+}
+
+/**
+ * Two products from each feedback record:
+ *  • SFT: the *edited* deck (or an 👍 unedited one) is a gold-quality target.
+ *  • DPO: (generated, edited) → (rejected, chosen) when the user materially changed it, or when 👎.
+ */
+function feedbackExamples(): { sft: Example[]; dpo: { prompt: Msg[]; chosen: string; rejected: string; meta: Record<string, unknown> }[] } {
+  const file = 'model/data/feedback.jsonl'
+  const sft: Example[] = []
+  const dpo: { prompt: Msg[]; chosen: string; rejected: string; meta: Record<string, unknown> }[] = []
+  if (!existsSync(file)) return { sft, dpo }
+  for (const line of readFileSync(file, 'utf8').split('\n')) {
+    if (!line.trim()) continue
+    let r: FeedbackRecord
+    try {
+      r = JSON.parse(line)
+    } catch {
+      continue
+    }
+    const gen = snapshotToOutline(r.generated)
+    const ed = r.edited ? snapshotToOutline(r.edited) : null
+    if (gen.length < 3) continue
+    const ar = r.lang === 'ar'
+    const prompt: Msg[] = [
+      { role: 'system', content: outlineSystem(r.lang, pick(ar ? TONES_AR : TONES_EN), pick(ar ? AUD_AR : AUD_EN), (ed ?? gen).length) },
+      { role: 'user', content: `الموضوع: ${r.prompt}\nالفئة: ${r.category}` },
+    ]
+    const changed = ed && outlineJson(ed) !== outlineJson(gen)
+    const target = changed ? ed : r.rating === 'up' ? gen : null
+    if (target && target.length >= 3) sft.push({ task: 'outline', source: 'gold', lang: r.lang, messages: [...prompt, { role: 'assistant', content: outlineJson(target) }] })
+    if (changed && ed.length >= 3) dpo.push({ prompt, chosen: outlineJson(ed), rejected: outlineJson(gen), meta: { engine: r.engine, rating: r.rating ?? null } })
+  }
+  return { sft, dpo }
+}
+
 /* ------------------------------------------------------------------ main */
 
 const golden: { deck: DeckSpec; slides: OutlineSlide[] }[] = []
@@ -316,6 +376,9 @@ for (const d of DEMO_DECKS) {
 examples.push(...plannerExamples())
 examples.push(...rewriteExamples())
 examples.push(...reviewExamples(golden))
+const fb = feedbackExamples()
+examples.push(...fb.sft)
+if (fb.dpo.length) writeFileSync(`${OUT}dpo.jsonl`, fb.dpo.map((x) => JSON.stringify(x)).join('\n') + '\n')
 
 // sanity: every assistant JSON parses, every title cleaned
 let bad = 0
@@ -361,6 +424,7 @@ const stats = {
   byLang: { ar: count('lang', 'ar'), en: count('lang', 'en') },
   topics: TOPICS.length,
   goldDecks: golden.length,
+  feedback: { sft: fb.sft.length, dpo: fb.dpo.length },
 }
 writeFileSync(`${OUT}stats.json`, JSON.stringify(stats, null, 2))
 console.log('Aurova dataset →', OUT)

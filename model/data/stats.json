@@ -17,5 +17,9 @@
     "en": 156
   },
   "topics": 180,
-  "goldDecks": 16
+  "goldDecks": 16,
+  "feedback": {
+    "sft": 0,
+    "dpo": 0
+  }
 }

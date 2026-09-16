@@ -2,7 +2,7 @@
  * Every modal in the product, in one place. Nothing here is decorative: each primary button calls a
  * real service (templates engine, PPTX exporter, importer, AI generator) and reports what happened.
  */
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Check,
   FileSpreadsheet,
@@ -288,10 +288,24 @@ function AiPane() {
       })
       const doc = instantiateDeck(spec, { category })
       requestOpenProject({ doc })
+      const fb = await import('../services/ai/feedback')
+      void fb.recordGeneration({ doc, prompt, category, engine })
+      const feedbackOn = await fb.isFeedbackEnabled()
       toast({
         kind: 'ai',
         title: `أُنشئ عرض من ${doc.slides.length} شرائح`,
         body: engine === 'provider' ? 'المحتوى من مزوّدك — راجعه وعدّله.' : 'المحتوى مُهيكل محليًا: عدّل العناوين والنقاط، كل شيء قابل للتحرير.',
+        ...(feedbackOn
+          ? {
+              action: {
+                label: '👍 جيد',
+                run: () => {
+                  void fb.rateGeneration(doc.id, 'up')
+                  toast({ kind: 'success', title: 'شكرًا — سُجّل تقييمك محليًا' })
+                },
+              },
+            }
+          : {}),
       })
     } catch (err) {
       toast({ kind: 'error', title: 'تعذّر التوليد', body: (err as Error).message })
@@ -370,6 +384,7 @@ function ExportDialog() {
 
   const run = async () => {
     setReport(null)
+    void import('../services/ai/feedback').then((m) => m.recordEdit(doc))
     try {
       if (format === 'pptx') {
         setBusy('يُبني ملف PPTX…')
@@ -675,6 +690,7 @@ function AiSettingsDialog() {
             />
           </Field>
         </div>
+        <FeedbackSettings />
         <Row className="justify-end">
           <Button variant="primary" onClick={close}>
             تم
@@ -682,6 +698,64 @@ function AiSettingsDialog() {
         </Row>
       </div>
     </Modal>
+  )
+}
+
+/** Opt-in capture of (prompt → generated → edited) pairs for training the Aurova model. Local only. */
+function FeedbackSettings() {
+  const [on, setOn] = useState(false)
+  const [stats, setStats] = useState<{ total: number; edited: number; up: number; down: number } | null>(null)
+  const refresh = async () => {
+    const fb = await import('../services/ai/feedback')
+    setOn(await fb.isFeedbackEnabled())
+    setStats(await fb.feedbackStats())
+  }
+  useEffect(() => {
+    void refresh()
+  }, [])
+  return (
+    <div className="space-y-2 rounded-lg border border-ink-800 bg-ink-950 p-2.5">
+      <Switch
+        checked={on}
+        onChange={async (v) => {
+          const fb = await import('../services/ai/feedback')
+          await fb.setFeedbackEnabled(v)
+          await refresh()
+        }}
+        label="المساهمة في تحسين نموذج Aurova (محليًا)"
+      />
+      <p className="text-[11px] leading-relaxed text-ink-400">
+        عند التفعيل تُحفظ في هذا المتصفح فقط أزواج: طلبك ← ما ولّده النموذج ← ما عدّلته أنت قبل التصدير. لا يُرسل شيء تلقائيًا؛ صدّر الملف بنفسك وقتما تشاء
+        {stats && stats.total > 0 ? ` — لديك ${stats.total} سجلًا، منها ${stats.edited} مع تعديلات و${stats.up} تقييمًا إيجابيًا.` : '.'}
+      </p>
+      {on && (
+        <Row className="gap-2">
+          <Button
+            size="sm"
+            variant="surface"
+            disabled={!stats?.total}
+            onClick={async () => {
+              const fb = await import('../services/ai/feedback')
+              downloadBlob(await fb.exportFeedback(), `aurova-feedback-${new Date().toISOString().slice(0, 10)}.jsonl`)
+            }}
+          >
+            <Download size={12} /> تصدير JSONL
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={!stats?.total}
+            onClick={async () => {
+              const fb = await import('../services/ai/feedback')
+              await fb.clearFeedback()
+              await refresh()
+            }}
+          >
+            مسح السجل
+          </Button>
+        </Row>
+      )}
+    </div>
   )
 }
 
