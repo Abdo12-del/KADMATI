@@ -402,7 +402,9 @@ export const PRESETS: PresetDef[] = [
 
   def('whiteboard-write-ar', 'كتابة عربية (يد واقعية)', 'whiteboard', () => ({
     name: 'كتابة عربية', duration: 2800,
-    text: { mode: 'chars', stagger: 65, from: 'end' }, // RTL: from end
+    // RTL text is stored in writing order (first character on the right), so the ink order
+    // is `start` — this is also what makes the hand start at the right edge of the line.
+    text: { mode: 'chars', stagger: 65, from: 'start' },
     whiteboard: { effect: 'draw', handStyle: 'marker-blue', handSide: 'right' },
     properties: {
       opacity: [kf(0, 0, e('linear')), kf(90, 1)],

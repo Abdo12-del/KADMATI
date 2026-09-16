@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, FileText, Minimize2, Moon, Play, Square } from 'lucide-react'
 import { SlideView } from '../render/SlideView'
-import { buildSlideEngine, type ElementBaseInfo, type SlideEngine } from '../animation/engine'
+import { baseInfo, buildSlideEngine, type ElementBaseInfo, type SlideEngine } from '../animation/engine'
 import { scheduleAnims } from '../animation/schedule'
 import { buildMorphSpecs, MORPH_OLD_PREFIX } from '../animation/morph'
 import { useDoc } from '../store/useDoc'
@@ -103,7 +103,7 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
       if (!id.startsWith(MORPH_OLD_PREFIX)) targets[id] = n
     })
     const elements: Record<string, ElementBaseInfo> = {}
-    for (const el of slide.elements) elements[el.id] = { x: el.x, y: el.y, w: el.w, h: el.h, rotation: el.rotation ?? 0 }
+    for (const el of slide.elements) elements[el.id] = baseInfo(el)
 
     const engine = buildSlideEngine({ targets, elements, anims: schedule.items.map((i) => i.spec), textSplit: true })
     engineRef.current = engine
@@ -129,7 +129,7 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
       animTargets.current.forEach((n, id) => void (targets[id] = n))
       const elements: Record<string, ElementBaseInfo> = {}
       for (const el of [...outgoingSlide.elements, ...slide.elements]) {
-        elements[el.id] = { x: el.x, y: el.y, w: el.w, h: el.h, rotation: el.rotation ?? 0 }
+        elements[el.id] = baseInfo(el)
       }
       if (destroyed) return
       engine = buildSlideEngine({ targets, elements, anims: specs, textSplit: false })

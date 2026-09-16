@@ -9,6 +9,7 @@
  * Run: node tests/animations/verify.mjs
  */
 import { JSDOM } from 'jsdom'
+import { existsSync, readFileSync } from 'node:fs'
 
 const dom = new JSDOM('<!doctype html><html><body><div id="host"></div></body></html>', { pretendToBeVisual: true })
 const { window } = dom
@@ -77,6 +78,7 @@ const { animRegistry } = mod
 let pass = 0
 let fail = 0
 const fails = []
+let ok2 = () => {}
 function ok(cond, msg) {
   if (cond) { pass++ }
   else { fail++; fails.push(msg); console.error('  ✗', msg) }
@@ -420,7 +422,7 @@ stopPreview()
 /* ------------------------------------------------ 11. whiteboard animation & hand tracking */
 console.log('\n[11] whiteboard animation & hand tracking')
 {
-  const { getHandFrame, subscribeHandFrame } = mod
+  const { getHandFrame, subscribeHandFrame, computeHandFrame, revealAt, HAND_ASSETS, handDrawWidth, handDrawHeight } = mod
   const wbSpec = presetById('whiteboard-draw').make('wb-target')
   ok(wbSpec.whiteboard?.effect === 'draw', 'whiteboard-draw carries effect="draw"')
   ok(['wipe-right','wipe-down','wipe-left','wipe-up','circle'].includes(wbSpec.reveal?.kind), `whiteboard-draw carries wipe reveal (got ${wbSpec.reveal?.kind})`)
@@ -446,6 +448,107 @@ console.log('\n[11] whiteboard animation & hand tracking')
   const endFrame = getHandFrame()
   ok(endFrame.active === false, 'hand is cleared and deactivated after destroy')
   unsubHand()
+
+  /* ---- the hand must sit on the ink edge, not on a trajectory of its own ---- */
+  const el = { x: 100, y: 80, w: 400, h: 260, rotation: 0 }
+  const spec = presetById('whiteboard-draw').make('el')
+  let maxDrift = 0
+  let lifted = 0
+  let descended = 0
+  let firstY = null
+  let lastY = null
+  for (let i = 0; i <= 40; i++) {
+    const t = Math.round((spec.duration * i) / 40)
+    const reveal = revealAt(spec, t)
+    const f = computeHandFrame(spec, el, t, { reveal })
+    if (!f) continue
+    const expected = el.y + 10 + reveal * (el.h - 20)
+    // the return strokes lift the pen; the ink edge itself is what must stay close
+    if (Math.abs(f.y - expected) > 26) maxDrift = Math.max(maxDrift, Math.abs(f.y - expected))
+    if (firstY === null) firstY = f.y
+    lastY = f.y
+    if (f.y > (descended || 0)) descended = f.y
+    if (!f.pressing) lifted++
+  }
+  ok(maxDrift === 0, `hand Y stays within one band of the ink edge on every sampled frame (max drift ${maxDrift.toFixed(1)}px)`)
+  ok(descended - firstY > (el.h - 20) * 0.6, `the hand descends the element as the ink is laid down (${Math.round(firstY)} → ${Math.round(descended)})`)
+  ok(lifted > 0, `the marker lifts between strokes (${lifted} lifted frames)`)
+
+  /* ---- text ink order: RTL lines are written from the right ---- */
+  const arSpec = presetById('whiteboard-write-ar').make('ar')
+  const arEl = { x: 200, y: 300, w: 800, h: 160, rotation: 0, rtl: true }
+  const firstX = computeHandFrame(arSpec, arEl, 20, {}).x
+  const lastX = computeHandFrame(arSpec, arEl, arSpec.duration - 40, {}).x
+  ok(firstX > lastX + 200, `Arabic text is written right to left (x ${Math.round(firstX)} → ${Math.round(lastX)})`)
+
+  const enSpec = presetById('whiteboard-write').make('en')
+  const enEl = { x: 200, y: 300, w: 800, h: 160, rotation: 0, rtl: false }
+  ok(computeHandFrame(enSpec, enEl, 20, {}).x < computeHandFrame(enSpec, enEl, enSpec.duration - 40, {}).x, 'LTR text is written left to right')
+
+  /* ---- measured ink positions beat the estimate: the nib lands on the unit ---- */
+  const units = [
+    { x: 900, y: 420 },
+    { x: 820, y: 420 },
+    { x: 740, y: 420 },
+  ]
+  const measured = computeHandFrame(arSpec, arEl, 65 * 1 + 20, { units })
+  ok(Math.abs(measured.x - units[1].x) < 45, `measured units drive the nib (x=${Math.round(measured.x)} vs unit ${units[1].x})`)
+  ok(Math.abs(measured.y - units[1].y) < 2, 'the nib sits on the measured baseline, not the box top')
+
+  /* ---- erase: the pad is centred on the shrinking ink ---- */
+  const eraseSpec = presetById('whiteboard-erase').make('er')
+  const eraseEl = { x: 100, y: 80, w: 400, h: 260, rotation: 0 }
+  let wipeDrift = 0
+  for (let i = 0; i <= 20; i++) {
+    const t = Math.round((eraseSpec.duration * i) / 20)
+    const reveal = revealAt(eraseSpec, t)
+    const f = computeHandFrame(eraseSpec, eraseEl, t, { reveal })
+    if (!f) continue
+    wipeDrift = Math.max(wipeDrift, Math.abs(f.y - (eraseEl.y + 10 + (1 - reveal) * (eraseEl.h - 20))))
+    ok2(f.pose === 'eraser', 'erase uses the eraser pose')
+  }
+  ok(wipeDrift < 8, `the eraser pad rides the wipe line (max drift ${wipeDrift.toFixed(1)}px)`)
+
+  /* ---- push: the flat palm leads ---- */
+  const pushSpec = presetById('whiteboard-push').make('pu')
+  const pushFrame = computeHandFrame(pushSpec, { x: 300, y: 300, w: 400, h: 200, rotation: 0 }, pushSpec.duration * 0.5, {})
+  ok(pushFrame.pose === 'palm', 'push uses the flat palm pose, not a pen grip')
+
+  /* ---- entry / exit are real phases, not pops ---- */
+  const entry = computeHandFrame(spec, el, -80, { reveal: 0 })
+  ok(entry && entry.active && entry.opacity < 1, 'the hand fades in while flying to the first stroke')
+  const exit = computeHandFrame(spec, el, spec.duration + 360, { reveal: 1 })
+  ok(exit && exit.active && exit.opacity < 0.5, `the hand lifts and fades out after the last stroke (opacity ${exit?.opacity})`)
+  ok(computeHandFrame(spec, el, -1000, { reveal: 0 }) === null, 'the hand is off screen before its entry window')
+
+  /* ---- shipped assets must agree with the manifest ---- */
+  const pngSize = (file) => {
+    const buf = readFileSync(file)
+    if (buf.toString('ascii', 1, 4) !== 'PNG') return null
+    return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) }
+  }
+  for (const [key, asset] of Object.entries(HAND_ASSETS)) {
+    const file = `public${asset.src}`
+    ok(existsSync(file), `hand asset exists: ${asset.src}`)
+    const size = pngSize(file)
+    ok(size && size.w === asset.natW && size.h === asset.natH, `${key}: manifest size matches the PNG (${asset.natW}×${asset.natH})`)
+    ok(asset.ax >= 0 && asset.ax <= asset.natW && asset.ay >= 0 && asset.ay <= asset.natH, `${key}: anchor ${asset.ax},${asset.ay} is inside the image`)
+    ok(handDrawWidth(asset) > 60 && handDrawHeight(asset) > 20, `${key}: drawn size is sane (${Math.round(handDrawWidth(asset))}×${Math.round(handDrawHeight(asset))} design px)`)
+  }
+  ok(!!HAND_ASSETS.eraser && !!HAND_ASSETS.palm, 'the eraser and the flat palm poses ship with the rest of the rig')
+
+  /* ---- retiming keeps the hand glued to the ink ---- */
+  const { retimeAnim } = mod
+  const stretched = presetById('whiteboard-draw').make('st')
+  retimeAnim(stretched, 4400)
+  ok(stretched.duration === 4400, 'retime sets the new duration')
+  ok(stretched.properties.clip[stretched.properties.clip.length - 1].t === 4400, 'retime stretches the clip keyframes to the new end')
+  const midStretch = computeHandFrame(stretched, el, 2200, { reveal: revealAt(stretched, 2200) })
+  const expectedStretch = el.y + 10 + revealAt(stretched, 2200) * (el.h - 20)
+  ok(Math.abs(midStretch.y - expectedStretch) < 26, 'after retiming, the hand still rides the ink edge')
+  const wri = presetById('whiteboard-write-ar').make('wr')
+  retimeAnim(wri, wri.duration * 2)
+  ok(wri.text.stagger === 130, `retime scales the text stagger too (${wri.text.stagger}ms)`)
 }
 
 /* ------------------------------------------------ summary */

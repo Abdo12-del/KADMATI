@@ -188,6 +188,25 @@ export function normalizeAnim(a: AnimSpec): AnimSpec {
   }
 }
 
+/**
+ * Retime an animation in place: every keyframe and the text stagger scale with the new
+ * duration, so a 2.2 s whiteboard draw stretched to 5 s still draws at the same *relative*
+ * pace. Without this, stretching a clip just piles the keyframes at the end of the old
+ * window and leaves the element (and the hand) parked for the rest of the timeline.
+ */
+export function retimeAnim(a: AnimSpec, duration: number): void {
+  const from = Math.max(1, a.duration)
+  const to = Math.max(100, Math.round(duration))
+  if (to === from) return
+  const k = to / from
+  for (const list of Object.values(a.properties)) {
+    if (!list) continue
+    for (const kf of list) kf.t = Math.max(0, Math.min(to, Math.round(kf.t * k)))
+  }
+  if (a.text) a.text = { ...a.text, stagger: Math.max(10, Math.round(a.text.stagger * k)) }
+  a.duration = to
+}
+
 /** Does this spec actually animate anything? */
 export function animHasContent(a: AnimSpec): boolean {
   if (a.motionPath) return true

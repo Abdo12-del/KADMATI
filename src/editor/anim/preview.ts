@@ -6,7 +6,7 @@
  * The dock owns its own long-lived engine; this singleton owns one-shot plays
  * and always cleans the DOM (transforms/filters/clip/split spans) afterwards.
  */
-import { buildSlideEngine, type ElementBaseInfo, type SlideEngine } from '../../animation/engine'
+import { baseInfo, buildSlideEngine, type ElementBaseInfo, type SlideEngine } from '../../animation/engine'
 import type { AnimSpec } from '../../animation/types'
 import { animHasContent } from '../../animation/types'
 import type { Slide } from '../../document/types'
@@ -86,7 +86,7 @@ export function previewOnCanvas(slide: Slide, opts: { anims?: AnimSpec[]; onlyId
   const targets = animRegistry.all()
   if (!list.some((a) => targets[a.target])) return
   const elements: Record<string, ElementBaseInfo> = {}
-  for (const el of slide.elements) elements[el.id] = { x: el.x, y: el.y, w: el.w, h: el.h, rotation: el.rotation ?? 0 }
+  for (const el of slide.elements) elements[el.id] = baseInfo(el)
 
   let engine: SlideEngine
   try {

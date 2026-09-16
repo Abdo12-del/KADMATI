@@ -12,6 +12,9 @@ coverage
 # local harnesses
 .tmp-verify/
 
+# raw hand photo plates (chroma-key sources for `npm run assets:hands`) — never shipped
+.hand-src/
+
 model/data/*.jsonl
 model/checkpoints/
 model/reports/

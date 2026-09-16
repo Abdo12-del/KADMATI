@@ -29,6 +29,20 @@ export interface ElementBaseInfo {
   w: number
   h: number
   rotation: number
+  /** text elements only: right-to-left paragraph direction (hand fallback grid) */
+  rtl?: boolean
+}
+
+/** Base geometry (+ text direction) the motion model needs for one element. */
+export function baseInfo(el: { x: number; y: number; w: number; h: number; rotation?: number; kind?: string; dir?: string }): ElementBaseInfo {
+  return {
+    x: el.x,
+    y: el.y,
+    w: el.w,
+    h: el.h,
+    rotation: el.rotation ?? 0,
+    rtl: el.kind === 'text' ? el.dir === 'rtl' : undefined,
+  }
 }
 
 export interface BuildCtx {
@@ -166,6 +180,17 @@ function clearClipAndFilters(n: HTMLElement): void {
   n.style.removeProperty?.(CLIP_VARS.cc)
 }
 
+/**
+ * The element's current reveal fraction (0..1) — the position of the ink edge the hand has
+ * to sit on. Sampled from the clip keyframes with the same easing the tween uses, so hand and
+ * ink can never drift apart: both come from the same numbers.
+ */
+export function revealAt(spec: AnimSpec, localT: number): number | undefined {
+  const kfs = spec.properties.clip
+  if (!kfs?.length) return undefined
+  return sampleKeyframes(kfs, Math.max(0, Math.min(spec.duration, localT)), spec)
+}
+
 /* =============================================================== build === */
 
 export function sampleKeyframes(kfs: Keyframe[], t: number, spec: AnimSpec): number {
@@ -187,6 +212,42 @@ export function sampleKeyframes(kfs: Keyframe[], t: number, spec: AnimSpec): num
 export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
   let userCb: ((t: number) => void) | null = null
   const hasWhiteboard = ctx.anims.some((a) => !!a.whiteboard && a.whiteboard.effect !== 'stroke')
+  /**
+   * Measured ink positions per animated text element, in design px.
+   *
+   * A hand that writes text has to land on the glyphs, and only the DOM knows where the
+   * TextSplitter put them. The positions are measured once, right after the split exists
+   * (getBoundingClientRect forces layout — doing it per frame would cost more than the whole
+   * animation) and cached; a failed measurement is retried on a later frame.
+   */
+  const unitCache = new Map<string, { x: number; y: number }[]>()
+  const splitNodes = new Map<string, TweenNodes>()
+
+  const measureUnits = (spec: AnimSpec): { x: number; y: number }[] | undefined => {
+    const cached = unitCache.get(spec.id)
+    if (cached) return cached
+    const root = ctx.targets[spec.target]
+    const el = ctx.elements[spec.target]
+    const list = splitNodes.get(spec.id)
+    if (!root || !el || !Array.isArray(list) || !list.length) return undefined
+    const rootBox = root.getBoundingClientRect?.()
+    if (!rootBox || !rootBox.width || !root.offsetWidth) return undefined
+    // client px → design px for this node (slide zoom × whatever the engine already applied)
+    const scale = rootBox.width / root.offsetWidth
+    const out: { x: number; y: number }[] = []
+    for (const node of list) {
+      const box = node.getBoundingClientRect?.()
+      if (!box) return undefined
+      out.push({
+        x: el.x + (box.left + box.width / 2 - rootBox.left) / scale,
+        // the nib sits on the baseline area of the glyph, not at the top of the ink box
+        y: el.y + (box.top + box.height * 0.82 - rootBox.top) / scale,
+      })
+    }
+    if (!out.length) return undefined
+    unitCache.set(spec.id, out)
+    return out
+  }
 
   const updateHand = (t: number) => {
     if (!hasWhiteboard) return
@@ -196,7 +257,13 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
       const localT = t - raw.delay
       const el = ctx.elements[raw.target]
       if (!el) continue
-      const frame = computeHandFrame(raw, el, localT)
+      const spec = normalizeSpec(raw)
+      const measured = measureUnits(spec)
+      const frame = computeHandFrame(spec, el, localT, {
+        reveal: revealAt(spec, localT),
+        // ink order: the DOM order, unless the animation inks the units backwards
+        units: measured && spec.text?.from === 'end' ? [...measured].reverse() : measured,
+      })
       if (frame && frame.active) {
         activeFrame = frame
         break
@@ -245,6 +312,7 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
         const split = spec.text.mode === 'chars' ? splitter.chars : spec.text.mode === 'lines' ? splitter.lines : splitter.words
         nodes = (split as HTMLElement[]) ?? []
         if (!nodes.length) nodes = node
+        else splitNodes.set(spec.id, nodes)
       } catch {
         nodes = node
       }

@@ -441,4 +441,5 @@ interface Slide { …, animations?: AnimSpec[] }
 
 - نموذج/محرك: `animation/{types,presets,engine,schedule,morph,easing,path,serialize,migrate,hand,HandOverlay}.ts`.
 - واجهة: `editor/anim/{AnimationLibrary,AnimationDock,EasingEditor,preview,library,registry,perf}.tsx?` + زر «حركة» عائم على التحديد في `SelectionOverlay` + تبويب «حركة» في `RightPanel` + Morph في تبويب الانتقال.
-- **اختبار حقيقي يمنع الأزرار الميتة:** `npm run test:anim` (`tests/animations/`) — يبني كل تأثير عبر المحرك داخل jsdom ويؤكد تغيّر DOM (transform/opacity/filter/clip)، إضافةً للجدولة وMorph وJSON وتتبع يد الوايت بورد ودورة المتجر الكاملة. **539 تحققًا، 0 فشل.**
+- **اختبار حقيقي يمنع الأزرار الميتة:** `npm run test:anim` (`tests/animations/`) — يبني كل تأثير عبر المحرك داخل jsdom ويؤكد تغيّر DOM (transform/opacity/filter/clip)، إضافةً للجدولة وMorph وJSON وتتبع يد الوايت بورد (التصاق السنّ بحدّ الحبر، اتجاه الكتابة RTL/LTR، صور اليد ومطابقتها للمانيفست) ودورة المتجر الكاملة. **654 تحققًا، 0 فشل.**
+- **يد الوايت بورد:** أُعيد بناؤها كاملًا (يد مصوّرة + نقطة التصاق معلنة + حركة مشتقّة من `clip` ومن مواضع النص المقيسة) — البحث والقرارات في [`docs/WHITEBOARD_HAND.md`](./docs/WHITEBOARD_HAND.md).
