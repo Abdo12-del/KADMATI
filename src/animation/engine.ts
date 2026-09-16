@@ -21,7 +21,7 @@ import { compileEase, springSegmentDuration } from './easing'
 import { broadcastHandFrame, clearHandFrame, computeHandFrame } from './hand'
 import { sampleMotionPath, type PathSample } from './path'
 import type { AnimProp, AnimSpec, Keyframe, Pt, RevealSpec, TextAnimSpec } from './types'
-import { animHasContent, animSpan, normalizeKeyframes } from './types'
+import { animHasContent, animSpan, INK_LEAD, normalizeKeyframes } from './types'
 
 export interface ElementBaseInfo {
   x: number
@@ -114,6 +114,23 @@ function cssKey(prop: AnimProp): string {
   return prop
 }
 
+/* ------------------------------------------------------------ text stream
+ *
+ * Connected scripts (Arabic, Persian, Urdu) cannot be inked by splitting them into character
+ * runs: each run is shaped on its own, so the letters lose their joined forms. Instead the text
+ * is split into **words** (each word stays one run, so shaping survives) and every word is
+ * revealed by a horizontal clip edge that travels across it — the ink appears stroke by stroke
+ * while the letters stay connected. The hand rides that same edge (see hand.ts `streamFrame`).
+ */
+
+/** CSS variable carrying the per-unit reveal of a text stream. */
+const TEXT_INK_VAR = '--kad-tx'
+
+/** Clip template: reveal from the right edge leftwards (right-to-left writing). */
+function streamClip(rtl: boolean): string {
+  return rtl ? 'inset(0 0 0 var(--kad-tx, 100%))' : 'inset(0 var(--kad-tx, 100%) 0 0)'
+}
+
 /* ------------------------------------------------------------- clip reveal */
 
 const CLIP_VARS = {
@@ -176,6 +193,7 @@ function applyClipBaseline(nodes: TweenNodes, spec: AnimSpec): void {
 
 function clearClipAndFilters(n: HTMLElement): void {
   n.style.clipPath = ''
+  n.style.removeProperty?.(TEXT_INK_VAR)
   n.style.removeProperty?.(CLIP_VARS.ct)
   n.style.removeProperty?.(CLIP_VARS.cr)
   n.style.removeProperty?.(CLIP_VARS.cb)
@@ -251,10 +269,13 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
    * (getBoundingClientRect forces layout — doing it per frame would cost more than the whole
    * animation) and cached; a failed measurement is retried on a later frame.
    */
-  const unitCache = new Map<string, { x: number; y: number; w?: number }[]>()
+  const unitCache = new Map<string, { x: number; y: number; w?: number; h?: number }[]>()
   const splitNodes = new Map<string, TweenNodes>()
 
-  const measureUnits = (spec: AnimSpec): { x: number; y: number; w?: number }[] | undefined => {
+  /** Per-animation stream timing (unit stride + pen-travel lead), for the hand. */
+  const streams = new Map<string, { stride: number; lead: number }>()
+
+  const measureUnits = (spec: AnimSpec): { x: number; y: number; w?: number; h?: number }[] | undefined => {
     const cached = unitCache.get(spec.id)
     if (cached) return cached
     const root = ctx.targets[spec.target]
@@ -265,7 +286,7 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
     if (!rootBox || !rootBox.width || !root.offsetWidth) return undefined
     // client px → design px for this node (slide zoom × whatever the engine already applied)
     const scale = rootBox.width / root.offsetWidth
-    const out: { x: number; y: number; w?: number }[] = []
+    const out: { x: number; y: number; w?: number; h?: number }[] = []
     for (const node of list) {
       const box = node.getBoundingClientRect?.()
       if (!box) return undefined
@@ -273,8 +294,9 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
         x: el.x + (box.left + box.width / 2 - rootBox.left) / scale,
         // the nib sits on the baseline area of the glyph, not at the top of the ink box
         y: el.y + (box.top + box.height * 0.82 - rootBox.top) / scale,
-        // the unit's own width: the hand sweeps across the word instead of parking on its centre
+        // the unit's own box: the hand sweeps across the word and is sized to the type
         w: box.width / scale,
+        h: box.height / scale,
       })
     }
     if (!out.length) return undefined
@@ -355,6 +377,24 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
     }
 
     const textInk = usesTextInk(spec, el)
+    // Connected script: ink each word through a moving clip edge instead of per-char runs.
+    const stream = textInk && !!el?.rtl && Array.isArray(nodes) && nodes.length > 1 && !!spec.text
+    const inkNodes = nodes
+    if (stream) {
+      const stride = Math.max(20, spec.text!.stagger)
+      const lead = stride * INK_LEAD
+      const wordNodes = nodes as HTMLElement[]
+      for (const w of wordNodes) {
+        touchedNodes.add(w)
+        w.style.willChange = 'clip-path'
+        w.style.clipPath = streamClip(true)
+        w.style.setProperty(TEXT_INK_VAR, '100%')
+      }
+      streams.set(spec.id, { stride, lead })
+      // element-level properties (opacity/scale/…) belong to the whole element, not to a word
+      nodes = node
+    }
+
     eachNode(nodes, (n) => {
       touchedNodes.add(n)
       n.style.willChange = 'transform, opacity, filter, clip-path'
@@ -364,6 +404,22 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
     const loop: boolean | number = spec.repeat === -1 ? true : spec.repeat > 0 ? spec.repeat : false
     const sub = createTimeline({ autoplay: false, loop, alternate: !!spec.yoyo })
     addSpecTweens(sub, spec, nodes, center, textInk)
+
+    if (stream) {
+      const { stride, lead } = streams.get(spec.id)!
+      // one continuous edge: word i is drawn over (1 - lead) of its stride, starting after the
+      // pen has travelled to it — the same numbers `streamFrame` uses for the hand
+      sub.add(
+        inkNodes as HTMLElement[],
+        {
+          [TEXT_INK_VAR]: { from: '100%', to: '0%' },
+          duration: stride * (1 - INK_LEAD),
+          ease: 'linear',
+          delay: stagger(stride),
+        },
+        lead,
+      )
+    }
     tl.sync(sub, spec.delay)
     duration = Math.max(duration, animSpan(spec))
   }

@@ -39,7 +39,8 @@ function inkDot(key: HandAssetKey): string | null {
     case 'chalk':
       return 'rgba(248,250,252,0.95)'
     case 'eraser':
-      return null
+    case 'palm':
+      return null // no ink at the working point: one wipes, the other pushes
     default:
       return 'rgba(17,24,39,0.5)' // marker-dark + graphite
   }
@@ -67,6 +68,8 @@ export const HandOverlay = memo(function HandOverlay({ slideId }: { slideId?: st
   const flip = frame.side === 'left' ? -1 : 1
   // a pressed tool sits ~1% closer to the board: the nib stays, the hand eases in
   const press = frame.pressing ? 0.99 : 1
+  // text ink sizes the rig to the type (a caption must not get a headline-sized hand)
+  const fit = frame.scale ?? 1
 
   return (
     <div
@@ -75,7 +78,7 @@ export const HandOverlay = memo(function HandOverlay({ slideId }: { slideId?: st
         left: frame.x,
         top: frame.y,
         opacity: frame.opacity,
-        transform: `translate(${-ax}px, ${-ay}px) rotate(${frame.angle}deg) scale(${flip * press}, ${press})`,
+        transform: `translate(${-ax}px, ${-ay}px) rotate(${frame.angle}deg) scale(${flip * press * fit}, ${press * fit})`,
         transformOrigin: `${ax}px ${ay}px`,
         willChange: 'transform, opacity',
         filter: 'drop-shadow(3px 5px 3px rgba(15,23,42,0.22))',

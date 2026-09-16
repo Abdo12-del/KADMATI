@@ -77,6 +77,13 @@ export interface TextAnimSpec {
 }
 
 /**
+ * Connected-script ink (Arabic, Persian, Urdu…): the fraction of a unit's writing window the
+ * pen spends travelling to the unit instead of drawing it. The engine must use the same value
+ * when it schedules the per-unit reveal, otherwise hand and ink disagree (see textStream.ts).
+ */
+export const INK_LEAD = 0.12
+
+/**
  * Clip-path reveal descriptor. The `clip` property runs 0 (hidden) → 1 (revealed);
  * this describes the geometry of the revealing edge.
  */

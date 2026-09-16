@@ -23,6 +23,7 @@
  */
 
 import type { ElementBaseInfo } from './engine'
+import { handAsset, handDrawHeight } from './handAssets'
 import type { AnimSpec, WhiteboardHandSide, WhiteboardHandStyle } from './types'
 
 /** Which asset the overlay should draw. */
@@ -34,11 +35,22 @@ export interface HandFrame {
   y: number
   /** extra tilt (deg) applied around the working point — assets ship pre-oriented */
   angle: number
+  /** 1 = the asset's authored size; smaller when the ink is smaller than the rig was designed for */
+  scale: number
   opacity: number
   style: WhiteboardHandStyle
   side: WhiteboardHandSide
   pressing: boolean
   pose: HandPose
+}
+
+/** The height the hand rig is authored at (design px) — the reference for `scale`. */
+const BASE_HAND_H = handDrawHeight(handAsset('marker-dark'))
+
+/** Hand size for a text run: ~5.5× the line, so a caption gets a smaller hand than a headline. */
+function scaleForText(unitHeight: number | undefined): number {
+  if (!unitHeight || !isFinite(unitHeight)) return 1
+  return Math.round(Math.min(1.15, Math.max(0.5, (unitHeight * 5.5) / BASE_HAND_H)) * 1000) / 1000
 }
 
 export interface HandCtx {
@@ -50,7 +62,7 @@ export interface HandCtx {
    * so a measured array is passed straight through; `from: 'end'` reverses it, which is what
    * the engine does when it builds this array.
    */
-  units?: { x: number; y: number; w?: number }[]
+  units?: { x: number; y: number; w?: number; h?: number }[]
   /**
    * ms between inked units, when it differs from `spec.text.stagger` — e.g. an RTL spec authored
    * per character is run per word (see `effectiveTextMode`), so the hand must advance per word too.
@@ -58,6 +70,12 @@ export interface HandCtx {
   stagger?: number
   /** paragraph direction of the target text (decides which side a unit is written from) */
   rtl?: boolean
+  /**
+   * Connected-script ink: the units are revealed by a clip edge travelling across each unit,
+   * `stride` ms per unit with `lead` ms of pen travel before a unit starts being drawn. When
+   * present, the hand follows that edge instead of sweeping unit by unit.
+   */
+  stream?: { stride: number; lead: number }
 }
 
 const DEFAULT_FRAME: HandFrame = {
@@ -65,6 +83,7 @@ const DEFAULT_FRAME: HandFrame = {
   x: 0,
   y: 0,
   angle: 0,
+  scale: 1,
   opacity: 0,
   style: 'marker-dark',
   side: 'right',
@@ -175,6 +194,9 @@ export function computeHandFrame(spec: AnimSpec, el: ElementBaseInfo, localT: nu
 
     if (wb.effect === 'draw') {
       if (spec.text) {
+        if (ctx.units?.length && ctx.stream) {
+          return streamFrame(style, side, pose, localT, ctx.units, ctx.stream, ctx.rtl ?? el.rtl === true)
+        }
         const units = ctx.units?.length ? ctx.units : estimatedUnits(spec, el, ctx.stagger)
         return textFrame(spec, style, side, pose, localT, units, ctx.stagger, ctx.rtl ?? el.rtl)
       }
@@ -294,13 +316,73 @@ export function computeHandFrame(spec: AnimSpec, el: ElementBaseInfo, localT: nu
 
 /* -------------------------------------------------------------- text frame */
 
+/**
+ * The ink edge of a text stream — used for connected scripts, where the ink travels across each
+ * unit instead of being switched on unit by unit (see `textStream` in engine.ts).
+ *
+ * At time `t` the pen is either travelling to the current unit (the first `lead` ms of its
+ * window — a real pen lift between words and lines) or drawing it, from the edge the script
+ * starts at to the edge it ends at. Both numbers come from the engine's schedule, so the hand
+ * and the ink can never disagree.
+ */
+function streamFrame(
+  style: WhiteboardHandStyle,
+  side: WhiteboardHandSide,
+  pose: HandPose,
+  localT: number,
+  units: { x: number; y: number; w?: number; h?: number }[],
+  stream: { stride: number; lead: number },
+  rtl: boolean,
+): HandFrame {
+  const n = units.length
+  const dir = rtl ? -1 : 1 // writing direction along the line
+  const { stride, lead } = stream
+  const travel = clamp(lead / stride, 0.02, 0.5)
+  const idx = clamp((Math.max(0, localT) - lead) / stride, 0, n)
+  const i = Math.min(n - 1, Math.floor(idx))
+  const f = idx - i
+  const u = units[i]
+  const half = (u.w ?? 0) / 2
+  const entry = u.x + (rtl ? half : -half)
+
+  let x: number
+  let y: number
+  const travelling = f < travel && i > 0
+  if (travelling) {
+    // pen lift: leave the previous unit's end and land on this unit's entry edge
+    const prev = units[i - 1]
+    const prevHalf = (prev.w ?? 0) / 2
+    const fromX = prev.x + (rtl ? -prevHalf : prevHalf)
+    const g = easeInOutSine(f / travel)
+    x = fromX + (entry - fromX) * g
+    y = prev.y + (u.y - prev.y) * g
+  } else {
+    const p = clamp((f - travel) / (1 - travel), 0, 1)
+    x = entry + dir * p * (u.w ?? 0)
+    y = u.y
+  }
+
+  const t = localT / 1000
+  return frame({
+    x: x + tremor(t, 0.7),
+    y: y + tremor(t, 3.9) + Math.sin(idx * 0.6) * 0.4,
+    angle: wristTilt(dir * 0.9, 0) + tremor(t, 8.2) * 0.7,
+    scale: scaleForText(u.h),
+    opacity: 1,
+    style,
+    side,
+    pressing: !travelling,
+    pose,
+  })
+}
+
 function textFrame(
   spec: AnimSpec,
   style: WhiteboardHandStyle,
   side: WhiteboardHandSide,
   pose: HandPose,
   localT: number,
-  units: { x: number; y: number; w?: number }[],
+  units: { x: number; y: number; w?: number; h?: number }[],
   staggerOverride?: number,
   rtlHint?: boolean,
 ): HandFrame {
@@ -342,6 +424,7 @@ function textFrame(
     x: x + tremor(t, 0.7),
     y: y + tremor(t, 3.9) + Math.sin(order * 0.9) * 0.5,
     angle: wristTilt(dir * 0.8, 0) + tremor(t, 8.2) * 0.7,
+    scale: scaleForText(u.h),
     opacity: 1,
     style,
     side,
@@ -398,12 +481,13 @@ function lastPoint(effect: string, el: ElementBaseInfo, ctx: HandCtx, isRight: b
 
 /* ----------------------------------------------------------------- helpers */
 
-function frame(f: Omit<HandFrame, 'active'> & { active?: boolean }): HandFrame {
+function frame(f: Omit<HandFrame, 'active' | 'scale'> & { active?: boolean; scale?: number }): HandFrame {
   return {
     active: true,
     x: Math.round(f.x * 100) / 100,
     y: Math.round(f.y * 100) / 100,
     angle: Math.round(f.angle * 100) / 100,
+    scale: f.scale ?? 1,
     opacity: Math.round(clamp(f.opacity, 0, 1) * 1000) / 1000,
     style: f.style,
     side: f.side,

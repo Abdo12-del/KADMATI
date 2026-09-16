@@ -576,7 +576,7 @@ console.log('\n[11] whiteboard animation & hand tracking')
  */
 console.log('\n[12] whiteboard drawing presets land correctly on text')
 {
-  const { useDoc, applyPreset, adaptSpecToTarget, usesTextInk, effectiveTextMode, createShape, createText, presetById, buildSlideEngine } = mod
+  const { useDoc, applyPreset, adaptSpecToTarget, usesTextInk, effectiveTextMode, createShape, createText, presetById, buildSlideEngine, computeHandFrame } = mod
   const state = useDoc.getState()
   const slideId = state.doc.slides[state.slideIndex].id
   let textEl
@@ -657,6 +657,59 @@ console.log('\n[12] whiteboard drawing presets land correctly on text')
   const charSpec = presetById('whiteboard-write').make('ar3')
   ok(effectiveTextMode(charSpec, { ...baseEl, rtl: true }) === 'words', 'even a character spec is upgraded for RTL targets')
   ok(effectiveTextMode(charSpec, { ...baseEl, rtl: false }) === 'chars', 'and stays per character for LTR targets')
+
+  /* ---- connected-script ink: word-shaped runs revealed by a travelling clip edge ---- */
+  host.innerHTML = ''
+  const arNode = document.createElement('div')
+  arNode.id = 'ar-stream'
+  arNode.innerHTML = '<p>رسم يدوي على السبورة</p>'
+  host.appendChild(arNode)
+  const arSpec2 = adaptSpecToTarget(presetById('whiteboard-draw').make('ar-stream'), textEl)
+  const engineStream = buildSlideEngine({ targets: { 'ar-stream': arNode }, elements: { 'ar-stream': baseEl }, anims: [arSpec2], textSplit: true })
+  engineStream.seek(arSpec2.text.stagger * 1.5) // mid-word: the edge is inside a word run
+  await tick(30)
+  const words = [...arNode.querySelectorAll('[data-word]')] // TextSplitter's own word runs
+  ok(!arNode.querySelector('span[style*="clip: rect"]')?.getAttribute('data-word'), 'the off-screen accessible copy is not a word run')
+  ok(words.length >= 4, `Arabic text is split into words, not characters (${words.length} runs)`)
+  ok(words.every((w) => w.textContent.trim().indexOf(' ') === -1), 'each run is a single word — the letters keep their joined forms')
+  const clipped = words.filter((w) => (w.style.clipPath || '').includes('inset(0 0 0'))
+  ok(clipped.length >= 4, `every word is revealed by a right-to-left clip edge (${clipped.length} word runs)`)
+  const half = clipped.filter((w) => {
+    const v = parseFloat(w.style.getPropertyValue('--kad-tx'))
+    return v > 0 && v < 100
+  })
+  ok(half.length >= 1, `the edge is mid-word on the word being written (${half.length} partially inked)`)
+  ok(!arNode.style.clipPath, 'still no block wipe anywhere on the element')
+  engineStream.destroy()
+  await tick(20)
+  ok(!words.some((w) => w.style.clipPath), 'destroying the engine clears the stream clips')
+
+  // the hand rides that edge: inside a word it advances right-to-left with the ink
+  const stride = arSpec2.text.stagger
+  const measuredWords = [
+    { x: 1000, y: 400, w: 200 },
+    { x: 700, y: 400, w: 200 },
+  ]
+  const at = (t, rtl = true) => computeHandFrame(arSpec2, { ...baseEl }, t, { units: measuredWords, stream: { stride, lead: stride * 0.12 }, rtl })
+  const first = at(60)
+  const mid = at(stride * 0.5)
+  const last = at(stride * 0.95)
+  ok(first.x > mid.x && mid.x > last.x, `the nib tracks the shrinking ink edge (${Math.round(first.x)} → ${Math.round(mid.x)} → ${Math.round(last.x)})`)
+  // the ink edge the engine animates: p = (f - lead) / (1 - lead) of the measured word box
+  const lead = stride * 0.12
+  const f = (stride * 0.5 - lead) / stride
+  const expectedEdge = 1000 + 100 - ((f - 0.12) / 0.88) * 200
+  ok(Math.abs(mid.x - expectedEdge) < 6, `the nib sits on the ink edge, not near it (${Math.round(mid.x)} vs ${Math.round(expectedEdge)})`)
+  // the second word's window opens with a pen lift (travelling from the end of the first word)
+  const travelling = at(lead + stride * 1.05)
+  ok(!travelling.pressing, 'the pen is lifted while it travels between words')
+  ok(at(lead + stride * 1.3).pressing, 'and it presses again once it lands on the next word')
+
+  // the rig is sized to the type: a caption gets a smaller hand than a headline
+  const big = computeHandFrame(arSpec2, { ...baseEl }, 200, { units: [{ x: 800, y: 400, w: 300, h: 64 }], stream: { stride, lead }, rtl: true })
+  const small = computeHandFrame(arSpec2, { ...baseEl }, 200, { units: [{ x: 800, y: 400, w: 160, h: 22 }], stream: { stride, lead }, rtl: true })
+  ok(big.scale > small.scale, `hand size follows the type size (${big.scale} for 64px text vs ${small.scale} for 22px)`)
+  ok(small.scale >= 0.5 && big.scale <= 1.15, 'and stays within sane bounds')
 
   // erasing text stays a block wipe: that is what an eraser does
   applyPreset('whiteboard-erase', [textEl.id], 'same')
