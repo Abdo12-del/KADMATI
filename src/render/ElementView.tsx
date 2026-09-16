@@ -2,6 +2,7 @@ import { memo, useEffect, useMemo, useRef } from 'react'
 import type { AssetRef, AnyElement, ChartElement, FrameElement, GradientStop, IconElement, ImageElement, LineElement, Paint, ShapeElement, SvgElement, TableElement, TextElement, TextStyle, VideoElement } from '../document/types'
 import { shapePath } from '../document/shapes'
 import { iconSvg } from '../lib/iconLibrary'
+import { sanitizeSvg } from '../lib/svg'
 import { paintToCss, shadowCss, strokeCss, withAlpha } from '../lib/colors'
 import { fontStack } from '../lib/fonts'
 import { imageStyle } from './elementStyle'
@@ -256,17 +257,7 @@ function SvgBody({ el }: { el: SvgElement }) {
   return <div style={{ width: '100%', height: '100%', boxShadow: shadowCss(el.shadow) }} dangerouslySetInnerHTML={{ __html: safe }} />
 }
 
-function sanitizeSvg(markup: string): string {
-  let out = markup
-  if (!/<svg/i.test(out)) out = `<svg viewBox="0 0 100 100" width="100%" height="100%">${out}</svg>`
-  out = out.replace(/<script[\s\S]*?<\/script>/gi, '').replace(/\son\w+="[^"]*"/gi, '')
-  out = out.replace(/<svg([^>]*)>/i, (_m, attrs: string) => `<svg${addIfMissing(attrs, 'preserveAspectRatio', 'xMidYMid meet')} style="width:100%;height:100%">`)
-  return out
-}
 
-function addIfMissing(attrs: string, name: string, value: string): string {
-  return attrs.includes(name) ? attrs : `${attrs} ${name}="${value}"`
-}
 
 /* ------------------------------------------------------------------ table */
 

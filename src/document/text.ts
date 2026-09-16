@@ -27,34 +27,174 @@ export const ALLOWED_TAGS = new Set([
   'FONT',
 ])
 
-/** Remove scripts, event handlers and anything outside the whitelist. */
+/**
+ * Tags dropped *with* their subtree. These can execute script, load remote code, or leave the
+ * HTML namespace, so unwrapping them (what we do for ordinary unknown tags) would be unsafe.
+ */
+const DROP_TAGS = new Set([
+  'SCRIPT',
+  'STYLE',
+  'IFRAME',
+  'FRAME',
+  'FRAMESET',
+  'OBJECT',
+  'EMBED',
+  'APPLET',
+  'LINK',
+  'META',
+  'BASE',
+  'TEMPLATE',
+  'NOSCRIPT',
+  'SVG',
+  'MATH',
+  'CANVAS',
+  'FORM',
+  'INPUT',
+  'BUTTON',
+  'TEXTAREA',
+  'SELECT',
+  'OPTION',
+  'AUDIO',
+  'VIDEO',
+  'SOURCE',
+  'TRACK',
+  'IMG',
+  'PICTURE',
+  'MAP',
+  'AREA',
+  'PORTAL',
+  'DIALOG',
+])
+
+/** Attributes we keep. Everything else — including every `on*` handler — is discarded. */
+const KEEP_ATTRS = new Set(['style', 'href', 'dir', 'start', 'face', 'color', 'size'])
+
+/** Guard against pathological nesting blowing the stack. Real documents are a handful deep. */
+const MAX_DEPTH = 40
+
+/**
+ * Remove scripts, event handlers and anything outside the whitelist.
+ *
+ * The output is rebuilt into a fresh tree rather than edited in place. That matters: the
+ * previous implementation unwrapped disallowed tags by splicing their children into the parent,
+ * but iterated over a snapshot of the child list, so the moved children were never visited —
+ * `<div><span onclick=…>` came back untouched and `<div><img onerror=…>` kept the `<img>`.
+ */
 export function sanitizeHtml(html: string): string {
-  if (typeof window === 'undefined') return html
-  const doc = new DOMParser().parseFromString(`<div>${html}</div>`, 'text/html')
+  const input = String(html ?? '')
+  if (typeof window === 'undefined' || typeof DOMParser === 'undefined') return sanitizeHtmlNoDom(input)
+  const doc = new DOMParser().parseFromString(`<div>${input}</div>`, 'text/html')
   const root = doc.body.firstElementChild
   if (!root) return ''
-  const walk = (node: Element) => {
-    for (const child of Array.from(node.children)) {
-      if (!ALLOWED_TAGS.has(child.tagName)) {
-        if (child.tagName === 'STYLE' || child.tagName === 'SCRIPT') child.remove()
-        else {
-          const parent = child.parentNode
-          while (child.firstChild) parent?.insertBefore(child.firstChild, child)
-          child.remove()
-        }
-        continue
-      }
-      for (const attr of Array.from(child.attributes)) {
-        const name = attr.name.toLowerCase()
-        const keep = name === 'style' || name === 'href' || name === 'dir' || name === 'start' || name === 'face' || name === 'color' || name === 'size'
-        if (!keep) child.removeAttribute(attr.name)
-        if (name === 'href' && /^\s*(javascript|data|vbscript):/i.test(attr.value)) child.removeAttribute('href')
-      }
-      walk(child)
+  const out = doc.createElement('div')
+  copyChildren(root, out, 0)
+  return out.innerHTML
+}
+
+function copyChildren(from: Element, to: Element, depth: number): void {
+  if (depth > MAX_DEPTH) return
+  for (const child of Array.from(from.childNodes)) {
+    // Text nodes carry the actual content; comments, CDATA and processing instructions go.
+    if (child.nodeType === 3) {
+      to.appendChild(child.cloneNode(false))
+      continue
     }
+    if (child.nodeType !== 1) continue
+    const el = child as Element
+    if (DROP_TAGS.has(el.tagName)) continue
+    if (!ALLOWED_TAGS.has(el.tagName)) {
+      // Unknown wrapper: keep the content, lose the tag — and *visit* the content.
+      copyChildren(el, to, depth + 1)
+      continue
+    }
+    const clean = to.ownerDocument.createElement(el.tagName.toLowerCase())
+    copyAttributes(el, clean)
+    copyChildren(el, clean, depth + 1)
+    to.appendChild(clean)
   }
-  walk(root)
-  return root.innerHTML
+}
+
+function copyAttributes(from: Element, to: Element): void {
+  for (const attr of Array.from(from.attributes)) {
+    const name = attr.name.toLowerCase()
+    if (!KEEP_ATTRS.has(name)) continue
+    if (name === 'href') {
+      const safe = safeHref(attr.value)
+      if (safe !== null) to.setAttribute('href', safe)
+      continue
+    }
+    if (name === 'style') {
+      const safe = safeStyle(attr.value)
+      if (safe !== null) to.setAttribute('style', safe)
+      continue
+    }
+    if (name === 'size' && !/^\d{1,2}$/.test(attr.value.trim())) continue
+    if (name === 'start' && !/^-?\d{1,5}$/.test(attr.value.trim())) continue
+    to.setAttribute(name, attr.value)
+  }
+}
+
+/** Only links that cannot execute: absolute http(s)/mailto/tel, or a relative reference. */
+export function safeHref(value: string): string | null {
+  // Control chars and whitespace are stripped before the scheme test: `java\nscript:` and
+  // `java\0script:` both execute in a browser but neither matches a naive /^javascript:/.
+  const probe = value.replace(/[\u0000-\u0020]/g, '').toLowerCase()
+  if (!probe) return null
+  if (/^(javascript|data|vbscript|file):/.test(probe)) return null
+  if (/^(https?|mailto|tel):/.test(probe)) return value
+  if (probe.startsWith('#') || probe.startsWith('/')) return value
+  if (!probe.includes(':')) return value
+  return null
+}
+
+/** CSS can pull in remote content or, on legacy engines, run script. Drop those declarations. */
+function safeStyle(value: string): string | null {
+  const clean = value.replace(/[\u0000-\u001f]/g, '')
+  if (!clean) return null
+  if (/url\s*\(|expression\s*\(|@import|behavior\s*:|javascript:|vbscript:/i.test(clean)) return null
+  return clean
+}
+
+/**
+ * Defensive fallback for a DOM-less host (a worker or a server-side export run). There is no
+ * parser to lean on, so we keep only whitelisted tags with whitelisted attributes and drop
+ * everything else — never the raw input, which is what this function used to return.
+ */
+function sanitizeHtmlNoDom(html: string): string {
+  let out = html.replace(/<!--[\s\S]*?-->/g, '')
+  for (const tag of DROP_TAGS) {
+    const name = tag.toLowerCase()
+    out = out
+      .replace(new RegExp(`<${name}\\b[\\s\\S]*?<\\/${name}\\s*>`, 'gi'), '')
+      .replace(new RegExp(`<${name}\\b[^>]*\\/?>`, 'gi'), '')
+  }
+  out = out.replace(/<\/?([a-zA-Z][\w-]*)((?:"[^"]*"|'[^']*'|[^>])*)>/g, (all, tag: string, attrs: string) => {
+    if (!ALLOWED_TAGS.has(tag.toUpperCase())) return ''
+    if (all[1] === '/') return `</${tag.toLowerCase()}>`
+    let kept = ''
+    const attrRe = /([a-zA-Z][\w:-]*)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g
+    let m: RegExpExecArray | null
+    while ((m = attrRe.exec(attrs))) {
+      const name = m[1].toLowerCase()
+      if (!KEEP_ATTRS.has(name)) continue
+      const value = m[2] ?? m[3] ?? m[4] ?? ''
+      if (name === 'href') {
+        const safe = safeHref(value)
+        if (safe === null) continue
+        kept += ` href="${safe.replace(/"/g, '&quot;')}"`
+      } else if (name === 'style') {
+        const safe = safeStyle(value)
+        if (safe === null) continue
+        kept += ` style="${safe.replace(/"/g, '&quot;')}"`
+      } else {
+        kept += ` ${name}="${value.replace(/"/g, '&quot;')}"`
+      }
+    }
+    return `<${tag.toLowerCase()}${kept}>`
+  })
+  // Anything that still looks like an event handler or an executor never reaches the DOM.
+  out = out.replace(/\son[a-z][a-z0-9-]*\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+  return out
 }
 
 export function escapeHtml(text: string): string {
