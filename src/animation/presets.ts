@@ -278,51 +278,145 @@ export const PRESETS: PresetDef[] = [
     motionPath: o?.motionPath ?? { kind: 'svg', d: 'M 0 360 C 320 200, 960 520, 1280 360' },
   }), { kw: 'custom svg path مسار مخصص' }),
 
-  /* ========================================================== WHITEBOARD */
-  def('whiteboard-draw', 'Whiteboard Draw (رسم باليد)', 'whiteboard', () => ({
-    name: 'Whiteboard Draw', duration: 1400, reveal: { kind: 'wipe-right' },
+  /* ========================================================== WHITEBOARD - Realistic hand drawing */
+  def('whiteboard-draw', 'Whiteboard Draw (رسم واقعي)', 'whiteboard', () => ({
+    name: 'Whiteboard Draw', duration: 2200, reveal: { kind: 'wipe-down' },
     whiteboard: { effect: 'draw', handStyle: 'marker-dark', handSide: 'right' },
     properties: {
-      clip: [kf(0, 0, e('linear')), kf(1400, 1)],
-      opacity: [kf(0, 0, e('linear')), kf(40, 1)],
+      // Realistic drawing: top-to-bottom reveal matching hand's vertical progress
+      // with variable speed (ease-in-out) simulating human drawing rhythm
+      clip: [
+        kf(0, 0, e('cubicOut')),
+        kf(400, 0.12, e('sineInOut')),
+        kf(900, 0.38, e('sineInOut')),
+        kf(1400, 0.65, e('sineInOut')),
+        kf(1850, 0.88, e('sineInOut')),
+        kf(2200, 1, e('cubicOut')),
+      ],
+      opacity: [kf(0, 0, e('linear')), kf(80, 1)],
+      // Subtle scale pulse as if ink pressure varies
+      scale: [
+        kf(0, 0.998, e('linear')),
+        kf(600, 1.002, e('sineInOut')),
+        kf(1200, 0.999, e('sineInOut')),
+        kf(2200, 1, e('cubicOut')),
+      ],
     },
-  }), { kw: 'whiteboard hand draw scribe doodly رسم سبورة يد قلم ماركر' }),
+  }), { kw: 'whiteboard hand draw scribe doodly رسم سبورة يد قلم ماركر واقعي' }),
 
-  def('whiteboard-push', 'Whiteboard Push (دفع باليد)', 'whiteboard', () => ({
-    name: 'Whiteboard Push', duration: 900,
-    whiteboard: { effect: 'push', handStyle: 'marker-dark', handSide: 'right' },
+  def('whiteboard-draw-pencil', 'Pencil Sketch (رسم بالقلم الرصاص)', 'whiteboard', () => ({
+    name: 'Pencil Sketch', duration: 2600, reveal: { kind: 'wipe-down' },
+    whiteboard: { effect: 'draw', handStyle: 'pencil', handSide: 'right' },
     properties: {
-      x: [kf(0, 180, e('cubicOut')), kf(900, 0)],
-      opacity: [kf(0, 0, e('linear')), kf(120, 1)],
+      clip: [
+        kf(0, 0, e('cubicOut')),
+        kf(500, 0.15, e('sineInOut')),
+        kf(1100, 0.42, e('sineInOut')),
+        kf(1700, 0.72, e('sineInOut')),
+        kf(2200, 0.92, e('sineInOut')),
+        kf(2600, 1, e('cubicOut')),
+      ],
+      opacity: [kf(0, 0, e('linear')), kf(100, 1)],
+      rotation: [
+        kf(0, -0.5, e('sineInOut')),
+        kf(800, 0.4, e('sineInOut')),
+        kf(1600, -0.3, e('sineInOut')),
+        kf(2600, 0),
+      ],
     },
-  }), { kw: 'whiteboard push hand slide انزلاق دفع يد' }),
+  }), { kw: 'pencil sketch رسم قلم رصاص تخطيط' }),
 
-  def('whiteboard-erase', 'Whiteboard Erase (مسح باليد)', 'whiteboard', () => ({
-    name: 'Whiteboard Erase', duration: 1200, reveal: { kind: 'wipe-right' },
-    whiteboard: { effect: 'erase', handStyle: 'eraser', handSide: 'right' },
+  def('whiteboard-draw-chalk', 'Chalk Draw (رسم بالطباشير)', 'whiteboard', () => ({
+    name: 'Chalk Draw', duration: 2000, reveal: { kind: 'wipe-down' },
+    whiteboard: { effect: 'draw', handStyle: 'chalk', handSide: 'right' },
     properties: {
-      clip: [kf(0, 1, e('linear')), kf(1200, 0)],
-      opacity: [kf(0, 1, e('linear')), kf(1200, 0)],
-    },
-  }), { kw: 'whiteboard erase duster sponge ممحاة مسح سبورة' }),
-
-  def('whiteboard-stroke', 'Sketch Draw (تخطيط بدون يد)', 'whiteboard', () => ({
-    name: 'Sketch Draw', duration: 950, reveal: { kind: 'wipe-right' },
-    whiteboard: { effect: 'stroke' },
-    properties: {
-      clip: [kf(0, 0, e('cubicOut')), kf(950, 1)],
-      opacity: [kf(0, 0, e('linear')), kf(40, 1)],
-    },
-  }), { kw: 'whiteboard stroke sketch outline رسم خطوط' }),
-
-  def('whiteboard-write', 'Handwriting (كتابة يدوية)', 'whiteboard', () => ({
-    name: 'Handwriting', duration: 1400,
-    text: { mode: 'chars', stagger: 40, from: 'start' },
-    whiteboard: { effect: 'draw', handStyle: 'marker-blue', handSide: 'right' },
-    properties: {
+      clip: [
+        kf(0, 0, e('quadOut')),
+        kf(600, 0.3, e('sineInOut')),
+        kf(1200, 0.62, e('sineInOut')),
+        kf(2000, 1, e('cubicOut')),
+      ],
       opacity: [kf(0, 0, e('linear')), kf(60, 1)],
     },
-  }), { kw: 'whiteboard write text handwriting كتابة يد قلم خط' }),
+  }), { kw: 'chalk طباشير رسم سبورة' }),
+
+  def('whiteboard-push', 'Whiteboard Push (دفع واقعي)', 'whiteboard', () => ({
+    name: 'Whiteboard Push', duration: 1100,
+    whiteboard: { effect: 'push', handStyle: 'marker-dark', handSide: 'right' },
+    properties: {
+      x: [kf(0, 220, e('backOut')), kf(900, -6, e('cubicOut')), kf(1100, 0, e('sineInOut'))],
+      opacity: [kf(0, 0, e('linear')), kf(150, 1)],
+      scale: [kf(0, 0.96, e('backOut')), kf(900, 1.02, e('cubicOut')), kf(1100, 1)],
+    },
+  }), { kw: 'whiteboard push hand slide انزلاق دفع يد واقعي' }),
+
+  def('whiteboard-erase', 'Whiteboard Erase (مسح واقعي)', 'whiteboard', () => ({
+    name: 'Whiteboard Erase', duration: 1600, reveal: { kind: 'wipe-down' },
+    whiteboard: { effect: 'erase', handStyle: 'eraser', handSide: 'right' },
+    properties: {
+      clip: [
+        kf(0, 1, e('linear')),
+        kf(400, 0.75, e('sineInOut')),
+        kf(900, 0.45, e('sineInOut')),
+        kf(1300, 0.15, e('sineInOut')),
+        kf(1600, 0, e('cubicIn')),
+      ],
+      opacity: [kf(0, 1, e('linear')), kf(1400, 1, e('linear')), kf(1600, 0)],
+      // Slight shake as eraser scrubs
+      x: [
+        kf(0, 0, e('linear')),
+        kf(200, -1.5, e('sineInOut')),
+        kf(400, 1.2, e('sineInOut')),
+        kf(700, -1, e('sineInOut')),
+        kf(1000, 0.8, e('sineInOut')),
+        kf(1600, 0),
+      ],
+    },
+  }), { kw: 'whiteboard erase duster sponge ممحاة مسح سبورة واقعي' }),
+
+  def('whiteboard-stroke', 'Sketch Draw (تخطيط احترافي)', 'whiteboard', () => ({
+    name: 'Sketch Draw', duration: 1400, reveal: { kind: 'circle' },
+    whiteboard: { effect: 'stroke' },
+    properties: {
+      clip: [kf(0, 0, e('cubicOut')), kf(1400, 1, e('cubicOut'))],
+      opacity: [kf(0, 0, e('linear')), kf(80, 1)],
+      scale: [kf(0, 0.92, e('backOut')), kf(1400, 1, e('cubicOut'))],
+    },
+  }), { kw: 'whiteboard stroke sketch outline رسم خطوط احترافي' }),
+
+  def('whiteboard-write', 'Handwriting (كتابة يدوية واقعية)', 'whiteboard', () => ({
+    name: 'Handwriting', duration: 2400,
+    text: { mode: 'chars', stagger: 55, from: 'start' },
+    whiteboard: { effect: 'draw', handStyle: 'marker-dark', handSide: 'right' },
+    properties: {
+      opacity: [kf(0, 0, e('linear')), kf(80, 1)],
+      // Subtle vertical bounce per character as hand writes
+      y: [
+        kf(0, 2, e('sineInOut')),
+        kf(600, -1, e('sineInOut')),
+        kf(1200, 1.5, e('sineInOut')),
+        kf(2400, 0, e('cubicOut')),
+      ],
+    },
+  }), { kw: 'whiteboard write text handwriting كتابة يد قلم خط واقعي' }),
+
+  def('whiteboard-write-ar', 'كتابة عربية (يد واقعية)', 'whiteboard', () => ({
+    name: 'كتابة عربية', duration: 2800,
+    text: { mode: 'chars', stagger: 65, from: 'end' }, // RTL: from end
+    whiteboard: { effect: 'draw', handStyle: 'marker-blue', handSide: 'right' },
+    properties: {
+      opacity: [kf(0, 0, e('linear')), kf(90, 1)],
+    },
+  }), { kw: 'arabic كتابة عربية خط يد RTL يمين لليسار' }),
+
+  def('whiteboard-write-pencil', 'كتابة بالقلم الرصاص', 'whiteboard', () => ({
+    name: 'Pencil Writing', duration: 2200,
+    text: { mode: 'chars', stagger: 45, from: 'start' },
+    whiteboard: { effect: 'draw', handStyle: 'pencil', handSide: 'right' },
+    properties: {
+      opacity: [kf(0, 0, e('linear')), kf(70, 1)],
+    },
+  }), { kw: 'pencil writing كتابة قلم رصاص' }),
 ]
 
 export function presetById(id: string): PresetDef | undefined {
@@ -368,14 +462,21 @@ export interface BundleDef {
 
 export const ANIMATION_BUNDLES: BundleDef[] = [
   {
-    id: 'bundle-whiteboard', label: 'Whiteboard Story', description: 'Hand Draw + Marker',
+    id: 'bundle-whiteboard', label: 'Whiteboard Story (واقعي)', description: 'رسم واقعي باليد + ماركر',
     make: (t) => [base(t, {
-      name: 'Whiteboard Story', presetId: 'bundle-whiteboard', kind: 'whiteboard', duration: 1400,
-      reveal: { kind: 'wipe-right' },
+      name: 'Whiteboard Story', presetId: 'bundle-whiteboard', kind: 'whiteboard', duration: 2400,
+      reveal: { kind: 'wipe-down' },
       whiteboard: { effect: 'draw', handStyle: 'marker-dark', handSide: 'right' },
       properties: {
-        clip: [kf(0, 0, e('linear')), kf(1400, 1)],
-        opacity: [kf(0, 0, e('linear')), kf(40, 1)],
+        clip: [
+          kf(0, 0, e('cubicOut')),
+          kf(500, 0.18, e('sineInOut')),
+          kf(1100, 0.45, e('sineInOut')),
+          kf(1700, 0.78, e('sineInOut')),
+          kf(2400, 1, e('cubicOut')),
+        ],
+        opacity: [kf(0, 0, e('linear')), kf(80, 1)],
+        scale: [kf(0, 0.998, e('linear')), kf(2400, 1, e('cubicOut'))],
       },
     })],
   },

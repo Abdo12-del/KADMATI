@@ -336,6 +336,7 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
 
 function addSpecTweens(sub: Timeline, spec: AnimSpec, nodes: TweenNodes, center: Pt): void {
   const hasPath = !!spec.motionPath
+  const isWhiteboardDraw = !!spec.whiteboard && spec.whiteboard.effect === 'draw'
   // anime v4 stagger uses 'first'/'center'/'last' (we store 'start'/'center'/'end')
   const staggerFrom = spec.text ? (spec.text.from === 'start' ? 'first' : spec.text.from === 'end' ? 'last' : 'center') : undefined
   const staggerDelay = spec.text && staggerFrom ? stagger(spec.text.stagger, { from: staggerFrom }) : undefined
@@ -379,6 +380,15 @@ function addSpecTweens(sub: Timeline, spec: AnimSpec, nodes: TweenNodes, center:
 
   if (spec.motionPath) {
     addMotionPathTweens(sub, spec, nodes, center, staggerOpt)
+  }
+
+  // Whiteboard-specific enhancements: ink flow and pressure effects
+  if (isWhiteboardDraw && !spec.text) {
+    eachNode(nodes, (n) => {
+      if (!n.dataset.kadOrigFilter) {
+        n.dataset.kadOrigFilter = n.style.filter || ''
+      }
+    })
   }
 
   // end: revert — one frame after the final keyframe, snap back to neutral state
