@@ -49,20 +49,20 @@ function stubOutline(userText, count) {
   const t = (arText, enText) => (ar ? arText : enText)
   const n = Math.max(4, Math.min(count || 8, 14))
   const slides = [
-    { kind: 'title', title: topic, takeaways: [t('عرض من إعداد نموذج Aurova (وضع التجربة)', 'Prepared by the Aurova model (stub mode)')] },
-    { kind: 'agenda', title: t('ما سنغطيه', 'What we will cover'), takeaways: [t('السياق', 'Context'), t('التحليل', 'Analysis'), t('الخطة', 'Plan'), t('القرار', 'Decision')] },
+    { kind: 'title', title: topic, takeaways: [t('عرض من إعداد نموذج Aurova (وضع التجربة)', 'Prepared by the Aurova model (stub mode)')], layout: 'title', bg: 'primary', image: 'aurora', notes: t('افتح بالنتيجة لا بالمنهج.', 'Open with the outcome, not the method.') },
+    { kind: 'agenda', title: t('ما سنغطيه', 'What we will cover'), takeaways: [t('السياق', 'Context'), t('التحليل', 'Analysis'), t('الخطة', 'Plan'), t('القرار', 'Decision')], layout: 'title-content' },
   ]
   const middle = [
-    { kind: 'content', title: t(`لماذا ${topic} الآن`, `Why ${topic} now`), takeaways: [t('تغيّر في السوق يفتح نافذة قصيرة', 'A market shift opens a short window'), t('التكلفة تتضاعف مع التأخير', 'Cost of delay compounds'), t('لدينا القدرة الداخلية للبدء', 'We already have the internal capacity')] },
-    { kind: 'stats', title: t('الأرقام التي تهم', 'The numbers that matter'), stat: [{ value: '3×', label: t('عائد متوقع', 'Expected return') }, { value: '90', label: t('يومًا للنتائج الأولى', 'days to first results') }, { value: '12%', label: t('وفر تشغيلي', 'Operating savings') }] },
+    { kind: 'content', title: t(`لماذا ${topic} الآن`, `Why ${topic} now`), takeaways: [t('تغيّر في السوق يفتح نافذة قصيرة', 'A market shift opens a short window'), t('التكلفة تتضاعف مع التأخير', 'Cost of delay compounds'), t('لدينا القدرة الداخلية للبدء', 'We already have the internal capacity')], layout: 'image-text', image: 'city', takeaway: t('النافذة مفتوحة الآن وليست دائمة.', 'The window is open now, not forever.') },
+    { kind: 'stats', layout: 'statistics', title: t('الأرقام التي تهم', 'The numbers that matter'), stat: [{ value: '3×', label: t('عائد متوقع', 'Expected return') }, { value: '90', label: t('يومًا للنتائج الأولى', 'days to first results') }, { value: '12%', label: t('وفر تشغيلي', 'Operating savings') }] },
     { kind: 'comparison', title: t('الوضع الحالي مقابل المستهدف', 'Current vs. target'), takeaways: [t('يدوي ومتفرّق ← موحّد وآلي', 'Manual and scattered → unified and automated'), t('قرارات شهرية ← أسبوعية', 'Monthly decisions → weekly')] },
     { kind: 'process', title: t('كيف ننفّذ', 'How we execute'), steps: [t('تشخيص', 'Diagnose'), t('تجربة محدودة', 'Pilot'), t('توسيع', 'Scale'), t('قياس', 'Measure')] },
     { kind: 'timeline', title: t('الجدول الزمني', 'Timeline'), takeaways: [t('الربع الأول: الأساس', 'Q1: foundation'), t('الربع الثاني: التجربة', 'Q2: pilot'), t('الربع الثالث: التعميم', 'Q3: rollout')] },
-    { kind: 'quote', title: t('ما يقوله العملاء', 'What customers say'), quote: { text: t('لم نكن نعرف كم نخسر حتى قسنا.', "We didn't know how much we were losing until we measured."), by: t('مدير عمليات', 'Operations lead') } },
+    { kind: 'quote', layout: 'quote', bg: 'surface', title: t('ما يقوله العملاء', 'What customers say'), quote: { text: t('لم نكن نعرف كم نخسر حتى قسنا.', "We didn't know how much we were losing until we measured."), by: t('مدير عمليات', 'Operations lead') } },
     { kind: 'content', title: t('المخاطر وكيف نحتويها', 'Risks and how we contain them'), takeaways: [t('اعتماد الفريق: تدريب مبكر', 'Adoption: train early'), t('التكلفة: مراحل ممولة تدريجيًا', 'Cost: staged funding'), t('الجودة: بوابات قياس', 'Quality: measurement gates')] },
   ]
   while (slides.length < n - 1) slides.push(middle[(slides.length - 2) % middle.length])
-  slides.push({ kind: 'closing', title: t('ما نطلبه الآن', 'What we ask for'), takeaways: [t('الموافقة على التجربة المحدودة', 'Approve the pilot'), t('تسمية مالك للمبادرة', 'Name an owner')] })
+  slides.push({ kind: 'closing', layout: 'closing', bg: 'dark', title: t('ما نطلبه الآن', 'What we ask for'), takeaways: [t('الموافقة على التجربة المحدودة', 'Approve the pilot'), t('تسمية مالك للمبادرة', 'Name an owner')] })
   return { slides }
 }
 

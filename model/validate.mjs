@@ -4,6 +4,9 @@
  * the editor unchanged.
  */
 export const KINDS = new Set(['title', 'agenda', 'content', 'stats', 'quote', 'comparison', 'process', 'timeline', 'closing'])
+export const LAYOUTS = new Set(['blank', 'title', 'title-centered', 'title-content', 'two-columns', 'image-text', 'full-image', 'quote', 'statistics', 'timeline', 'process', 'comparison', 'chart', 'table', 'section', 'closing'])
+export const ARTS = new Set(['aurora', 'grid', 'waves', 'city', 'lab', 'portrait', 'product', 'paper'])
+export const BGS = new Set(['default', 'primary', 'surface', 'dark', 'image', 'pattern'])
 const wc = (s) => s.trim().split(/\s+/).filter(Boolean).length
 
 export function parseLoose(raw) {
@@ -39,7 +42,15 @@ export function validateOutline(raw, { count } = {}) {
     if (pts.some((p) => typeof p !== 'string' || wc(p) > 22)) reasons.push(`long-point@${i}`)
     if (x.kind === 'stats' && !(x.stat?.length)) reasons.push(`stats-empty@${i}`)
     if (x.kind === 'quote' && !x.quote?.text) reasons.push(`quote-empty@${i}`)
+    // design hints are optional but must come from the closed sets
+    if (x.layout !== undefined && !LAYOUTS.has(x.layout)) reasons.push(`layout@${i}`)
+    if (x.image !== undefined && !ARTS.has(x.image)) reasons.push(`image@${i}`)
+    if (x.bg !== undefined && !BGS.has(x.bg)) reasons.push(`bg@${i}`)
+    if (x.notes !== undefined && (typeof x.notes !== 'string' || x.notes.length > 400)) reasons.push(`notes@${i}`)
   })
+  // coverage: how many slides carry a design hint (reported, not a failure)
+  const hinted = s.filter((x) => x.layout || x.image || x.bg || x.notes).length
+  return { ok: reasons.length === 0, reasons, hinted, total: s.length }
   return { ok: reasons.length === 0, reasons }
 }
 

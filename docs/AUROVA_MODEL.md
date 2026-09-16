@@ -31,7 +31,7 @@ POST {AUROVA_GATEWAY_URL}/v1/chat/completions
 ## 3. المهام التي يخدمها النموذج
 | المهمة | الملف | المدخل | المخرج |
 |---|---|---|---|
-| توليد هيكل عرض | `generate.ts → providerOutline` | موضوع، فئة، جمهور، نبرة، عدد | `{"slides":[{kind,title,takeaways,stat?,quote?,steps?}]}` |
+| توليد هيكل عرض + تصميم | `generate.ts → providerOutline` | موضوع، فئة، جمهور، نبرة، عدد | `{"slides":[{kind,title,takeaways,stat?,quote?,steps?,compare?,timeline?, layout?,image?,bg?,notes?,takeaway?}]}` — حقول التصميم من مجموعات مغلقة ويتحقق منها المحرر |
 | إعادة صياغة نص | `refine.ts → providerRewrite` | نص + عملية (improve/shorten/formal/title) | نص فقط |
 | مراجعة عرض (لاحقًا) | `review.ts` | Issues محلية | Issues مُثراة |
 

@@ -43,7 +43,7 @@ async function worker() {
       else out = (await res.json()).choices?.[0]?.message?.content ?? null
     } catch (e) { err = e.message }
     const ms = performance.now() - t0
-    const r = { task: ex.meta.task, lang: ex.meta.lang, ms, err, schema_ok: false, frame_ok: null, count_ok: null, lang_ok: null, reasons: [] }
+    const r = { task: ex.meta.task, lang: ex.meta.lang, ms, err, schema_ok: false, frame_ok: null, count_ok: null, lang_ok: null, hint_cov: null, reasons: [] }
     if (out) {
       if (ex.meta.task === 'outline') {
         const count = countFromSystem(system.content)
@@ -51,6 +51,7 @@ async function worker() {
         r.schema_ok = v.ok; r.reasons = v.reasons
         r.frame_ok = !v.reasons.some((x) => x.startsWith('no-')) && !v.reasons.includes('not-json')
         r.count_ok = !v.reasons.includes('count-off') && !v.reasons.includes('not-json')
+        r.hint_cov = v.total ? v.hinted / v.total : 0
         const o = parseLoose(out); const text = o?.slides?.map((s) => s.title).join(' ') ?? ''
         r.lang_ok = text ? isAr(text) === (ex.meta.lang === 'ar') : false
       } else if (ex.meta.task === 'rewrite') {
@@ -79,7 +80,7 @@ for (const task of ['outline', 'rewrite', 'review']) {
     n: rs.length,
     errors: rs.filter((r) => r.err).length,
     schema_ok: pct(rs, (r) => r.schema_ok),
-    ...(task === 'outline' ? { frame_ok: pct(rs, (r) => r.frame_ok), count_ok: pct(rs, (r) => r.count_ok) } : {}),
+    ...(task === 'outline' ? { frame_ok: pct(rs, (r) => r.frame_ok), count_ok: pct(rs, (r) => r.count_ok), design_hints: Math.round((rs.reduce((a, r) => a + (r.hint_cov ?? 0), 0) / rs.length) * 100) } : {}),
     ...(task !== 'review' ? { lang_ok: pct(rs, (r) => r.lang_ok) } : {}),
     latency_p50: q(rs.map((r) => r.ms), 0.5),
     latency_p95: q(rs.map((r) => r.ms), 0.95),

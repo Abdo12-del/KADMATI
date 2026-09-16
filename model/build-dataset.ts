@@ -22,7 +22,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { TEMPLATES } from '../src/templates/catalog'
 import { DEMO_DECKS } from '../src/demo/decks'
 import type { DeckSpec, SlideSpec, TemplateCategory } from '../src/templates/engine'
-import { cleanTitle, inferCategory, localOutline, type OutlineSlide } from '../src/services/ai/generate'
+import { DESIGN_HINTS_RULE, cleanTitle, inferCategory, localOutline, type OutlineSlide } from '../src/services/ai/generate'
 import { acceptable, localRewrite, type RefineOp } from '../src/services/ai/refine'
 import { createPresentation, createText } from '../src/document/factory'
 import type { TextElement } from '../src/document/types'
@@ -48,6 +48,7 @@ function outlineSystem(lang: 'ar' | 'en', tone: string, audience: string, count:
     `اللغة: ${lang === 'ar' ? 'العربية الفصحى الحديثة بلغة مهنية مباشرة' : 'English'}.`,
     `النبرة: ${tone}. الجمهور: ${audience}. عدد الشرائح: ${count}.`,
     'قواعد: عنوان كل شريحة فكرة لا تسمية قسم؛ نقاط ٢–٤ قصيرة؛ لا حشو ولا إحصاءات مختلقة؛ ضع شريحة title أولًا وشريحة closing أخيرة.',
+    DESIGN_HINTS_RULE,
   ].join('\n')
 }
 const REWRITE_SYSTEM = (tone: string) => `أنت محرر عروض تقديمية. أعد النص المعدّل فقط دون شرح أو تنسيق. النبرة: ${tone}.`
@@ -98,6 +99,11 @@ function outlineJson(slides: OutlineSlide[]): string {
       if (s.steps?.length) o.steps = s.steps
       if (s.compare) o.compare = s.compare
       if (s.timeline?.length) o.timeline = s.timeline
+      if (s.takeaway) o.takeaway = s.takeaway
+      if (s.layout) o.layout = s.layout
+      if (s.image) o.image = s.image
+      if (s.bg) o.bg = s.bg
+      if (s.notes) o.notes = s.notes
       return o
     }),
   })
@@ -124,6 +130,19 @@ const LAYOUT_TO_KIND: Record<string, OutlineSlide['kind']> = {
 }
 
 function slideToOutline(s: SlideSpec, i: number, n: number): OutlineSlide | null {
+  const base = slideToOutlineBase(s, i, n)
+  if (!base) return null
+  // Design hints come straight from the human-authored spec: this is what v3 learns from.
+  const hints: Partial<OutlineSlide> = { layout: s.layout }
+  if (s.image) hints.image = s.image
+  if (s.bg && s.bg !== 'default') hints.bg = s.bg
+  if (s.notes) hints.notes = s.notes.slice(0, 400)
+  const sub = strip(s.content?.subtitle)[0]
+  if (sub && base.kind !== 'title') hints.takeaway = sub
+  return { ...base, ...hints }
+}
+
+function slideToOutlineBase(s: SlideSpec, i: number, n: number): OutlineSlide | null {
   const c = s.content ?? {}
   const kind = i === 0 ? 'title' : i === n - 1 ? 'closing' : LAYOUT_TO_KIND[s.layout] ?? 'content'
   const title = strip(c.title)[0]
