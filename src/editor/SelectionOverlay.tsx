@@ -21,17 +21,26 @@ export interface OverlayProps {
   badge: { x: number; y: number; text: string } | null
   marquee: { x: number; y: number; w: number; h: number } | null
   gesture: string | null
+  /**
+   * Hide the whole chrome while the motion engine drives the canvas. The engine writes
+   * transforms straight to the element wrappers, so the model rect this overlay reads from is
+   * no longer where the element is — drawing the frame there would park it beside the element.
+   */
+  hidden?: boolean
   onHandleDown: (e: React.PointerEvent, h: HandleId) => void
   onRotateDown: (e: React.PointerEvent) => void
 }
 
-export const SelectionOverlay = memo(function SelectionOverlay({ slide, doc, selection, zoom, guides, badge, marquee, gesture, onHandleDown, onRotateDown }: OverlayProps) {
+export const SelectionOverlay = memo(function SelectionOverlay({ slide, doc, selection, zoom, guides, badge, marquee, gesture, hidden, onHandleDown, onRotateDown }: OverlayProps) {
+  // Hooks run unconditionally — the early return only skips the drawing.
+  const setRightPanel = useUI((s) => s.setRightPanel)
+
+  if (hidden) return null
   const els = slide.elements.filter((e) => selection.includes(e.id))
   const single = els.length === 1 ? els[0] : null
   const bounds = union(els)
   const px = (v: number) => v * zoom
   const active = gesture && gesture !== 'marquee'
-  const setRightPanel = useUI((s) => s.setRightPanel)
 
   const openAnimate = (e: React.PointerEvent) => {
     e.stopPropagation()

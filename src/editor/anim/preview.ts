@@ -20,6 +20,7 @@ let studioOpen = false
 export function setStudioOpen(open: boolean): void {
   studioOpen = open
   if (open) clear()
+  notify()
 }
 
 function clear() {
@@ -28,6 +29,40 @@ function clear() {
     active.destroy()
     active = null
   }
+  notify()
+}
+
+/* ------------------------------------------------------- "engine is driving" broadcast
+ *
+ * While the engine animates an element it writes transform/opacity/filter straight to the
+ * per-element wrapper node — React never sees it. The selection overlay, meanwhile, is drawn
+ * from the document model (`el.x/y/w/h/rotation`), which the animation does not touch. The two
+ * therefore disagree: the element sits where the motion put it and the frame with the eight
+ * resize handles stays at the model rect, so it looks parked *beside* the element.
+ *
+ * Rather than chase the live matrix inside the overlay (it would need a per-frame React
+ * update, which the whole design avoids), we do what every motion tool does: while the engine
+ * owns the canvas, the edit chrome is not drawn at all.
+ */
+type Listener = (driving: boolean) => void
+const listeners = new Set<Listener>()
+
+/** True when playback or the studio dock is displacing elements on the canvas. */
+export function isEngineDriving(): boolean {
+  return !!active || studioOpen
+}
+
+export function subscribeEngineDriving(listener: Listener): () => void {
+  listeners.add(listener)
+  listener(isEngineDriving())
+  return () => {
+    listeners.delete(listener)
+  }
+}
+
+function notify() {
+  const driving = isEngineDriving()
+  for (const listener of listeners) listener(driving)
 }
 
 /**
@@ -62,12 +97,14 @@ export function previewOnCanvas(slide: Slide, opts: { anims?: AnimSpec[]; onlyId
   }
   active = engine
   engine.restart()
+  notify()
   const cap = Math.max(3000, engine.duration + 1200)
   stopTimer = window.setTimeout(() => {
     if (active === engine) {
       engine.destroy()
       active = null
     }
+    notify()
   }, cap)
 }
 
