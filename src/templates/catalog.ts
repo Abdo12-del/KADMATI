@@ -22,7 +22,7 @@ export const TEMPLATES: TemplateDef[] = [
       { layout: 'chart', content: { title: 'الإيراد الشهري', body: 'يبدأ الانخفاض الموسمي في يوليو ثم يعود الخط للارتفاع في سبتمبر. السوق المؤسسي هو المحرك الأساسي.' }, notes: 'لا تشرح الرسم، اشرح السبب.' },
       { layout: 'two-columns', content: { title: 'ما نجح — وما تعثّر', body: ['✓ توحيد فريق المنتج والنمو\n✓ تقليل زمن الاستجابة ٤٠٪', '✗ تأخّر إطلاق التطبيق ٦ أسابيع\n✗ تسعير الحزمة المتوسطة غير واضح'] } },
       { layout: 'process', content: { title: 'خطة الربع القادم' } },
-      { layout: 'closing', content: { title: 'الأسئلة؟', body: 'التفاصيل الكاملة في ملف المراجعة المرفق.', footer: 'strategy@kadmati.studio' } },
+      { layout: 'closing', content: { title: 'الأسئلة؟', body: 'التفاصيل الكاملة في ملف المراجعة المرفق.', footer: 'strategy@aurova.studio' } },
     ],
   },
   {
@@ -80,7 +80,7 @@ export const TEMPLATES: TemplateDef[] = [
       { layout: 'two-columns', content: { title: 'الجمهور والرسالة', body: ['صاحب المتجر (٣٠–٤٥): «دخلك يتحسّن بدون تعقيد»\nمدير التسويق: «تقارير واضحة»', 'القناة: بحث · فيديو قصير · بريد أسبوعي\nالإيقاع: ٣ محتويات عميقة شهريًا'] } },
       { layout: 'chart', content: { title: 'توزيع الميزانية' , body: '٥٥٪ محتوى وبحث، ٢٥٪ وسائط مدفوعة، ١٥٪ أتمتة، ٥٪ تجارب محسوبة المخاطر.' } },
       { layout: 'timeline', content: { title: 'خارطة الطريق' } },
-      { layout: 'closing', content: { title: 'المؤشّر الذي نحاسب عليه', body: 'إيراد متكرر جديد من قنوات عضوية — لا «إعجابات».', footer: 'growth@kadmati.studio' } },
+      { layout: 'closing', content: { title: 'المؤشّر الذي نحاسب عليه', body: 'إيراد متكرر جديد من قنوات عضوية — لا «إعجابات».', footer: 'growth@aurova.studio' } },
     ],
   },
   {
@@ -132,7 +132,7 @@ export const TEMPLATES: TemplateDef[] = [
       { layout: 'statistics', content: { title: 'العام بأربعة أرقام', stat: ['٢٨٪', '٩٤٪', '١٧', '٣'], body: ['نموّ الإيراد', 'رضا العملاء', 'سوقًا جديدًا', 'منتجًا أساسيًّا'] } },
       { layout: 'chart', content: { title: 'الإيراد بحسب القطاع' } },
       { layout: 'timeline', content: { title: 'محطات السنة' } },
-      { layout: 'closing', content: { title: 'ما القادم', body: 'الأولوية: عمق المنتج على اتساعه.', footer: 'report@kadmati.studio' } },
+      { layout: 'closing', content: { title: 'ما القادم', body: 'الأولوية: عمق المنتج على اتساعه.', footer: 'report@aurova.studio' } },
     ],
   },
   {
@@ -202,9 +202,9 @@ export const TEMPLATES: TemplateDef[] = [
     category: 'modern',
     themeId: 'corporate-ink',
     tags: ['منتج', 'إطلاق'],
-    title: 'كدماتي ٢٫٠',
+    title: 'أوروفا ٢٫٠',
     slides: [
-      { layout: 'title', content: { kicker: 'إطلاق', title: 'كدماتي ٢٫٠', subtitle: 'محرّر واحد، عرض واحد، تصدير واحد.' } },
+      { layout: 'title', content: { kicker: 'إطلاق', title: 'أوروفا ٢٫٠', subtitle: 'محرّر واحد، عرض واحد، تصدير واحد.' } },
       { layout: 'image-text', content: { title: 'ما الجديد', body: 'طبقات حقيقية، قوالب قابلة للتعديل، وتصدير PPTX يحتفظ بالعناصر.' }, image: 'grid' },
       { layout: 'statistics', content: { title: 'بالأرقام', stat: ['×٢٫٤', '١٨ms', '٤٢'], body: ['أسرع في الفتح', 'زمن الاستجابة', 'قالبًا جاهزًا'] } },
       { layout: 'closing', content: { title: 'متاح اليوم', body: 'لكل الحسابات، بدون انتظار.' } },

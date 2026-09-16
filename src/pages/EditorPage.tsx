@@ -63,18 +63,18 @@ export function EditorPage() {
 
   useEffect(() => {
     const start = () => setPresenting(true)
-    window.addEventListener('kadmati:present', start)
-    return () => window.removeEventListener('kadmati:present', start)
+    window.addEventListener('aurova:present', start)
+    return () => window.removeEventListener('aurova:present', start)
   }, [])
 
   useEffect(() => {
     const close = () => setAnimOpen(false)
     const open = () => setAnimOpen(true)
-    window.addEventListener('kadmati:anim-close', close)
-    window.addEventListener('kadmati:anim-open', open)
+    window.addEventListener('aurova:anim-close', close)
+    window.addEventListener('aurova:anim-open', open)
     return () => {
-      window.removeEventListener('kadmati:anim-close', close)
-      window.removeEventListener('kadmati:anim-open', open)
+      window.removeEventListener('aurova:anim-close', close)
+      window.removeEventListener('aurova:anim-open', open)
     }
   }, [])
 

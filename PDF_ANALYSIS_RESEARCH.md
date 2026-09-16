@@ -15,7 +15,7 @@
 |---|---|---|---|
 | **Parser داخل المتصفح (المرحلة 1 — المنفَّذة في الـ Prototype)** | `pdfjs-dist` (Mozilla pdf.js) | Apache-2.0 | نص مع إحداثيات وأسماء خطوط، اتجاه RTL لكل قطعة، استخراج الصور، رسم الصفحات، يعمل 100% في المتصفح — يتوافق مع فلسفة المنصة (كل شيء محليًا) |
 | **OCR داخل المتصفح (للممسوح ضوئيًا، اختياريًا)** | `tesseract.js` (ara/eng/fra) | Apache-2.0 | الوحيد العملي في المتصفح؛ يُحمَّل عند الطلب فقط؛ جودة العربية متوسطة → يُستخدم كمسار احتياطي وواجهة موحّدة |
-| **فهم المستند + التخطيط + التخطيط الدلالي (منطق المنصة)** | كود خاص داخل KADMATI (`src/services/pdf/*`) | — | هذا هو **المنتج نفسه** (Element{type,text,bbox,page,confidence} ← Slide types ← DeckSpec)؛ لا يوجد مشروع يخرج DeckSpec قابلًا للتعديل بمحركنا |
+| **فهم المستند + التخطيط + التخطيط الدلالي (منطق المنصة)** | كود خاص داخل أوروفا (`src/services/pdf/*`) | — | هذا هو **المنتج نفسه** (Element{type,text,bbox,page,confidence} ← Slide types ← DeckSpec)؛ لا يوجد مشروع يخرج DeckSpec قابلًا للتعديل بمحركنا |
 | **خدمة تحليل متقدمة (المرحلة 2، للممسوح/المعقد)** | Microservice بايثون حول **Docling** (layout: DocLayNet + جداول: TableFormer + OCR قابل للتوصيل: Surya) | MIT | أقوى خط PDF مفتوح بمخرجات JSON منظمة `DoclingDocument` (labels + bbox + provenance + confidence)؛ يعمل على CPU عادي؛ ترخيصه الأنظف في فئته |
 | **بناء PPTX لاحقًا في خدمة بايثون إن لزم** | `python-pptx` | MIT | مرجع فقط — منصتنا تصدّر PPTX أصلًا عبر `pptxgenjs` |
 

@@ -1,9 +1,9 @@
 {
-  "name": "kadmati-studio",
+  "name": "aurova-studio",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "KADMATI Studio — a professional presentation design platform (RTL-first, PPTX round-trip)",
+  "description": "Aurova Studio — a professional presentation design platform (RTL-first, PPTX round-trip)",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
@@ -11,7 +11,13 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:anim": "node tests/animations/verify.mjs",
     "test:pdf": "node tests/pdf/build.mjs && node .tmp-verify/pdf-test.mjs",
-    "test:pdf:fixtures": "node tests/pdf/fixtures.mjs"
+    "test:pdf:fixtures": "node tests/pdf/fixtures.mjs",
+    "gateway": "node server/aurova-gateway.mjs",
+    "model:dataset": "node model/build.mjs",
+    "model:distill": "node model/distill.mjs",
+    "model:eval": "node model/eval.mjs",
+    "model:eval:stub": "node model/eval.mjs --url http://127.0.0.1:8787/v1/chat/completions --model aurova-deck-1",
+    "test:model": "node model/smoke.mjs"
   },
   "dependencies": {
     "@tanstack/react-virtual": "3.14.12",

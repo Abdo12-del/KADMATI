@@ -1,0 +1,18 @@
+name: Aurova Model
+on:
+  push:
+    paths: ['model/**', 'server/**', 'src/services/ai/**', 'src/templates/**', 'src/demo/**']
+  pull_request:
+    paths: ['model/**', 'server/**', 'src/services/ai/**', 'src/templates/**', 'src/demo/**']
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run test:model
+      - uses: actions/upload-artifact@v4
+        with: { name: dataset-stats, path: model/data/stats.json }

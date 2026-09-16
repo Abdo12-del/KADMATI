@@ -1,6 +1,6 @@
 /**
  * PPTX import — `pptxtojson` (MIT) parses the OOXML package; this module normalises its output
- * into the KADMATI document model, reusing the same element renderers as the editor.
+ * into the Aurova document model, reusing the same element renderers as the editor.
  *
  * Fidelity policy: everything representable becomes a real editable element (text, image, shape,
  * table, chart, background, notes, transitions). Anything that cannot be expressed faithfully is

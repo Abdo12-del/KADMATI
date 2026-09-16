@@ -44,10 +44,10 @@ export async function exportToPptx(input: Presentation, opts: PptxExportOptions 
   const scale = (v: number) => v * IN_PER_PX
   const rasterized: PptxExportResult['rasterized'] = []
 
-  pptx.defineLayout({ name: 'KADMATI_169', width: 13.3333, height: 7.5 })
-  pptx.layout = 'KADMATI_169'
-  pptx.author = doc.metadata.author ?? 'KADMATI Studio'
-  pptx.company = doc.metadata.company ?? 'KADMATI Studio'
+  pptx.defineLayout({ name: 'AUROVA_169', width: 13.3333, height: 7.5 })
+  pptx.layout = 'AUROVA_169'
+  pptx.author = doc.metadata.author ?? 'Aurova Studio'
+  pptx.company = doc.metadata.company ?? 'Aurova Studio'
   pptx.title = doc.metadata.title
   pptx.subject = doc.metadata.subject ?? ''
   pptx.rtlMode = doc.metadata.dir === 'rtl'

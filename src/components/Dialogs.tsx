@@ -2,7 +2,7 @@
  * Every modal in the product, in one place. Nothing here is decorative: each primary button calls a
  * real service (templates engine, PPTX exporter, importer, AI generator) and reports what happened.
  */
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Check,
   FileSpreadsheet,
@@ -10,6 +10,7 @@ import {
   Import,
   LayoutTemplate,
   Loader2,
+  Plug,
   Sparkles,
   Upload,
   Wand2,
@@ -31,6 +32,7 @@ import { downloadBlob, downloadUrl } from '../store/storage'
 import { importPptxFile } from '../services/importPptx'
 import { cn, fileNameSafe } from '../lib/cn'
 import { requestOpenProject } from '../services/openDeck'
+import { PROVIDERS, connLabel, isRemoteReady, providerDef, testConnection, toConn, type ConnTest, type ProviderId } from '../services/ai/providers'
 
 export function DialogHost() {
   const dialog = useUI((s) => s.dialog)
@@ -286,10 +288,24 @@ function AiPane() {
       })
       const doc = instantiateDeck(spec, { category })
       requestOpenProject({ doc })
+      const fb = await import('../services/ai/feedback')
+      void fb.recordGeneration({ doc, prompt, category, engine })
+      const feedbackOn = await fb.isFeedbackEnabled()
       toast({
         kind: 'ai',
         title: `أُنشئ عرض من ${doc.slides.length} شرائح`,
         body: engine === 'provider' ? 'المحتوى من مزوّدك — راجعه وعدّله.' : 'المحتوى مُهيكل محليًا: عدّل العناوين والنقاط، كل شيء قابل للتحرير.',
+        ...(feedbackOn
+          ? {
+              action: {
+                label: '👍 جيد',
+                run: () => {
+                  void fb.rateGeneration(doc.id, 'up')
+                  toast({ kind: 'success', title: 'شكرًا — سُجّل تقييمك محليًا' })
+                },
+              },
+            }
+          : {}),
       })
     } catch (err) {
       toast({ kind: 'error', title: 'تعذّر التوليد', body: (err as Error).message })
@@ -331,9 +347,9 @@ function AiPane() {
         </Field>
       </div>
       <p className="text-[11.5px] leading-relaxed text-ink-400">
-        {ai.provider === 'custom' && ai.endpoint
-          ? `المصدر: ${ai.model || ai.endpoint} — نطلب منه الهيكل والنصوص فقط، ثم نبني التخطيط والعناصر محليًا.`
-          : 'المصدر: محرك كدماتي المحلي — يبني هيكلًا ومنطقًا لغويًا دون إنترنت. اضبط مزوّدًا من إعدادات الذكاء لتحصل على صياغة أعمق.'}
+        {isRemoteReady(toConn(ai))
+          ? `المصدر: ${connLabel(toConn(ai))} — نطلب منه الهيكل والنصوص فقط، ثم نبني التخطيط والعناصر محليًا.`
+          : 'المصدر: محرك أوروفا المحلي — يبني هيكلًا ومنطقًا لغويًا دون إنترنت. اضبط مزوّدًا من إعدادات الذكاء لتحصل على صياغة أعمق.'}
       </p>
       <div className="flex items-center gap-2">
         <Button variant="primary" onClick={() => void generate()} disabled={!!busy}>
@@ -368,6 +384,7 @@ function ExportDialog() {
 
   const run = async () => {
     setReport(null)
+    void import('../services/ai/feedback').then((m) => m.recordEdit(doc))
     try {
       if (format === 'pptx') {
         setBusy('يُبني ملف PPTX…')
@@ -579,38 +596,74 @@ function ShortcutsDialog() {
 function AiSettingsDialog() {
   const ai = useUI((s) => s.ai)
   const setAi = useUI((s) => s.setAi)
+  const def = providerDef(ai.provider)
+  const [test, setTest] = useState<{ busy: boolean; result?: ConnTest }>({ busy: false })
+  const runTest = async () => {
+    setTest({ busy: true })
+    const result = await testConnection(toConn(ai))
+    setTest({ busy: false, result })
+  }
   return (
     <Modal open onClose={close} title="إعدادات الذكاء الاصطناعي" width={600}>
       <div className="space-y-3.5">
         <Field label="المصدر">
-          <Segmented
+          <Select
             value={ai.provider}
-            onChange={(v) => setAi({ provider: v as never })}
-            options={[
-              { value: 'local', label: 'محلي (في المتصفح)' },
-              { value: 'custom', label: 'مزوّد خارجي' },
-            ]}
+            onChange={(v) => setAi({ provider: v as ProviderId })}
+            options={PROVIDERS.map((p) => ({ value: p.id, label: p.label }))}
           />
         </Field>
-        {ai.provider === 'custom' ? (
-          <>
-            <Field label="عنوان API">
-              <TextField value={ai.endpoint} onChange={(v) => setAi({ endpoint: v })} placeholder="https://my-provider.example/v1/chat/completions" />
-            </Field>
-            <Field label="الموديل">
-              <TextField value={ai.model} onChange={(v) => setAi({ model: v })} placeholder="gpt-… · local-llm · …" />
-            </Field>
-            <Field label="مفتاح API">
-              <TextField value={ai.apiKey ?? ''} onChange={(v) => setAi({ apiKey: v })} placeholder="يُحفظ في هذا المتصفح فقط" />
-            </Field>
-            <p className="rounded-lg border border-warn/30 bg-warn/8 p-2.5 text-[11.5px] leading-relaxed text-ink-200">
-              لا خادم وسيط بعد: الطلبات تخرج من متصفحك مباشرةً إلى العنوان أعلاه، والمفتاح مخزّن محليًا في device storage. لا تلصق مفتاحًا مشتركًا.
-            </p>
-          </>
-        ) : (
-          <p className="rounded-lg border border-ink-800 bg-ink-950 p-2.5 text-[11.5px] leading-relaxed text-ink-300">
-            المحرك المحلي يبني هيكل العرض ويعيد صياغة النصوص بقواعد لغوية — يعمل بلا اتصال وبلا إرسال أي بيانات. القالب والتخطيط والمحاذاة تظل كما هي في كلتا الحالتين.
+        <p className={cn('rounded-lg border p-2.5 text-[11.5px] leading-relaxed', def.id === 'aurova' ? 'border-signal/30 bg-signal/8 text-ink-100' : 'border-ink-800 bg-ink-950 text-ink-300')}>
+          {def.blurb}
+          {def.id === 'local' && ' القالب والتخطيط والمحاذاة تظل كما هي في كل الحالات.'}
+        </p>
+        {def.id === 'custom' && (
+          <Field label="عنوان API (متوافق مع OpenAI)">
+            <TextField value={ai.endpoint} onChange={(v) => setAi({ endpoint: v })} placeholder="https://my-llm.example/v1/chat/completions" />
+          </Field>
+        )}
+        {def.models.length > 0 ? (
+          <Field label="النموذج">
+            <Select
+              value={def.models.some((m) => m.id === ai.model) ? ai.model : def.models[0].id}
+              onChange={(v) => setAi({ model: v })}
+              options={def.models.map((m) => ({ value: m.id, label: m.hint ? `${m.label} — ${m.hint}` : m.label }))}
+            />
+          </Field>
+        ) : def.id === 'custom' ? (
+          <Field label="اسم النموذج">
+            <TextField value={ai.model} onChange={(v) => setAi({ model: v })} placeholder="my-model" />
+          </Field>
+        ) : null}
+        {def.id !== 'local' && def.id !== 'aurova' && (
+          <Field label={def.needsKey ? 'مفتاح API' : 'مفتاح API (اختياري)'}>
+            <TextField
+              value={ai.keys[def.id] ?? ''}
+              onChange={(v) => setAi({ keys: { ...ai.keys, [def.id]: v } })}
+              placeholder={def.keyPlaceholder ?? 'يُحفظ في هذا المتصفح فقط'}
+            />
+            {def.keysUrl && (
+              <a href={def.keysUrl} target="_blank" rel="noreferrer" className="mt-1 inline-block text-[11px] text-signal hover:underline">
+                الحصول على مفتاح من {def.label} ↗
+              </a>
+            )}
+          </Field>
+        )}
+        {def.id !== 'local' && def.id !== 'aurova' && (
+          <p className="rounded-lg border border-warn/30 bg-warn/8 p-2.5 text-[11.5px] leading-relaxed text-ink-200">
+            الطلبات تخرج من متصفحك مباشرةً إلى {def.label}، والمفتاح مخزّن محليًا في هذا الجهاز فقط. لا تلصق مفتاحًا مشتركًا.
+            {def.needsKey && !ai.keys[def.id] && ' بدون مفتاح سيُستخدم المحرك المحلي تلقائيًا.'}
           </p>
+        )}
+        {def.id !== 'local' && (
+          <Row className="items-center gap-2">
+            <Button size="sm" variant="surface" onClick={() => void runTest()} disabled={test.busy}>
+              {test.busy ? <Loader2 size={12} className="animate-spin" /> : <Plug size={12} />} اختبار الاتصال
+            </Button>
+            {test.result && (
+              <span className={cn('text-[11.5px]', test.result.ok ? 'text-emerald-400' : 'text-red-400')}>{test.result.message}</span>
+            )}
+          </Row>
         )}
         <div className="grid grid-cols-2 gap-3">
           <Field label="النبرة">
@@ -637,6 +690,7 @@ function AiSettingsDialog() {
             />
           </Field>
         </div>
+        <FeedbackSettings />
         <Row className="justify-end">
           <Button variant="primary" onClick={close}>
             تم
@@ -644,6 +698,64 @@ function AiSettingsDialog() {
         </Row>
       </div>
     </Modal>
+  )
+}
+
+/** Opt-in capture of (prompt → generated → edited) pairs for training the Aurova model. Local only. */
+function FeedbackSettings() {
+  const [on, setOn] = useState(false)
+  const [stats, setStats] = useState<{ total: number; edited: number; up: number; down: number } | null>(null)
+  const refresh = async () => {
+    const fb = await import('../services/ai/feedback')
+    setOn(await fb.isFeedbackEnabled())
+    setStats(await fb.feedbackStats())
+  }
+  useEffect(() => {
+    void refresh()
+  }, [])
+  return (
+    <div className="space-y-2 rounded-lg border border-ink-800 bg-ink-950 p-2.5">
+      <Switch
+        checked={on}
+        onChange={async (v) => {
+          const fb = await import('../services/ai/feedback')
+          await fb.setFeedbackEnabled(v)
+          await refresh()
+        }}
+        label="المساهمة في تحسين نموذج Aurova (محليًا)"
+      />
+      <p className="text-[11px] leading-relaxed text-ink-400">
+        عند التفعيل تُحفظ في هذا المتصفح فقط أزواج: طلبك ← ما ولّده النموذج ← ما عدّلته أنت قبل التصدير. لا يُرسل شيء تلقائيًا؛ صدّر الملف بنفسك وقتما تشاء
+        {stats && stats.total > 0 ? ` — لديك ${stats.total} سجلًا، منها ${stats.edited} مع تعديلات و${stats.up} تقييمًا إيجابيًا.` : '.'}
+      </p>
+      {on && (
+        <Row className="gap-2">
+          <Button
+            size="sm"
+            variant="surface"
+            disabled={!stats?.total}
+            onClick={async () => {
+              const fb = await import('../services/ai/feedback')
+              downloadBlob(await fb.exportFeedback(), `aurova-feedback-${new Date().toISOString().slice(0, 10)}.jsonl`)
+            }}
+          >
+            <Download size={12} /> تصدير JSONL
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={!stats?.total}
+            onClick={async () => {
+              const fb = await import('../services/ai/feedback')
+              await fb.clearFeedback()
+              await refresh()
+            }}
+          >
+            مسح السجل
+          </Button>
+        </Row>
+      )}
+    </div>
   )
 }
 
@@ -675,7 +787,7 @@ function ProfileDialog() {
           <Button
             variant="primary"
             onClick={() => {
-              setProfile({ name: name.trim() || 'مستخدم كدماتي', role: role.trim(), email: email.trim() })
+              setProfile({ name: name.trim() || 'مستخدم أوروفا', role: role.trim(), email: email.trim() })
               close()
               toast({ kind: 'success', title: 'حُفظ الملف' })
             }}
@@ -702,7 +814,7 @@ function ShareDialog() {
           <Button
             variant="surface"
             onClick={() => {
-              downloadBlob(new Blob([json], { type: 'application/json' }), `${fileNameSafe(doc.metadata.title)}.kadmati.json`)
+              downloadBlob(new Blob([json], { type: 'application/json' }), `${fileNameSafe(doc.metadata.title)}.aurova.json`)
             }}
           >
             <Upload size={13} /> تنزيل نسخة JSON

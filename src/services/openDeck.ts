@@ -16,7 +16,7 @@ let pending: OpenDetail | null = null
 
 export function requestOpenProject(detail: OpenDetail) {
   pending = detail
-  bus.dispatchEvent(new CustomEvent('kadmati:open', { detail }))
+  bus.dispatchEvent(new CustomEvent('aurova:open', { detail }))
 }
 
 /** Mounted once in App; consumes open requests as soon as the router exists. */
@@ -48,12 +48,12 @@ export function useDeckOpener() {
       pending = null
       void handle(detail)
     }
-    bus.addEventListener('kadmati:open', listener)
+    bus.addEventListener('aurova:open', listener)
     if (pending) {
       const p = pending
       pending = null
       void handle(p)
     }
-    return () => bus.removeEventListener('kadmati:open', listener)
+    return () => bus.removeEventListener('aurova:open', listener)
   }, [handle])
 }

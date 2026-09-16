@@ -1,6 +1,7 @@
 /** Transient app state: toasts, preferences, dialogs, local profile. */
 import { create } from 'zustand'
 import { storage } from './storage'
+import { PROVIDER_MAP, defaultModel, type ProviderId } from '../services/ai/providers'
 
 export type ToastKind = 'info' | 'success' | 'error' | 'ai'
 
@@ -14,9 +15,14 @@ export interface Toast {
 }
 
 export interface AiSettings {
-  provider: 'local' | 'custom'
+  /** Which backend answers AI requests. `local` = deterministic in-browser planner. */
+  provider: ProviderId
+  /** Endpoint is only user-editable for `custom`; other providers have fixed endpoints. */
   endpoint: string
   model: string
+  /** Per-provider keys so switching providers does not lose them. Stored in this browser only. */
+  keys: Partial<Record<ProviderId, string>>
+  /** @deprecated kept for migration of older settings blobs. */
   apiKey?: string
   tone: 'neutral' | 'formal' | 'friendly' | 'punchy'
   density: 'short' | 'balanced' | 'rich'
@@ -72,8 +78,19 @@ const DEFAULT_AI: AiSettings = {
   provider: 'local',
   endpoint: '',
   model: '',
+  keys: {},
   tone: 'neutral',
   density: 'balanced',
+}
+
+/** Older blobs had `provider: 'custom'` + a single `apiKey`; fold them into the new shape. */
+function migrateAi(raw: Partial<AiSettings> | null | undefined): AiSettings {
+  const ai: AiSettings = { ...DEFAULT_AI, ...(raw ?? {}), keys: { ...(raw?.keys ?? {}) } }
+  if (!(ai.provider in PROVIDER_MAP)) ai.provider = 'local'
+  if (raw?.apiKey && !ai.keys[ai.provider]) ai.keys[ai.provider] = raw.apiKey
+  delete ai.apiKey
+  if (!ai.model) ai.model = defaultModel(ai.provider)
+  return ai
 }
 
 async function persist(key: string, value: unknown) {
@@ -102,7 +119,7 @@ export const useUI = create<UIState>()((set, get) => ({
     ])
     set({
       prefs: { ...DEFAULT_PREFS, ...(prefs ?? {}) },
-      ai: { ...DEFAULT_AI, ...(ai ?? {}) },
+      ai: migrateAi(ai),
       profile: profile ?? null,
       hydrated: true,
     })
@@ -125,7 +142,10 @@ export const useUI = create<UIState>()((set, get) => ({
   },
 
   setAi: (a) => {
-    const ai = { ...get().ai, ...a }
+    const prev = get().ai
+    const ai = { ...prev, ...a }
+    // Switching provider: pick that provider's default model unless the caller set one.
+    if (a.provider && a.provider !== prev.provider && a.model === undefined) ai.model = defaultModel(a.provider)
     set({ ai })
     void persist('ai', ai)
   },

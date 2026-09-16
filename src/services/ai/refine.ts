@@ -8,7 +8,8 @@
  *   answer is junk. Generated text becomes real text elements, never images.
  */
 import { useDoc } from '../../store/useDoc'
-import { useUI } from '../../store/useUI'
+import { useUI, type AiSettings } from '../../store/useUI'
+import { chat, connLabel, isRemoteReady, toConn } from './providers'
 import { htmlToPlainText, plainToHtml, sanitizeHtml } from '../../document/text'
 import { LAYOUTS, buildLayout, type LayoutDef } from '../../templates/layouts'
 import { unionBounds } from '../../document/geometry'
@@ -33,11 +34,11 @@ export async function rewriteText(elementId: string, op: RefineOp): Promise<Refi
   let next = localRewrite(source, op, el, doc)
   let engine = 'محلي'
 
-  if (ai.endpoint && ai.provider === 'custom') {
+  if (isRemoteReady(toConn(ai))) {
     const remote = await providerRewrite(source, op, ai)
     if (remote && acceptable(source, remote, op)) {
       next = remote
-      engine = ai.model || 'المزوّد'
+      engine = connLabel(toConn(ai))
     }
   }
 
@@ -63,7 +64,7 @@ function wordCount(text: string): number {
   return text.split(/\s+/).filter(Boolean).length
 }
 
-function acceptable(source: string, next: string, op: RefineOp): boolean {
+export function acceptable(source: string, next: string, op: RefineOp): boolean {
   const trimmed = next.trim()
   if (!trimmed || trimmed.length < 3) return false
   if (/```|^[#*-]\s/m.test(trimmed)) return false
@@ -216,37 +217,19 @@ function titleCase(text: string, dir: 'rtl' | 'ltr'): string {
 
 /* ------------------------------------------------------------------ provider pass */
 
-async function providerRewrite(source: string, op: RefineOp, ai: { endpoint: string; model: string; tone: string }): Promise<string | null> {
+async function providerRewrite(source: string, op: RefineOp, ai: AiSettings): Promise<string | null> {
   const instructions: Record<RefineOp, string> = {
     improve: 'حسّن الصياغة مع الحفاظ على المعنى والطول التقريبي.',
     shorten: 'اختصر إلى النصف تقريبًا مع إبقاء الأرقام والاستنتاجات.',
     formal: 'أعد الصياغة بنبرة رسمية مهنية.',
     title: 'اقترح عنوانًا من ٤ إلى ٧ كلمات يلخص الفكرة.',
   }
-  try {
-    const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 20000)
-    const res = await fetch(ai.endpoint.replace(/\/$/, ''), {
-      method: 'POST',
-      signal: controller.signal,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: ai.model,
-        messages: [
-          { role: 'system', content: `أنت محرر عروض تقديمية. أعد النص المعدّل فقط دون شرح أو تنسيق. النبرة: ${ai.tone}.` },
-          { role: 'user', content: `${instructions[op]}\n\nالنص:\n${source}` },
-        ],
-        temperature: 0.4,
-      }),
-    })
-    clearTimeout(timer)
-    if (!res.ok) return null
-    const json = (await res.json()) as { choices?: { message?: { content?: string } }[] }
-    const content = json.choices?.[0]?.message?.content
-    return typeof content === 'string' ? content.trim() : null
-  } catch {
-    return null
-  }
+  return chat(toConn(ai), {
+    system: `أنت محرر عروض تقديمية. أعد النص المعدّل فقط دون شرح أو تنسيق. النبرة: ${ai.tone}.`,
+    user: `${instructions[op]}\n\nالنص:\n${source}`,
+    temperature: 0.4,
+    timeoutMs: 20000,
+  })
 }
 
 /* ------------------------------------------------------------------ slide-level ops */

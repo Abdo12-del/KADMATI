@@ -120,7 +120,7 @@ export function StatusBar() {
             <Maximize2 size={11} />
           </button>
         </div>
-        <Button size="sm" variant="surface" onClick={() => window.dispatchEvent(new CustomEvent('kadmati:present'))} tip="عرض تقديمي · P">
+        <Button size="sm" variant="surface" onClick={() => window.dispatchEvent(new CustomEvent('aurova:present'))} tip="عرض تقديمي · P">
           <Presentation size={12} /> عرض
         </Button>
       </div>

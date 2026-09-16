@@ -89,7 +89,7 @@ export function DashboardPage() {
       <aside className="glass sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-e border-ink-800/70 p-3 lg:flex">
         <Link to="/" className="mb-4 flex items-center gap-2.5 px-1">
           <span className="aur-fill glow-blue grid size-7 place-items-center rounded-lg text-[13px] font-black text-white">ك</span>
-          <span className="font-display text-[15px] font-semibold tracking-tight">KADMATI</span>
+          <span className="font-display text-[15px] font-semibold tracking-tight">أوروفا</span>
         </Link>
         <nav className="space-y-0.5">
           {NAV.map((item) => {
@@ -273,7 +273,7 @@ function ProfileModal({ onClose }: { onClose: () => void }) {
           <Button
             variant="primary"
             onClick={() => {
-              setProfile({ name: name.trim() || 'مستخدم كدماتي', role: role.trim(), email: email.trim() })
+              setProfile({ name: name.trim() || 'مستخدم أوروفا', role: role.trim(), email: email.trim() })
               onClose()
               toast({ kind: 'success', title: 'حُفظ الملف', body: 'يظهر في بيانات PPTX وفي التحيّة.' })
             }}

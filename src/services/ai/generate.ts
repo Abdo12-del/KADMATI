@@ -14,6 +14,7 @@ import { LAYOUTS } from '../../templates/layouts'
 import type { ArtKind, DeckSpec, SlideSpec, TemplateCategory } from '../../templates/engine'
 import { THEME_PRESETS } from '../../document/factory'
 import { useUI } from '../../store/useUI'
+import { chat, isRemoteReady, toConn } from './providers'
 
 export interface GenerateOptions {
   slides?: number
@@ -49,8 +50,8 @@ export async function generateDeck(prompt: string, opts: GenerateOptions = {}): 
   let engine: 'local' | 'provider' = 'local'
 
   const ai = useUI.getState().ai
-  if (ai.provider === 'custom' && ai.endpoint) {
-    opts.onStage?.('استخدام المزوّد', 1, total)
+  if (isRemoteReady(toConn(ai))) {
+    opts.onStage?.(ai.provider === 'aurova' ? 'نموذج Aurova' : 'استخدام المزوّد', 1, total)
     const remote = await providerOutline({ topic, count, lang, audience, tone, category })
     if (remote?.length) {
       outline = remote
@@ -69,7 +70,7 @@ export async function generateDeck(prompt: string, opts: GenerateOptions = {}): 
     id: `ai-${Date.now().toString(36)}`,
     title: cleanTitle(topic, lang),
     subject: subtitleFor(outline, lang, audience),
-    author: 'KADMATI AI',
+    author: 'Aurova AI',
     lang,
     dir: lang === 'ar' ? 'rtl' : 'ltr',
     themeId: themeFor(style, category),
@@ -94,7 +95,7 @@ function inferCount(topic: string): number {
   return 9
 }
 
-function inferCategory(topic: string, lang: string): TemplateCategory {
+export function inferCategory(topic: string, lang: string): TemplateCategory {
   const t = topic.toLowerCase()
   const has = (words: string[]) => words.some((w) => t.includes(w))
   if (has(['pitch', 'استثمار', 'مستثمر', 'شركة ناشئة', 'startup', 'fundrais', 'تمويل'])) return 'pitch'
@@ -131,7 +132,7 @@ function themeFor(style: GenerateOptions['style'], category: TemplateCategory): 
   return byName ?? (THEME_PRESETS.some((p) => p.id === fallback) ? fallback : THEME_PRESETS[0].id)
 }
 
-function cleanTitle(topic: string, lang: 'ar' | 'en'): string {
+export function cleanTitle(topic: string, lang: 'ar' | 'en'): string {
   let t = topic
     .replace(/^(اصنع|أنشئ|اعمل|صمم|أنشأ|create|make|build|generate)\s+(لي\s+)?(عرضًا تقديميًا|عرض تقديمي|معرض|presentation|deck|slides?)\s*(عن|لـ|about|for|on)?\s*/i, '')
     .replace(/[.!?؟]+\s*$/, '')
@@ -165,7 +166,7 @@ function tagsFor(topic: string, lang: 'ar' | 'en', category: TemplateCategory): 
 
 /* ------------------------------------------------------------------ planning */
 
-interface OutlineSlide {
+export interface OutlineSlide {
   kind: 'title' | 'agenda' | 'content' | 'stats' | 'quote' | 'comparison' | 'process' | 'timeline' | 'closing'
   title: string
   takeaways?: string[]
@@ -176,7 +177,14 @@ interface OutlineSlide {
   timeline?: { when: string; what: string }[]
   takeaway?: string
   image?: ArtKind
+  /** Design hints (v3): the model may propose them; the renderer validates and may override. */
+  layout?: string
+  bg?: 'default' | 'primary' | 'surface' | 'dark' | 'image' | 'pattern'
+  notes?: string
 }
+
+export const ART_KINDS: readonly ArtKind[] = ['aurora', 'grid', 'waves', 'city', 'lab', 'portrait', 'product', 'paper']
+export const BG_KINDS = ['default', 'primary', 'surface', 'dark', 'image', 'pattern'] as const
 
 interface LocalInput {
   topic: string
@@ -190,7 +198,7 @@ interface LocalInput {
  * questions, "vs", steps) and builds the deck around them, padding with genuinely useful framing
  * questions rather than filler prose.
  */
-function localOutline({ topic, count, lang, category }: LocalInput): OutlineSlide[] {
+export function localOutline({ topic, count, lang, category }: LocalInput): OutlineSlide[] {
   const ar = lang === 'ar'
   const clean = cleanTitle(topic, lang)
   const signals = extractSignals(topic)
@@ -201,7 +209,7 @@ function localOutline({ topic, count, lang, category }: LocalInput): OutlineSlid
     {
       kind: 'agenda',
       title: ar ? 'خريطة العرض' : 'What we will cover',
-      takeaways: chapters.slice(0, Math.min(6, Math.max(3, count - 4)).valueOf()).map((c) => c.title),
+      takeaways: chapters.slice(0, Math.min(5, Math.max(3, count - 4))).map((c) => c.title),
     },
   ]
 
@@ -267,13 +275,13 @@ function localOutline({ topic, count, lang, category }: LocalInput): OutlineSlid
     })
   }
 
-  outline.push({
+  const closing: OutlineSlide = {
     kind: 'closing',
     title: ar ? 'ما نطلبه الآن' : 'What we are asking for',
     takeaways: ar ? ['قرار واحد هذا الأسبوع', 'مالك وقت واضح للتجربة', 'مراجعة النتائج بعد ٣٠ يومًا'] : ['One decision this week', 'A named owner for the trial', 'Results review in 30 days'],
-  })
-
-  return outline.slice(0, Math.max(4, count))
+  }
+  // Trim the middle, never the closing — the deck must always end with an ask.
+  return [...outline.slice(0, Math.max(4, count) - 1), closing]
 }
 
 interface Signals {
@@ -442,8 +450,10 @@ function toSlideSpec(
   }
   let layout = layoutForKind[item.kind]
   if (item.kind === 'content' && item.image) layout = 'image-text'
+  // Model-proposed layout wins when it exists and does not contradict the slide kind's data shape.
+  if (item.layout && LAYOUT_IDS.has(item.layout) && layoutCompatible(item.kind, item.layout)) layout = item.layout
   if (!LAYOUT_IDS.has(layout)) layout = 'title-content'
-  if (item.kind === 'title' && ctx.i === 0) layout = 'title'
+  if (item.kind === 'title' && ctx.i === 0 && !['title', 'title-centered', 'full-image'].includes(layout)) layout = 'title'
 
   const content: SlideSpec['content'] = {}
   const title = cleanTitle(item.title, ctx.lang)
@@ -477,18 +487,59 @@ function toSlideSpec(
   }
   if (item.takeaway && item.kind === 'content') content.subtitle = item.takeaway
 
-  const notes = ar
-    ? [`قُل الجملة الافتتاحية، ثم اشرح: ${item.takeaway ?? title}`, 'اسأل عن نقطة اعتراض واحدة قبل أن تكمل.']
-    : [`Open with: ${item.takeaway ?? title}`, 'Ask for one objection before continuing.']
+  const notes = item.notes?.trim()
+    ? [item.notes.trim()]
+    : ar
+      ? [`قُل الجملة الافتتاحية، ثم اشرح: ${item.takeaway ?? title}`, 'اسأل عن نقطة اعتراض واحدة قبل أن تكمل.']
+      : [`Open with: ${item.takeaway ?? title}`, 'Ask for one objection before continuing.']
+
+  const defaultBg = item.kind === 'title' ? 'primary' : item.kind === 'closing' ? 'dark' : item.kind === 'quote' ? 'surface' : 'default'
+  const bg = item.bg && (BG_KINDS as readonly string[]).includes(item.bg) ? item.bg : defaultBg
+  // Image-driven layouts need art; if the model asked for one without naming it, pick by category.
+  const needsArt = layout === 'image-text' || layout === 'full-image' || bg === 'image'
+  const image = item.image ?? (needsArt ? defaultArt(ctx.category, ctx.i) : undefined)
 
   return {
     layout,
     content,
-    bg: item.kind === 'title' ? 'primary' : item.kind === 'closing' ? 'dark' : item.kind === 'quote' ? 'surface' : 'default',
-    image: item.image,
+    bg: bg === 'image' && !image ? defaultBg : bg,
+    image,
     notes: notes.join('\n'),
     transition: ctx.i === 0 ? { type: 'none' } : { type: 'fade', duration: 300 },
   }
+}
+
+/** A layout is compatible when it can show the data the slide kind carries. */
+function layoutCompatible(kind: OutlineSlide['kind'], layout: string): boolean {
+  const allowed: Record<OutlineSlide['kind'], string[]> = {
+    title: ['title', 'title-centered', 'full-image'],
+    agenda: ['title-content', 'two-columns', 'section'],
+    content: ['title-content', 'two-columns', 'image-text', 'full-image', 'section', 'table', 'chart'],
+    stats: ['statistics', 'chart'],
+    quote: ['quote'],
+    comparison: ['comparison', 'two-columns'],
+    process: ['process', 'timeline'],
+    timeline: ['timeline', 'process'],
+    closing: ['closing', 'title-centered'],
+  }
+  return allowed[kind].includes(layout)
+}
+
+function defaultArt(category: TemplateCategory, i: number): ArtKind {
+  const byCat: Partial<Record<TemplateCategory, ArtKind[]>> = {
+    business: ['city', 'grid', 'paper'],
+    report: ['grid', 'paper'],
+    startup: ['product', 'aurora', 'city'],
+    pitch: ['product', 'aurora'],
+    marketing: ['aurora', 'waves', 'product'],
+    education: ['lab', 'paper', 'grid'],
+    academic: ['lab', 'paper'],
+    creative: ['aurora', 'waves'],
+    portfolio: ['portrait', 'product'],
+    personal: ['portrait', 'waves'],
+  }
+  const list = byCat[category] ?? ['aurora', 'grid', 'waves']
+  return list[i % list.length]
 }
 
 function bullets(items: string[], ar: boolean): string {
@@ -507,39 +558,37 @@ interface ProviderSlide {
   stat?: { value?: string; label?: string }[]
   quote?: { text?: string; by?: string }
   steps?: string[]
+  compare?: { left?: { title?: string; points?: string[] }; right?: { title?: string; points?: string[] } }
+  timeline?: { when?: string; what?: string }[]
+  takeaway?: string
+  layout?: string
+  image?: string
+  bg?: string
+  notes?: string
 }
+
+/** Shared with the dataset builder so training prompts match production prompts byte-for-byte. */
+export const DESIGN_HINTS_RULE =
+  'اختياري لكل شريحة: "takeaway" (جملة واحدة تلخّص الفكرة)، "layout" من {title,title-centered,title-content,two-columns,image-text,full-image,quote,statistics,timeline,process,comparison,chart,table,section,closing}، "image" من {aurora,grid,waves,city,lab,portrait,product,paper} عند الحاجة لصورة، "bg" من {default,primary,surface,dark,image,pattern}، و"notes" (ملاحظة متحدث قصيرة).'
 
 async function providerOutline(input: { topic: string; count: number; lang: 'ar' | 'en'; audience: string; tone: string; category: TemplateCategory }): Promise<OutlineSlide[] | null> {
   const ai = useUI.getState().ai
-  if (!ai.endpoint) return null
   const system = [
     'أنت مخرج عروض تقديمية. أعد JSON فقط، دون شرح أو علامات تنسيق.',
     'الشكل: {"slides":[{"kind":"title|agenda|content|stats|quote|comparison|process|timeline|closing","title":"...","takeaways":["..."]}]}',
     `اللغة: ${input.lang === 'ar' ? 'العربية الفصحى الحديثة بلغة مهنية مباشرة' : 'English'}.`,
     `النبرة: ${input.tone}. الجمهور: ${input.audience}. عدد الشرائح: ${input.count}.`,
     'قواعد: عنوان كل شريحة فكرة لا تسمية قسم؛ نقاط ٢–٤ قصيرة؛ لا حشو ولا إحصاءات مختلقة؛ ضع شريحة title أولًا وشريحة closing أخيرة.',
+    DESIGN_HINTS_RULE,
   ].join('\n')
   try {
-    const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 25000)
-    const res = await fetch(ai.endpoint.replace(/\/$/, ''), {
-      method: 'POST',
-      signal: controller.signal,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: ai.model,
-        temperature: 0.5,
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: `الموضوع: ${input.topic}\nالفئة: ${input.category}` },
-        ],
-      }),
+    const raw = await chat(toConn(ai), {
+      system,
+      user: `الموضوع: ${input.topic}\nالفئة: ${input.category}`,
+      temperature: 0.5,
+      json: true,
+      timeoutMs: 25000,
     })
-    clearTimeout(timer)
-    if (!res.ok) return null
-    const json = (await res.json()) as { choices?: { message?: { content?: string } }[] }
-    const raw = json.choices?.[0]?.message?.content
     if (!raw) return null
     const parsed = parseLooseJson(raw) as { slides?: ProviderSlide[] }
     const list = (parsed?.slides ?? [])
@@ -555,23 +604,41 @@ async function providerOutline(input: { topic: string; count: number; lang: 'ar'
 }
 
 function normalizeProviderSlide(s: ProviderSlide): OutlineSlide | null {
-  const title = String(s.title ?? '').replace(/[#*_`]/g, '').trim()
+  const clean = (t: unknown) => String(t ?? '').replace(/[#*_`]/g, '').trim()
+  const title = clean(s.title)
   if (!title) return null
   const kind = (['title', 'agenda', 'content', 'stats', 'quote', 'comparison', 'process', 'timeline', 'closing'] as const).includes(s.kind as never) ? (s.kind as OutlineSlide['kind']) : 'content'
-  const takeaways = (s.takeaways ?? s.points ?? []).map((t) => String(t).replace(/[#*_`]/g, '').trim()).filter(Boolean).slice(0, 5)
+  const takeaways = (s.takeaways ?? s.points ?? []).map(clean).filter(Boolean).slice(0, 5)
+  // Design hints are validated against closed sets; anything else is dropped silently.
+  const hints: Pick<OutlineSlide, 'layout' | 'image' | 'bg' | 'notes' | 'takeaway'> = {}
+  if (typeof s.layout === 'string' && LAYOUT_IDS.has(s.layout)) hints.layout = s.layout
+  if (typeof s.image === 'string' && (ART_KINDS as readonly string[]).includes(s.image)) hints.image = s.image as ArtKind
+  if (typeof s.bg === 'string' && (BG_KINDS as readonly string[]).includes(s.bg)) hints.bg = s.bg as OutlineSlide['bg']
+  if (typeof s.notes === 'string' && s.notes.trim()) hints.notes = clean(s.notes).slice(0, 400)
+  if (typeof s.takeaway === 'string' && s.takeaway.trim()) hints.takeaway = clean(s.takeaway).slice(0, 200)
+
   if (kind === 'stats') {
-    const stat = (s.stat ?? []).filter((x) => x?.value).map((x) => ({ value: String(x.value), label: String(x.label ?? '') }))
-    if (stat.length) return { kind, title, stat }
+    const stat = (s.stat ?? []).filter((x) => x?.value).map((x) => ({ value: clean(x.value), label: clean(x.label) }))
+    if (stat.length) return { kind, title, stat, ...hints }
   }
   if (kind === 'quote') {
-    const text = String(s.quote?.text ?? takeaways[0] ?? '').trim()
-    return text ? { kind, title, quote: { text, by: s.quote?.by } } : null
+    const text = clean(s.quote?.text ?? takeaways[0])
+    return text ? { kind, title, quote: { text, by: s.quote?.by ? clean(s.quote.by) : undefined }, ...hints } : null
   }
   if (kind === 'process') {
-    const steps = (s.steps ?? takeaways).filter(Boolean).slice(0, 5)
-    return steps.length ? { kind, title, steps } : null
+    const steps = (s.steps ?? takeaways).map(clean).filter(Boolean).slice(0, 5)
+    return steps.length ? { kind, title, steps, ...hints } : null
   }
-  return { kind, title, takeaways }
+  if (kind === 'comparison' && s.compare?.left && s.compare?.right) {
+    const side = (x: { title?: string; points?: string[] }) => ({ title: clean(x.title), points: (x.points ?? []).map(clean).filter(Boolean).slice(0, 4) })
+    const compare = { left: side(s.compare.left), right: side(s.compare.right) }
+    if (compare.left.title && compare.right.title) return { kind, title, compare, ...hints }
+  }
+  if (kind === 'timeline' && s.timeline?.length) {
+    const timeline = s.timeline.map((t) => ({ when: clean(t.when), what: clean(t.what) })).filter((t) => t.what).slice(0, 6)
+    if (timeline.length) return { kind, title, timeline, ...hints }
+  }
+  return { kind, title, takeaways, ...hints }
 }
 
 function parseLooseJson(raw: string): unknown {

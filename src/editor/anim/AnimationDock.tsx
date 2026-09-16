@@ -126,13 +126,13 @@ export function AnimationDock() {
   // while open the dock owns canvas playback and quick-previews route to it
   useEffect(() => {
     setStudioOpen(true)
-    window.dispatchEvent(new Event('kadmati:anim-visible'))
+    window.dispatchEvent(new Event('aurova:anim-visible'))
     const onPreview = () => doRestart()
-    window.addEventListener('kadmati:anim-preview', onPreview)
+    window.addEventListener('aurova:anim-preview', onPreview)
     return () => {
       setStudioOpen(false)
-      window.dispatchEvent(new Event('kadmati:anim-hidden'))
-      window.removeEventListener('kadmati:anim-preview', onPreview)
+      window.dispatchEvent(new Event('aurova:anim-hidden'))
+      window.removeEventListener('aurova:anim-preview', onPreview)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -445,7 +445,7 @@ export function AnimationDock() {
     if (!selAnim) return
     setDrawing(true)
     useUI.getState().toast({ kind: 'info', title: 'رسم مسار الحركة', body: 'انقر على اللوحة: 4 نقاط لـ Bezier (أو نقر مزدوج عند نقطتين/ثلاث). Esc للإلغاء.' })
-    window.dispatchEvent(new CustomEvent('kadmati:anim-draw', { detail: { animId: selAnim.id } }))
+    window.dispatchEvent(new CustomEvent('aurova:anim-draw', { detail: { animId: selAnim.id } }))
   }
 
   useEffect(() => {
@@ -459,11 +459,11 @@ export function AnimationDock() {
       }
     }
     const cancel = () => setDrawing(false)
-    window.addEventListener('kadmati:anim-draw-done', done)
-    window.addEventListener('kadmati:anim-draw-cancel', cancel)
+    window.addEventListener('aurova:anim-draw-done', done)
+    window.addEventListener('aurova:anim-draw-cancel', cancel)
     return () => {
-      window.removeEventListener('kadmati:anim-draw-done', done)
-      window.removeEventListener('kadmati:anim-draw-cancel', cancel)
+      window.removeEventListener('aurova:anim-draw-done', done)
+      window.removeEventListener('aurova:anim-draw-cancel', cancel)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slide?.id])
@@ -562,7 +562,7 @@ export function AnimationDock() {
         <button type="button" onClick={() => setPerfOpen(true)} className="flex items-center gap-1.5 rounded-lg border border-ink-700 px-2.5 py-1.5 text-[12px] text-ink-300 hover:bg-ink-800" title="اختبار الأداء">
           <Gauge size={13} /> Performance
         </button>
-        <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('kadmati:anim-close'))} className="grid size-8 place-items-center rounded-lg text-ink-400 hover:bg-ink-800" title="إغلاق">
+        <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('aurova:anim-close'))} className="grid size-8 place-items-center rounded-lg text-ink-400 hover:bg-ink-800" title="إغلاق">
           <X size={14} />
         </button>
       </div>
