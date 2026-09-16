@@ -10,10 +10,10 @@
 import pptxgen from 'pptxgenjs'
 import { toPng } from 'html-to-image'
 import { htmlToBlocks, type TextBlock } from '../document/text'
-import { FROM_PPTX_SHAPE, PPTX_SHAPE_MAP } from '../document/shapes'
+import { FROM_PPTX_SHAPE, PPTX_SHAPE_MAP, shapePath } from '../document/shapes'
 import { iconSvg } from '../lib/iconLibrary'
 import { svgToPngDataUrl, toEmbeddableImageData, toMediaDataValue } from '../lib/raster'
-import { parseColor, toHex } from '../lib/colors'
+import { paintToCss, parseColor, toHex } from '../lib/colors'
 import { resolveFont } from '../lib/fonts'
 import { chartData } from '../render/ChartView'
 import type { AnyElement, Background, ChartElement, ImageElement, ImageFilters, Presentation, ShapeElement, Slide, TableElement, TextStyle } from '../document/types'
@@ -538,8 +538,6 @@ async function rasterizeImageElement(el: ImageElement, src: string | null): Prom
 async function shapeFallbackPng(el: ShapeElement): Promise<string | null> {
   // No DOM capture available: rasterize our own SVG path through a canvas so PowerPoint gets a real
   // PNG (PptxGenJS cannot embed SVG data URLs on its own).
-  const { shapePath } = await import('../document/shapes')
-  const { paintToCss } = await import('../lib/colors')
   const { d } = shapePath(el.shape, el.w, el.h, el.radius, el.adj)
   const paint = paintToCss(el.fill)
   const fill = paint.startsWith('linear') || paint.startsWith('radial') ? (el.fill.type === 'gradient' ? el.fill.stops[0]?.color ?? '#cccccc' : '#cccccc') : paint

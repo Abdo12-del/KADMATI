@@ -71,6 +71,8 @@ const { scheduleAnims } = mod
 const { buildMorphSpecs } = mod
 const { parseSlideAnims, slideAnimsJson, cloneAnim } = mod
 const { animHasContent } = mod
+const { isEngineDriving, subscribeEngineDriving, stopPreview, setStudioOpen, previewOnCanvas } = mod
+const { animRegistry } = mod
 
 let pass = 0
 let fail = 0
@@ -362,6 +364,58 @@ console.log(`[9] store → library → scheduler → engine integration`)
   ok(opacities[0] > opacities[2] + 0.05, `stagger plays elements in order at t=400 (${opacities.map((o) => o.toFixed(2)).join(',')})`)
   engine.destroy()
 }
+
+/* ------------------------------------------------ 10. engine-driving broadcast
+ *
+ * The selection overlay draws the frame and the eight resize handles from the document model.
+ * The engine writes transforms straight to the element wrappers, so while it drives the canvas
+ * the model rect and the painted element disagree — the frame ends up beside the element.
+ * The canvas hides the chrome instead; this locks that contract.
+ */
+console.log('\n[10] engine-driving broadcast hides edit chrome')
+
+ok(isEngineDriving() === false, 'canvas is not engine-driven at rest')
+
+const seen = []
+const unsubscribe = subscribeEngineDriving((v) => seen.push(v))
+ok(seen.length === 1 && seen[0] === false, 'a new subscriber is told the current state immediately')
+
+// A wrapper node registered the way SlideView registers it, plus one animation on the slide.
+document.getElementById('host').innerHTML = ''
+const wrap = document.createElement('div')
+wrap.id = 'wrap-1'
+document.getElementById('host').appendChild(wrap)
+animRegistry.register('el-drive', wrap)
+
+const driveSlide = {
+  id: 's-drive',
+  layoutId: 'blank',
+  background: { type: 'solid', color: '#ffffff' },
+  elements: [{ id: 'el-drive', kind: 'text', name: 't', x: 100, y: 100, w: 300, h: 120, rotation: 0 }],
+  notes: '',
+  transition: { type: 'none', duration: 0 },
+  hidden: false,
+  animations: [presetById('fade-in').make('el-drive')],
+}
+previewOnCanvas(driveSlide)
+ok(isEngineDriving() === true, 'starting a preview marks the canvas engine-driven')
+ok(seen[seen.length - 1] === true, 'subscribers are notified when it starts')
+
+// The engine owns the wrapper: it must have written something the model knows nothing about.
+ok(wrap.style.transform !== '' || wrap.style.opacity !== '', 'the engine really does drive the wrapper node')
+
+stopPreview()
+ok(isEngineDriving() === false, 'stopping the preview releases the canvas')
+ok(seen[seen.length - 1] === false, 'subscribers are notified when it stops')
+ok(wrap.style.transform === '' && wrap.style.opacity === '', 'the wrapper is restored when the engine is destroyed')
+
+setStudioOpen(true)
+ok(isEngineDriving() === true, 'opening the animation studio marks the canvas engine-driven')
+setStudioOpen(false)
+ok(isEngineDriving() === false, 'closing the animation studio releases the canvas')
+
+unsubscribe()
+stopPreview()
 
 /* ------------------------------------------------ summary */
 rmSync('.tmp-verify', { recursive: true, force: true })

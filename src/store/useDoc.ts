@@ -28,6 +28,7 @@ import {
   newId,
 } from '../document/factory'
 import { alignRects, clamp, distribute, type AlignEdge } from '../document/geometry'
+import { sanitizeHtml } from '../document/text'
 import type { LayoutDef } from '../templates/layouts'
 import { buildLayout } from '../templates/layouts'
 import type {
@@ -558,10 +559,14 @@ export const useDoc = create<DocState>()(
 
         updateElementText: (id, html) => {
           const sid = slideIdOf()
+          // Sanitize at the model boundary, not at render time: text reaches the store from
+          // contentEditable (`node.innerHTML`), from PPTX/PDF import and from AI output, and
+          // every one of those is rendered with innerHTML downstream.
+          const content = sanitizeHtml(html)
           mutateSilently((doc) => {
             const slide = doc.slides.find((s) => s.id === sid)
             const el = slide?.elements.find((e) => e.id === id)
-            if (el && el.kind === 'text') el.content = html
+            if (el && el.kind === 'text') el.content = content
           })
           set({ saveStatus: 'dirty' })
         },

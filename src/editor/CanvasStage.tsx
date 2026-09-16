@@ -11,7 +11,7 @@ import { importPptxFile } from '../services/importPptx'
 import { LAYOUTS } from '../templates/layouts'
 import { cn } from '../lib/cn'
 import { animRegistry } from './anim/registry'
-import { stopPreview } from './anim/preview'
+import { subscribeEngineDriving, stopPreview } from './anim/preview'
 import { cubicToPathD, motionPathDrawD, pointsToCubic } from '../animation/path'
 import type { LayoutDef } from '../templates/layouts'
 
@@ -37,6 +37,10 @@ export function CanvasStage() {
   const [dropping, setDropping] = useState(false)
   const [draw, setDraw] = useState<{ animId: string; points: { x: number; y: number }[] } | null>(null)
   const [motionGuides, setMotionGuides] = useState(false)
+  // While the motion engine displaces elements, the selection frame would be drawn at the
+  // model rect instead of where the element actually is — so it is hidden until playback ends.
+  const [engineDriving, setEngineDriving] = useState(false)
+  useEffect(() => subscribeEngineDriving(setEngineDriving), [])
 
   // The animation dock asks us to show/hide the motion-path guides overlay.
   useEffect(() => {
@@ -415,6 +419,7 @@ export function CanvasStage() {
               badge={interaction.badge}
               marquee={interaction.marquee}
               gesture={interaction.gestureKind}
+              hidden={engineDriving}
               onHandleDown={interaction.onHandlePointerDown}
               onRotateDown={interaction.onRotatePointerDown}
             />

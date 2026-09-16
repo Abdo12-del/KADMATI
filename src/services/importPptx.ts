@@ -25,6 +25,8 @@ import {
 } from '../document/factory'
 import { FROM_PPTX_SHAPE } from '../document/shapes'
 import { escapeHtml, sanitizeHtml } from '../document/text'
+import { requestOpenProject } from './openDeck'
+import { toast } from '../store/useUI'
 import { toHex } from '../lib/colors'
 import { CANVAS_W, defaultTransition, type AnyElement, type ShapeId, type AssetRef, type Background, type ChartKind, type Presentation, type ShapeElement, type Slide, type TableCell, type Theme, type TextStyle } from '../document/types'
 
@@ -804,8 +806,6 @@ export async function importPptxFile(
   file: File,
   onProgress?: (label: string, done: number, total: number) => void,
 ): Promise<ImportResult> {
-  const { requestOpenProject } = await import('./openDeck')
-  const { toast } = await import('../store/useUI')
   try {
     const result = await importPptx(file, onProgress)
     requestOpenProject({ doc: result.doc })
