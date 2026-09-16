@@ -26,7 +26,7 @@ export const HAND_ASSETS: Record<string, HandAsset> = {
   'pencil': { src: '/hands/pencil.png', natW: 926, natH: 760, ax: 0, ay: 0, designH: 340 },
   'chalk': { src: '/hands/chalk.png', natW: 957, natH: 760, ax: 10, ay: 4, designH: 330 },
   'eraser': { src: '/hands/eraser.png', natW: 760, natH: 629, ax: 353, ay: 628, designW: 430 },
-  'palm': { src: '/hands/palm.png', natW: 760, natH: 325, ax: 39, ay: 93, designW: 540 },
+  'palm': { src: '/hands/palm.png', natW: 760, natH: 295, ax: 37, ay: 74, designW: 540 },
 }
 
 /** Copy from the surveyed engines: one main hand, one off hand (docs/WHITEBOARD_HAND.md §2). */

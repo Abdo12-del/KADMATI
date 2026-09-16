@@ -4,7 +4,7 @@ export { buildSlideEngine, sampleKeyframes, revealAt, baseInfo, usesTextInk, eff
 export { scheduleAnims } from '../../src/animation/schedule'
 export { buildMorphSpecs, MORPH_OLD_PREFIX } from '../../src/animation/morph'
 export { parseSlideAnims, slideAnimsJson, cloneAnim } from '../../src/animation/serialize'
-export { animHasContent, animSpan, normalizeAnim, retimeAnim } from '../../src/animation/types'
+export { animHasContent, animSpan, normalizeAnim, retimeAnim, INK_LEAD, NIB_AHEAD_PX } from '../../src/animation/types'
 export { sampleMotionPath } from '../../src/animation/path'
 export { applyPreset, applyBundle, enableMorph, adaptSpecToTarget } from '../../src/editor/anim/library'
 export { useDoc } from '../../src/store/useDoc'
@@ -13,3 +13,4 @@ export { isEngineDriving, subscribeEngineDriving, stopPreview, setStudioOpen, pr
 export { animRegistry } from '../../src/editor/anim/registry'
 export { subscribeHandFrame, getHandFrame, clearHandFrame, computeHandFrame, HAND_ENTRY_MS, HAND_EXIT_MS } from '../../src/animation/hand'
 export { HAND_ASSETS, handAsset, handDrawWidth, handDrawHeight } from '../../src/animation/handAssets'
+export { clusterWidthsMeasured, clearClusterCache, canvasFontOf, glyphInkFraction } from '../../src/animation/glyphClusters'

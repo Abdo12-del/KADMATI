@@ -18,6 +18,7 @@
 import { createTimeline, stagger, TextSplitter } from 'animejs'
 import type { Timeline } from 'animejs'
 import { compileEase, springSegmentDuration } from './easing'
+import { canvasFontOf, clusterWidthsFor, glyphInkFraction } from './glyphClusters'
 import { broadcastHandFrame, clearHandFrame, computeHandFrame } from './hand'
 import { sampleMotionPath, type PathSample } from './path'
 import type { AnimProp, AnimSpec, Keyframe, Pt, RevealSpec, TextAnimSpec } from './types'
@@ -272,8 +273,8 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
   const unitCache = new Map<string, { x: number; y: number; w?: number; h?: number }[]>()
   const splitNodes = new Map<string, TweenNodes>()
 
-  /** Per-animation stream timing (unit stride + pen-travel lead), for the hand. */
-  const streams = new Map<string, { stride: number; lead: number }>()
+  /** Per-animation stream timing (unit stride + pen-travel lead + per-unit clusters), for the hand. */
+  const streams = new Map<string, { stride: number; lead: number; clusters: number[][] }>()
 
   const measureUnits = (spec: AnimSpec): { x: number; y: number; w?: number; h?: number }[] | undefined => {
     const cached = unitCache.get(spec.id)
@@ -314,12 +315,16 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
       if (!el) continue
       const spec = normalizeSpec(raw)
       const measured = measureUnits(spec)
+      // the running ink stream for this spec: without it the hand would sweep at its own pace
+      // instead of riding the clip edge the engine is animating
+      const stream = streams.get(spec.id)
       const frame = computeHandFrame(spec, el, localT, {
         reveal: usesTextInk(spec, el) ? undefined : revealAt(spec, localT),
         // the pace of the ink is the pace of the *effective* unit, words included
         stagger: effectiveTextMode(spec, el) === 'words' ? spec.text!.stagger : undefined,
         // ink order: the DOM order, unless the animation inks the units backwards
         units: measured && spec.text?.from === 'end' ? [...measured].reverse() : measured,
+        stream: stream && measured?.length ? { stride: stream.stride, lead: stream.lead, clusters: stream.clusters } : undefined,
       })
       if (frame && frame.active) {
         activeFrame = frame
@@ -378,7 +383,7 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
 
     const textInk = usesTextInk(spec, el)
     // Connected script: ink each word through a moving clip edge instead of per-char runs.
-    const stream = textInk && !!el?.rtl && Array.isArray(nodes) && nodes.length > 1 && !!spec.text
+    const stream = textInk && !!el?.rtl && Array.isArray(nodes) && nodes.length > 0 && !!spec.text
     const inkNodes = nodes
     if (stream) {
       const stride = Math.max(20, spec.text!.stagger)
@@ -390,7 +395,16 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
         w.style.clipPath = streamClip(true)
         w.style.setProperty(TEXT_INK_VAR, '100%')
       }
-      streams.set(spec.id, { stride, lead })
+      // Cluster widths per word, so the ink advances glyph by glyph instead of sweeping the whole
+      // word at a constant rate (the pen lands on real letter boundaries, and no glyph is halved
+      // by its neighbour's window). Falls back to a uniform sweep when measuring is impossible.
+      const font = canvasFontOf(typeof window !== 'undefined' ? window.getComputedStyle?.(wordNodes[0]) : undefined)
+      const clusters: number[][] = wordNodes.map((w) => {
+        const box = w.getBoundingClientRect?.()
+        const width = box?.width ?? 0
+        return clusterWidthsFor(w.textContent ?? '', font, width) ?? []
+      })
+      streams.set(spec.id, { stride, lead, clusters })
       // element-level properties (opacity/scale/…) belong to the whole element, not to a word
       nodes = node
     }
@@ -406,19 +420,34 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
     addSpecTweens(sub, spec, nodes, center, textInk)
 
     if (stream) {
-      const { stride, lead } = streams.get(spec.id)!
-      // one continuous edge: word i is drawn over (1 - lead) of its stride, starting after the
-      // pen has travelled to it — the same numbers `streamFrame` uses for the hand
-      sub.add(
-        inkNodes as HTMLElement[],
-        {
-          [TEXT_INK_VAR]: { from: '100%', to: '0%' },
-          duration: stride * (1 - INK_LEAD),
-          ease: 'linear',
-          delay: stagger(stride),
-        },
-        lead,
-      )
+      const { stride, lead, clusters } = streams.get(spec.id)!
+      const drawWindow = stride * (1 - INK_LEAD)
+      const wordNodes = inkNodes as HTMLElement[]
+      /** One linear run of the ink edge — the fallback when a word could not be measured. */
+      const sweep = (w: HTMLElement, at: number) =>
+        sub.add(w, { [TEXT_INK_VAR]: { from: '100%', to: '0%' }, duration: drawWindow, ease: 'linear' }, at)
+
+      wordNodes.forEach((w, j) => {
+        const start = lead + j * stride // the pen has landed on word j by now
+        const widths = clusters[j]
+        const total = widths.reduce((a, b) => a + b, 0)
+        if (!widths.length || !total) {
+          // This word was not measurable: keep it in step with the others by sweeping it whole.
+          sweep(w, start)
+          return
+        }
+        let cum = 0
+        let t = start
+        for (const cw of widths) {
+          const pct = (v: number) => `${(100 * (1 - v)).toFixed(2)}%`
+          const dur = (drawWindow * cw) / total
+          // the nib's own speed profile inside a glyph — the hand reads the same function
+          sub.add(w, { [TEXT_INK_VAR]: { from: pct(cum / total), to: pct((cum + cw) / total) }, duration: Math.max(1, dur), ease: glyphInkFraction }, t)
+          cum += cw
+          t += dur
+        }
+        sub.set(w, { [TEXT_INK_VAR]: '0%' }, spec.duration)
+      })
     }
     tl.sync(sub, spec.delay)
     duration = Math.max(duration, animSpan(spec))
@@ -467,6 +496,8 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
     },
     destroy() {
       clearHandFrame()
+      unitCache.clear()
+      streams.clear()
       try {
         tl.pause()
         tl.revert()

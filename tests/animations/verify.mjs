@@ -288,16 +288,33 @@ console.log(`[7] intensity, rotation mapping, blur filter`)
   ok(/blur\([\d.]+px\)/.test(node.style.filter), `blur renders in CSS filter (got "${node.style.filter}")`)
   engineB.destroy()
 
-  // intensity scales travel distance
+  // intensity scales travel distance: same preset, same instant, twice the amplitude
   document.getElementById('host').innerHTML = ''
-  node = makeTarget('ix')
-  const specI = presetById('shake').make('ix', { intensity: 2 })
-  const engineI = buildSlideEngine({ targets: { ix: node }, elements: { ix: { x: 0, y: 0, w: 200, h: 100, rotation: 0 } }, anims: [specI] })
-  engineI.restart()
-  await tick(150)
-  const m = node.style.transform.match(/translateX\((-?[\d.]+)px\)/)
-  ok(m && Math.abs(Number(m[1])) >= 12, `intensity 2× doubles shake displacement (got "${node.style.transform}")`)
-  engineI.destroy()
+  const host = document.getElementById('host')
+  const ix1 = makeTarget('ix1')
+  const ix2 = makeTarget('ix2')
+  const amp = (id, intensity) => {
+    const engine = buildSlideEngine({
+      targets: { [id]: id === 'ix1' ? ix1 : ix2 },
+      elements: { [id]: { x: 0, y: 0, w: 200, h: 100, rotation: 0 } },
+      anims: [presetById('shake').make(id, { intensity })],
+    })
+    engine.restart()
+    return engine
+  }
+  const e1 = amp('ix1', 1)
+  const e2 = amp('ix2', 2)
+  const dx = (n) => Number(n.style.transform.match(/translateX\((-?[\d.]+)px\)/)?.[1] ?? NaN)
+  // deterministic: same instant in both, no dependence on how fast the runner's rAF ticks
+  e1.seek(150)
+  e2.seek(150)
+  await waitFor(() => Math.abs(dx(ix1)) > 0.5 && Math.abs(dx(ix2)) > 0.5)
+  ok(Math.abs(dx(ix1)) > 0.5 && Math.abs(dx(ix2)) > 0.5, `both intensities displace the element (${dx(ix1)} vs ${dx(ix2)})`)
+  const ratio = Math.abs(dx(ix2)) / Math.abs(dx(ix1))
+  ok(ratio > 1.6 && ratio < 2.4, `intensity 2× doubles shake displacement (${Math.abs(dx(ix2)).toFixed(1)}px vs ${Math.abs(dx(ix1)).toFixed(1)}px → ×${ratio.toFixed(2)})`)
+  e1.destroy()
+  e2.destroy()
+  void host
 }
 
 /* ------------------------------------------------ 8. text split */
@@ -708,15 +725,28 @@ console.log('\n[12] whiteboard drawing presets land correctly on text')
   const mid = at(stride * 0.5)
   const last = at(stride * 0.95)
   ok(first.x > mid.x && mid.x > last.x, `the nib tracks the shrinking ink edge (${Math.round(first.x)} → ${Math.round(mid.x)} → ${Math.round(last.x)})`)
-  // the ink edge the engine animates: p = (f - lead) / (1 - lead) of the measured word box
+  // the ink edge the engine animates, for the same instant: the word starts inking at `lead` and
+  // the clip tween lasts stride * (1 - INK_LEAD)
   const lead = stride * 0.12
-  const f = (stride * 0.5 - lead) / stride
-  const expectedEdge = 1000 + 100 - ((f - 0.12) / 0.88) * 200
-  ok(Math.abs(mid.x - expectedEdge) < 6, `the nib sits on the ink edge, not near it (${Math.round(mid.x)} vs ${Math.round(expectedEdge)})`)
-  // the second word's window opens with a pen lift (travelling from the end of the first word)
-  const travelling = at(lead + stride * 1.05)
-  ok(!travelling.pressing, 'the pen is lifted while it travels between words')
-  ok(at(lead + stride * 1.3).pressing, 'and it presses again once it lands on the next word')
+  const p0 = (stride * 0.5 - lead) / (stride * 0.88)
+  const ahead = mod.NIB_AHEAD_PX * mid.scale
+  const expectedEdge = 1000 + 100 - p0 * 200 - ahead // RTL: the tip leads the wet edge leftwards
+  ok(Math.abs(mid.x - expectedEdge) < 3, `the nib rides the ink edge, tip just ahead of the wet ink (${Math.round(mid.x)} vs ${Math.round(expectedEdge)})`)
+  // a word is written first, then the pen lifts for the last `lead` ms of its window
+  const threeWords = [
+    { x: 1000, y: 400, w: 200 },
+    { x: 700, y: 400, w: 200 },
+    { x: 400, y: 400, w: 200 },
+  ]
+  const at3 = (t) => computeHandFrame(arSpec2, { ...baseEl }, t, { units: threeWords, stream: { stride, lead }, rtl: true })
+  const writing = at3(lead + stride * 1.5)
+  ok(writing.pressing, 'the pen is pressing while the second word is being written')
+  ok(writing.x < 800 && writing.x > 600, `and it is inside the second word's box (${Math.round(writing.x)})`)
+  const travelling = at3(lead + stride * 1.94)
+  ok(!travelling.pressing, 'the pen is lifted while it travels to the next word')
+  ok(travelling.x < 600 && travelling.x > 500, `and it is between the two words mid-lift (${Math.round(travelling.x)})`)
+  const landed = at3(lead + stride * 2.01)
+  ok(landed.pressing && Math.abs(landed.x - (400 + 100)) < 12, `and it lands on the third word's entry edge (${Math.round(landed.x)} vs 500)`)
 
   // the rig is sized to the type: a caption gets a smaller hand than a headline
   const big = computeHandFrame(arSpec2, { ...baseEl }, 200, { units: [{ x: 800, y: 400, w: 300, h: 64 }], stream: { stride, lead }, rtl: true })
@@ -740,6 +770,146 @@ console.log('\n[12] whiteboard drawing presets land correctly on text')
   adaptSpecToTarget(twice, textEl)
   ok(JSON.stringify(twice) === once, 'adapting twice is the same as adapting once')
   void px
+}
+
+console.log('\n[13] connected-script ink: cluster boundaries inside a word')
+{
+  const { clusterWidthsMeasured, canvasFontOf, INK_LEAD, computeHandFrame, presetById } = mod
+
+  // A deterministic "font" helper: every base letter is 100px, marks and tatweel own no
+  // advance. That is the shape of real Arabic metrics without needing a canvas.
+  const measureEm = (px) => (t) => [...t].reduce((n, ch) => n + (/\p{Mn}/u.test(ch) || ch === '\u0640' ? 0 : px), 0)
+
+  const ar = '\u0631\u0633\u0645' // ر س م — three joined letters
+  const w3 = clusterWidthsMeasured(ar, measureEm(100))
+  ok(w3.length === 3, `three joined letters → three clusters, not one sweep (${w3.length})`)
+  ok(w3.every((w) => w === 100), 'each cluster is as wide as its letter')
+  ok(Math.abs(w3.reduce((a, b) => a + b, 0) - 300) < 0.001, 'the cluster widths add up to the whole word')
+
+  const lamAlef = '\u0644\u0627'
+  const wl = clusterWidthsMeasured(lamAlef, (t) => (t.length ? 100 : 0))
+  ok(wl.length === 1, 'lam + alef is one glyph, so it is one cluster (two characters, one ink)')
+
+  const withHarakah = '\u0631\u064e\u0633\u0645' // رَ س م — a fatha owns no advance
+  const wh = clusterWidthsMeasured(withHarakah, measureEm(100))
+  ok(wh.length === 3, `a harakah joins the cluster in front of it instead of making a stop (${wh.length})`)
+
+  const withTatweel = '\u0631\u0640\u0640\u0633' // ر ـ ـ س — kashida fillers
+  const wt = clusterWidthsMeasured(withTatweel, measureEm(100))
+  ok(wt.length === 2, `tatweel is a filler, not a pen stop (${wt.length})`)
+
+  const sliver = clusterWidthsMeasured('\u0631\u064e', measureEm(100))
+  ok(sliver.length === 1, 'a mark-only cluster merges leftwards rather than giving the pen a zero step')
+
+  const ltr = clusterWidthsMeasured('draw', measureEm(50))
+  ok(ltr.length === 4 && ltr.every((w) => w === 50), 'Latin text splits per character with its own widths')
+
+  ok(clusterWidthsMeasured('', measureEm(10)).length === 0, 'an empty word has no clusters')
+  const zero = clusterWidthsMeasured(ar, () => 0)
+  ok(zero.length === 1 && zero[0] === 0, 'an unmeasurable font collapses to a single degenerate cluster (the engine then sweeps)')
+
+  ok(canvasFontOf(undefined).includes('100px'), 'a missing computed style still yields a usable canvas font shorthand')
+  ok(canvasFontOf({ fontStyle: 'italic', fontWeight: '700', fontSize: '42px', fontFamily: 'Georgia, serif' }) === 'italic 700 42px Georgia, serif', 'the canvas font shorthand mirrors the DOM font')
+
+  // The engine's own tweens: with a font metric available it inks cluster by cluster, on the very
+  // same speed curve the hand reads. jsdom has no canvas, so hand it one that answers like Arabic.
+  const canvasProto = HTMLCanvasElement.prototype
+  const realGetContext = canvasProto.getContext
+  canvasProto.getContext = function (kind, ...rest) {
+    if (kind !== '2d') return realGetContext.call(this, kind, ...rest)
+    return { font: '', measureText: (t) => ({ width: [...String(t)].filter((c) => !/\p{Mn}/u.test(c) && c !== '\u0640').length * 100 }) }
+  }
+  try {
+    const { clearClusterCache, glyphInkFraction, buildSlideEngine, adaptSpecToTarget, presetById, INK_LEAD: LEAD } = mod
+    clearClusterCache()
+    const host = document.getElementById('host')
+    host.innerHTML = ''
+    const node = document.createElement('div')
+    node.id = 'cluster-stream'
+    node.innerHTML = '<p>رسم</p>' // three joined letters, each 100px in our fake metric
+    host.appendChild(node)
+    const el = { kind: 'text', content: '<p>رسم</p>', font: { dir: 'rtl' }, x: 0, y: 0, w: 600, h: 200, rotation: 0 }
+    const spec = adaptSpecToTarget(presetById('whiteboard-draw').make('cluster-stream'), el)
+    const engine = buildSlideEngine({
+      targets: { 'cluster-stream': node },
+      elements: { 'cluster-stream': { ...el, isText: true, rtl: true } },
+      anims: [spec],
+      textSplit: true,
+    })
+    // jsdom reports no boxes at all: give the row a layout so the engine can measure its units
+    const boxAt = (left, top, width, height) => ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => ({}) })
+    const realRect = Element.prototype.getBoundingClientRect
+    const realWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
+    const realHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')
+    Element.prototype.getBoundingClientRect = function () {
+      return this.id === 'cluster-stream' ? boxAt(0, 0, 600, 200) : boxAt(150, 60, 300, 60)
+    }
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, get() { return this.id === 'cluster-stream' ? 600 : 300 } })
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, get() { return this.id === 'cluster-stream' ? 200 : 60 } })
+
+    const stride = spec.text.stagger
+    const drawMs = stride * (1 - LEAD)
+    const wordNode = () => node.querySelector('[data-word]')
+    const ink = () => Number.parseFloat(wordNode()?.style.getPropertyValue('--kad-tx'))
+    const valueAt = async (frac) => {
+      engine.seek(stride * LEAD + drawMs * frac) // frac of the word's drawing time
+      await waitFor(() => Number.isFinite(ink()) && ink() < 100)
+      return ink()
+    }
+    try {
+      const endOfFirstLetter = await valueAt(1 / 3)
+      ok(Math.abs(endOfFirstLetter - 66.67) < 0.6, `the ink tween ends on the first letter's boundary, not on a time fraction (${endOfFirstLetter.toFixed(2)}% vs 66.67%)`)
+      const endOfSecondLetter = await valueAt(2 / 3)
+      ok(Math.abs(endOfSecondLetter - 33.33) < 0.6, `and on the second letter's boundary (${endOfSecondLetter.toFixed(2)}% vs 33.33%)`)
+      const quarter = await valueAt(0.25 / 3)
+      const eased = 100 * (1 - (mod.glyphInkFraction(0.25) * 100) / 300)
+      const linear = 100 * (1 - 25 / 300)
+      ok(Math.abs(quarter - eased) < 0.6, `inside a letter the ink follows the pen's own speed curve (${quarter.toFixed(2)}% vs eased ${eased.toFixed(2)}%)`)
+      ok(Math.abs(quarter - linear) > 1, `and that curve is measurably not a constant-speed glide (linear would be ${linear.toFixed(2)}%)`)
+
+      // end to end: the hand the *engine* broadcasts rides that very edge (this is what the user
+      // sees — a hand that is wired to the ink, not sweeping at its own pace)
+      const entry = 300 + 150 // measured unit centre + half its width (RTL starts at the right edge)
+      for (const frac of [0.1, 0.5, 0.9]) {
+        const v = await valueAt(frac)
+        const frame = mod.getHandFrame()
+        ok(!!frame, `the engine broadcasts a hand frame while the stream inks (${frac * 100}% of the word)`)
+        const drawn = (1 - v / 100) * 300
+        const expected = entry - (drawn + mod.NIB_AHEAD_PX * frame.scale)
+        ok(Math.abs(frame.x - expected) < 4, `the nib rides the ink edge at ${Math.round(frac * 100)}% (${Math.round(frame.x)} vs ${Math.round(expected)})`)
+      }
+      const fallback = mod.getHandFrame()
+      ok(fallback.x < entry && fallback.pressing !== undefined, 'the frame is a real drawing frame, not the element-level sweep')
+    } finally {
+      Element.prototype.getBoundingClientRect = realRect
+      Object.defineProperty(HTMLElement.prototype, 'offsetWidth', realWidth)
+      Object.defineProperty(HTMLElement.prototype, 'offsetHeight', realHeight)
+    }
+    engine.destroy()
+  } finally {
+    canvasProto.getContext = realGetContext
+    mod.clearClusterCache?.()
+  }
+
+  // The engine's tween boundaries and the hand's boundaries must come from one list: assert that
+  // the pen's position is monotonic and lands on each cluster edge inside the word.
+  const arEl = { x: 120, y: 180, w: 700, h: 200, rotation: 0, isText: true, rtl: true }
+  const spec = { ...presetById('whiteboard-draw').make('x'), duration: 2200, text: { mode: 'words', stagger: 230, from: 'start' } }
+  const stride = 230
+  const lead = stride * INK_LEAD
+  const widths = w3
+  const unit = { x: 800, y: 400, w: widths.reduce((a, b) => a + b, 0), h: 64 }
+  const ctx = { units: [unit], stream: { stride, lead, clusters: [widths] }, rtl: true }
+  const at = (ms) => computeHandFrame(spec, { ...arEl }, ms, ctx)
+  const start = at(lead + 1)
+  const end = at(lead + stride * (1 - INK_LEAD) - 1)
+  const mid = at(lead + stride * (1 - INK_LEAD) * 0.5)
+  const ahead = mod.NIB_AHEAD_PX * start.scale
+  ok(Math.abs(start.x - (unit.x + unit.w / 2 - ahead)) <= 3, `the nib starts at the word's right edge, tip ahead of the ink (${Math.round(start.x)} vs ${Math.round(unit.x + unit.w / 2 - ahead)})`)
+  ok(mid.x < start.x && end.x < mid.x, 'the nib advances right-to-left across the clusters')
+  ok(Math.abs(end.x - (unit.x - unit.w / 2 - ahead)) <= 3, `and finishes at the left edge (${Math.round(end.x)} vs ${Math.round(unit.x - unit.w / 2 - ahead)})`)
+  const uniform = computeHandFrame(spec, { ...arEl }, lead + stride * (1 - INK_LEAD) * 0.25, { units: [unit], stream: { stride, lead }, rtl: true })
+  ok(uniform.x < start.x && uniform.x > end.x, 'without clusters the sweep still works (fallback path)')
 }
 
 /* ------------------------------------------------ summary */

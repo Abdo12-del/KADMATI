@@ -84,6 +84,13 @@ export interface TextAnimSpec {
 export const INK_LEAD = 0.12
 
 /**
+ * How far the nib travels *ahead* of the ink edge, in design px (scaled with the hand at draw
+ * time). Ink appears at the nib, so the wet edge always trails the tip: without this the ink
+ * looks like it sprouts from under the middle of the pen.
+ */
+export const NIB_AHEAD_PX = 7
+
+/**
  * Clip-path reveal descriptor. The `clip` property runs 0 (hidden) → 1 (revealed);
  * this describes the geometry of the revealing edge.
  */

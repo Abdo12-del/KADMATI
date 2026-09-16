@@ -24,6 +24,8 @@
 
 import type { ElementBaseInfo } from './engine'
 import { handAsset, handDrawHeight } from './handAssets'
+import { INK_LEAD, NIB_AHEAD_PX } from './types'
+import { glyphInkFraction } from './glyphClusters'
 import type { AnimSpec, WhiteboardHandSide, WhiteboardHandStyle } from './types'
 
 /** Which asset the overlay should draw. */
@@ -75,7 +77,12 @@ export interface HandCtx {
    * `stride` ms per unit with `lead` ms of pen travel before a unit starts being drawn. When
    * present, the hand follows that edge instead of sweeping unit by unit.
    */
-  stream?: { stride: number; lead: number }
+  stream?: {
+    stride: number
+    lead: number
+    /** per-unit cluster widths (design px) — the pieces a pen draws inside one unit */
+    clusters?: number[][]
+  }
 }
 
 const DEFAULT_FRAME: HandFrame = {
@@ -320,10 +327,10 @@ export function computeHandFrame(spec: AnimSpec, el: ElementBaseInfo, localT: nu
  * The ink edge of a text stream — used for connected scripts, where the ink travels across each
  * unit instead of being switched on unit by unit (see `textStream` in engine.ts).
  *
- * At time `t` the pen is either travelling to the current unit (the first `lead` ms of its
- * window — a real pen lift between words and lines) or drawing it, from the edge the script
- * starts at to the edge it ends at. Both numbers come from the engine's schedule, so the hand
- * and the ink can never disagree.
+ * The window of one unit is exactly what the engine schedules: the ink tween starts at
+ * `lead + i * stride` and lasts `stride * (1 - INK_LEAD)`, and the pen spends the remaining
+ * `lead` ms lifting off the unit it just finished and landing on the next one's entry edge.
+ * Writing and travelling share the same clock, so the nib rides the ink edge the whole way.
  */
 function streamFrame(
   style: WhiteboardHandStyle,
@@ -331,47 +338,78 @@ function streamFrame(
   pose: HandPose,
   localT: number,
   units: { x: number; y: number; w?: number; h?: number }[],
-  stream: { stride: number; lead: number },
+  stream: { stride: number; lead: number; clusters?: number[][] },
   rtl: boolean,
 ): HandFrame {
   const n = units.length
   const dir = rtl ? -1 : 1 // writing direction along the line
   const { stride, lead } = stream
-  const travel = clamp(lead / stride, 0.02, 0.5)
-  const idx = clamp((Math.max(0, localT) - lead) / stride, 0, n)
-  const i = Math.min(n - 1, Math.floor(idx))
-  const f = idx - i
+  // the ink tween's length — the pen draws for exactly this long, then lifts
+  const drawMs = Math.max(1, stride * (1 - INK_LEAD))
+  const u0 = Math.max(0, localT - lead) // time since the first unit's ink began
+  const raw = Math.floor(u0 / stride)
+  const i = clamp(raw, 0, n - 1) // the unit whose window we are inside of
+  const w = u0 - raw * stride // time into that window
   const u = units[i]
-  const half = (u.w ?? 0) / 2
+  const box = u.w ?? 0
+  const half = box / 2
+  const handScale = scaleForText(u.h)
+  // the tip sits slightly ahead of the wet edge, scaled with the rig: the ink trails the nib
+  const ahead = NIB_AHEAD_PX * handScale
+  /** The edge of the unit where the script starts (its right edge in RTL). */
   const entry = u.x + (rtl ? half : -half)
+  /** The edge it ends at. */
+  const exit = entry + dir * box
+  const travel = raw === i && w > drawMs && i < n - 1
 
   let x: number
   let y: number
-  const travelling = f < travel && i > 0
-  if (travelling) {
-    // pen lift: leave the previous unit's end and land on this unit's entry edge
-    const prev = units[i - 1]
-    const prevHalf = (prev.w ?? 0) / 2
-    const fromX = prev.x + (rtl ? -prevHalf : prevHalf)
-    const g = easeInOutSine(f / travel)
-    x = fromX + (entry - fromX) * g
-    y = prev.y + (u.y - prev.y) * g
-  } else {
-    const p = clamp((f - travel) / (1 - travel), 0, 1)
-    x = entry + dir * p * (u.w ?? 0)
+  if (w <= drawMs || i >= n - 1) {
+    // drawing (or holding the last stroke while the pen has nowhere left to go)
+    const p = clamp(w / drawMs, 0, 1)
+    const widths = stream.clusters?.[i]
+    const total = widths?.reduce((a, b) => a + b, 0) ?? 0
+    if (widths?.length && total > 0 && box > 0) {
+      // Inside the unit the ink advances cluster by cluster — the same boundaries and the same
+      // in-glyph speed profile the engine tweens, so the nib rides the edge of the glyph that is
+      // actually being drawn instead of gliding at an average speed.
+      let cum = 0
+      let drawn = 0
+      for (let k = 0; k < widths.length; k++) {
+        const cw = widths[k]
+        // index, not value: two clusters of the same width must not look like the last one
+        if (p <= (cum + cw) / total || k === widths.length - 1) {
+          const q = clamp((p * total - cum) / cw, 0, 1)
+          drawn = cum + glyphInkFraction(q) * cw
+          break
+        }
+        cum += cw
+      }
+      // the ink the pen has already laid, measured from the unit's start edge (right, for RTL)
+      x = entry + dir * (drawn + ahead)
+    } else {
+      x = entry + dir * (p * box + ahead)
+    }
     y = u.y
+  } else {
+    // pen lift: leave this unit's exit edge and land on the next unit's entry edge
+    const next = units[i + 1]
+    const nextEntry = next.x + (rtl ? (next.w ?? 0) / 2 : -(next.w ?? 0) / 2)
+    const g = easeInOutSine(clamp((w - drawMs) / Math.max(1, lead), 0, 1))
+    x = exit + dir * ahead + (nextEntry + dir * ahead - (exit + dir * ahead)) * g
+    y = u.y + (next.y - u.y) * g
   }
 
   const t = localT / 1000
   return frame({
     x: x + tremor(t, 0.7),
-    y: y + tremor(t, 3.9) + Math.sin(idx * 0.6) * 0.4,
+    y: y + tremor(t, 3.9) + Math.sin(i * 0.6) * 0.4,
     angle: wristTilt(dir * 0.9, 0) + tremor(t, 8.2) * 0.7,
-    scale: scaleForText(u.h),
+    scale: scaleForText(units[i]?.h ?? units[units.length - 1]?.h),
     opacity: 1,
     style,
     side,
-    pressing: !travelling,
+    pressing: !travel,
     pose,
   })
 }
@@ -424,7 +462,7 @@ function textFrame(
     x: x + tremor(t, 0.7),
     y: y + tremor(t, 3.9) + Math.sin(order * 0.9) * 0.5,
     angle: wristTilt(dir * 0.8, 0) + tremor(t, 8.2) * 0.7,
-    scale: scaleForText(u.h),
+    scale: scaleForText(units[Math.min(i, units.length - 1)]?.h),
     opacity: 1,
     style,
     side,
