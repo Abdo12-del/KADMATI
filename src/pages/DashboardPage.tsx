@@ -29,6 +29,7 @@ import { TEMPLATE_MAP } from '../templates/catalog'
 import { Button, Chip, Empty, Field, Modal, Popover, Select, TextField, MenuItem } from '../components/ui'
 import { selectVisibleProjects, useLibrary, type SortMode } from '../store/useLibrary'
 import { useUI } from '../store/useUI'
+import { instantiateDeck } from '../templates/engine'
 import { requestOpenProject } from '../services/openDeck'
 import { toast } from '../store/useUI'
 import { cn } from '../lib/cn'
@@ -471,7 +472,6 @@ function QuickStart() {
       hint: 'هيكل + محتوى قابل للتحرير',
       run: async () => {
         const { generateDeck } = await import('../services/ai/generate')
-        const { instantiateDeck } = await import('../templates/engine')
         const { spec } = await generateDeck('عرض عن كيف يغيّر الذكاء الاصطناعي طريقة عمل الفرق خلال سنة واحدة', { slides: 8, category: 'business' })
         const doc = instantiateDeck(spec)
         const record = await library.createProject(doc)

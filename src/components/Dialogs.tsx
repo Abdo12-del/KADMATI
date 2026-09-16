@@ -3,6 +3,7 @@
  * real service (templates engine, PPTX exporter, importer, AI generator) and reports what happened.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { toJpeg, toPng } from 'html-to-image'
 import {
   Check,
   FileSpreadsheet,
@@ -426,7 +427,6 @@ function ExportDialog() {
           onProgress: (done: number, total: number, label: string) => setBusy(`${label} (${done}/${total})`),
         }
         if (scope === 'current' && target) {
-          const { toPng, toJpeg } = await import('html-to-image')
           const node = await base.renderSlide(slideIndex, doc.size.w, doc.size.h)
           const url = format === 'jpg' ? await toJpeg(node, { quality: quality / 100, pixelRatio: scale, backgroundColor: '#ffffff' }) : await toPng(node, { pixelRatio: scale, backgroundColor: '#ffffff' })
           downloadUrl(url, `${fileNameSafe(doc.metadata.title)}-${slideIndex + 1}.${format}`)
