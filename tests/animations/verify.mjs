@@ -417,6 +417,37 @@ ok(isEngineDriving() === false, 'closing the animation studio releases the canva
 unsubscribe()
 stopPreview()
 
+/* ------------------------------------------------ 11. whiteboard animation & hand tracking */
+console.log('\n[11] whiteboard animation & hand tracking')
+{
+  const { getHandFrame, subscribeHandFrame } = mod
+  const wbSpec = presetById('whiteboard-draw').make('wb-target')
+  ok(wbSpec.whiteboard?.effect === 'draw', 'whiteboard-draw carries effect="draw"')
+  ok(wbSpec.reveal?.kind === 'wipe-right', 'whiteboard-draw carries wipe reveal')
+
+  document.getElementById('host').innerHTML = ''
+  const node = makeTarget('wb-target')
+  const targets = { 'wb-target': node }
+  const elements = { 'wb-target': { x: 50, y: 60, w: 200, h: 80, rotation: 0 } }
+
+  const frames = []
+  const unsubHand = subscribeHandFrame((f) => frames.push({ ...f }))
+
+  const engine = buildSlideEngine({ targets, elements, anims: [wbSpec] })
+  engine.seek(wbSpec.duration * 0.5)
+  await tick(30)
+  const midFrame = getHandFrame()
+  ok(midFrame.active === true, 'hand is active during drawing mid-timeline')
+  ok(midFrame.x >= 50 && midFrame.x <= 260, `hand X is within element bounds (got ${midFrame.x})`)
+  ok(midFrame.y >= 60 && midFrame.y <= 150, `hand Y is within element bounds (got ${midFrame.y})`)
+
+  engine.destroy()
+  await tick(20)
+  const endFrame = getHandFrame()
+  ok(endFrame.active === false, 'hand is cleared and deactivated after destroy')
+  unsubHand()
+}
+
 /* ------------------------------------------------ summary */
 rmSync('.tmp-verify', { recursive: true, force: true })
 console.log(`\n${fail === 0 ? '✓ ALL' : '✗ FAIL'} — ${pass} passed, ${fail} failed`)

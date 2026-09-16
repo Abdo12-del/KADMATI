@@ -41,6 +41,7 @@
     "react-dom": "19.3.0",
     "react-router-dom": "7.18.3",
     "recharts": "3.10.1",
+    "roughjs": "^4.6.6",
     "tailwind-merge": "3.7.0",
     "tesseract.js": "^7.0.0",
     "zundo": "2.3.0",

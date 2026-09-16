@@ -786,6 +786,71 @@ export function AnimationDock() {
                 </label>
               ) : null}
 
+              {/* Whiteboard animation settings */}
+              {selAnim.whiteboard ? (
+                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5">
+                  <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-amber-300">
+                    <span>✍️</span> خصائص وايت بورد أنميشن
+                  </span>
+                  <div className="space-y-2">
+                    <label className="block">
+                      <span className="mb-1 block text-[10.5px] text-ink-300">أداة الرسم / اليد</span>
+                      <select
+                        value={selAnim.whiteboard.handStyle ?? 'marker-dark'}
+                        onChange={(e) =>
+                          mutateAnim(selAnim.id, (a) => {
+                            if (a.whiteboard) a.whiteboard.handStyle = e.target.value as any
+                          }, 'تغيير أداة الوايت بورد')
+                        }
+                        className="w-full rounded-md border border-ink-700 bg-ink-950 px-2 py-1 text-[11.5px] text-ink-100 outline-none"
+                      >
+                        <option value="marker-dark">🖊️ ماركر أسود (Black Marker)</option>
+                        <option value="marker-blue">🖊️ ماركر أزرق (Blue Marker)</option>
+                        <option value="pencil">✏️ قلم رصاص (Pencil)</option>
+                        <option value="chalk">🖍️ طباشير (Chalk)</option>
+                        <option value="eraser">🧽 ممحاة سبورة (Eraser)</option>
+                      </select>
+                    </label>
+
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <label className="block">
+                        <span className="mb-1 block text-[10.5px] text-ink-300">جهة اليد</span>
+                        <select
+                          value={selAnim.whiteboard.handSide ?? 'right'}
+                          onChange={(e) =>
+                            mutateAnim(selAnim.id, (a) => {
+                              if (a.whiteboard) a.whiteboard.handSide = e.target.value as any
+                            }, 'تغيير جهة اليد')
+                          }
+                          className="w-full rounded-md border border-ink-700 bg-ink-950 px-2 py-1 text-[11.5px] text-ink-100 outline-none"
+                        >
+                          <option value="right">يمين (Right hand)</option>
+                          <option value="left">يسار (Left hand / RTL)</option>
+                        </select>
+                      </label>
+
+                      <label className="block">
+                        <span className="mb-1 block text-[10.5px] text-ink-300">التأثير</span>
+                        <select
+                          value={selAnim.whiteboard.effect}
+                          onChange={(e) =>
+                            mutateAnim(selAnim.id, (a) => {
+                              if (a.whiteboard) a.whiteboard.effect = e.target.value as any
+                            }, 'تغيير نوع تأثير الوايت بورد')
+                          }
+                          className="w-full rounded-md border border-ink-700 bg-ink-950 px-2 py-1 text-[11.5px] text-ink-100 outline-none"
+                        >
+                          <option value="draw">رسم باليد (Draw)</option>
+                          <option value="push">دفع باليد (Push)</option>
+                          <option value="erase">مسح (Erase)</option>
+                          <option value="stroke">تخطيط فقط (Stroke)</option>
+                        </select>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
               {/* re-apply preset */}
               <label className="block">
                 <span className="mb-1 block text-[10.5px] text-ink-500">إعادة تطبيق Preset</span>

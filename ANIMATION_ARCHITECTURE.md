@@ -426,18 +426,19 @@ interface Slide { …, animations?: AnimSpec[] }
 | التطبيق على عدة عناصر غير موجود | — | أوضاع Same/Simultaneous/Sequence/Stagger مع فارق زمني قابل للضبط |
 | غياب Start/End/Intensity/Direction | — | الحقول في النموذج والمفتش + المجدول `scheduleAnims` (onClick/with/after بأسلوب PowerPoint) |
 
-### 16.2 الكتالوج النهائي (45 تأثيرًا — كلها مختبرة فعليًا)
+### 16.2 الكتالوج النهائي (50 تأثيرًا — كلها مختبرة فعليًا)
 
+- **Whiteboard (5):** Whiteboard Draw (رسم باليد مع تتبع قلم الماركر) · Whiteboard Push (دفع باليد من الحافة) · Whiteboard Erase (مسح بممحاة السبورة) · Sketch Draw (تخطيط متجهي تدريجي) · Handwriting (كتابة يدوية حرفاً بحرف).
 - **Entrance (12):** Fade In · Slide In ×4 اتجاهات · Zoom In · Zoom Out · Scale In · Bounce In · Rotate In · Blur In · Rise · Typewriter.
 - **Exit (10):** Fade Out · Slide Out ×4 · Drop · Zoom Out · Scale Out · Rotate Out · Blur Out.
 - **Emphasis (12):** Pulse · Bounce · Shake · Swing · Float · Grow · Shrink · Rotate · Glow · Flash · Tada · Wobble · Heartbeat.
 - **Reveal (6):** Wipe ×4 اتجاهات (clip-path + متغيرات CSS) · Mask Reveal دائري · Text Reveal سطرًا سطرًا.
 - **Motion (3):** Bezier (يُرسم على اللوحة) · Circle · Custom SVG Path.
-- **Presets جاهزة بضغطة:** Elegant (Fade+Rise) · Dynamic (Slide+Scale) · Presentation (Fade+Slide) · Cinematic (Blur+Zoom).
+- **Presets جاهزة بضغطة:** Whiteboard Story (Hand Draw + Marker) · Elegant (Fade+Rise) · Dynamic (Slide+Scale) · Presentation (Fade+Slide) · Cinematic (Blur+Zoom).
 - **Advanced:** Morph بين الشرائح (مطابقة id/الاسم — محرك `buildMorphSpecs` فوق نفس المحرك) · Motion Paths · Stagger · Click Sequence.
 
 ### 16.3 الملفات
 
-- نموذج/محرك: `animation/{types,presets,engine,schedule,morph,easing,path,serialize,migrate}.ts`.
+- نموذج/محرك: `animation/{types,presets,engine,schedule,morph,easing,path,serialize,migrate,hand,HandOverlay}.ts`.
 - واجهة: `editor/anim/{AnimationLibrary,AnimationDock,EasingEditor,preview,library,registry,perf}.tsx?` + زر «حركة» عائم على التحديد في `SelectionOverlay` + تبويب «حركة» في `RightPanel` + Morph في تبويب الانتقال.
-- **اختبار حقيقي يمنع الأزرار الميتة:** `npm run test:anim` (`tests/animations/`) — يبني كل تأثير عبر المحرك داخل jsdom ويؤكد تغيّر DOM (transform/opacity/filter/clip)، إضافةً للجدولة وMorph وJSON ودورة المتجر الكاملة. **474 تحققًا، 0 فشل.**
+- **اختبار حقيقي يمنع الأزرار الميتة:** `npm run test:anim` (`tests/animations/`) — يبني كل تأثير عبر المحرك داخل jsdom ويؤكد تغيّر DOM (transform/opacity/filter/clip)، إضافةً للجدولة وMorph وJSON وتتبع يد الوايت بورد ودورة المتجر الكاملة. **539 تحققًا، 0 فشل.**

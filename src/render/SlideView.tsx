@@ -2,6 +2,7 @@ import { memo, useCallback, type CSSProperties } from 'react'
 import type { AnyElement, Paint, Presentation, Slide } from '../document/types'
 import { backgroundToCss, paintToCss } from '../lib/colors'
 import { ElementView, type RenderMode } from './ElementView'
+import { HandOverlay } from '../animation/HandOverlay'
 
 /**
  * Renders one slide at *design scale* (1280×720 logical px). The parent applies zoom as a CSS
@@ -98,6 +99,7 @@ function SlideViewImpl({ slide, doc, mode, editingId, selection, onTextInput, on
       ) : null}
       {overlay ? <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: paintToCss(overlay) }} /> : null}
       {roots.map(renderEl)}
+      {!isStatic ? <HandOverlay slideId={slide.id} /> : null}
     </div>
   )
 }

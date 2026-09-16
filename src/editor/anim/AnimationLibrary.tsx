@@ -43,6 +43,8 @@ import {
   Zap,
   ZoomIn,
   ZoomOut,
+  Eraser,
+  Hand,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { ANIMATION_BUNDLES, PRESET_GROUPS, presetById, type PresetDef } from '../../animation/presets'
@@ -52,10 +54,11 @@ import { useCurrentSlide, useDoc } from '../../store/useDoc'
 import { previewOnCanvas } from './preview'
 import { applyBundle, applyPreset, enableMorph, type MultiMode } from './library'
 
-type Tab = 'presets' | 'entrance' | 'exit' | 'emphasis' | 'reveal' | 'advanced'
+type Tab = 'presets' | 'whiteboard' | 'entrance' | 'exit' | 'emphasis' | 'reveal' | 'advanced'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'presets', label: 'Presets' },
+  { id: 'whiteboard', label: 'وايت بورد ✍️' },
   { id: 'entrance', label: 'Entrance' },
   { id: 'exit', label: 'Exit' },
   { id: 'emphasis', label: 'Emphasis' },
@@ -64,6 +67,11 @@ const TABS: { id: Tab; label: string }[] = [
 ]
 
 const ICONS: Record<string, LucideIcon> = {
+  'whiteboard-draw': PenLine,
+  'whiteboard-push': Hand,
+  'whiteboard-erase': Eraser,
+  'whiteboard-stroke': Spline,
+  'whiteboard-write': Type,
   'fade-in': Sparkles,
   'fade-out': Sparkles,
   'slide-in-left': ArrowRight,
@@ -112,6 +120,7 @@ const ICONS: Record<string, LucideIcon> = {
 }
 
 const KIND_TINT: Record<string, string> = {
+  whiteboard: 'text-amber-400 bg-amber-500/15 ring-1 ring-amber-500/30',
   entrance: 'text-emerald-300 bg-emerald-500/10',
   exit: 'text-rose-300 bg-rose-500/10',
   emphasis: 'text-amber-300 bg-amber-500/10',

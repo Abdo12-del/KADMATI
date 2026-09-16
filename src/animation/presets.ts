@@ -277,6 +277,52 @@ export const PRESETS: PresetDef[] = [
     name: 'Custom Path', duration: 2200, easing: e('sineInOut'), properties: {},
     motionPath: o?.motionPath ?? { kind: 'svg', d: 'M 0 360 C 320 200, 960 520, 1280 360' },
   }), { kw: 'custom svg path مسار مخصص' }),
+
+  /* ========================================================== WHITEBOARD */
+  def('whiteboard-draw', 'Whiteboard Draw (رسم باليد)', 'whiteboard', () => ({
+    name: 'Whiteboard Draw', duration: 1400, reveal: { kind: 'wipe-right' },
+    whiteboard: { effect: 'draw', handStyle: 'marker-dark', handSide: 'right' },
+    properties: {
+      clip: [kf(0, 0, e('linear')), kf(1400, 1)],
+      opacity: [kf(0, 0, e('linear')), kf(40, 1)],
+    },
+  }), { kw: 'whiteboard hand draw scribe doodly رسم سبورة يد قلم ماركر' }),
+
+  def('whiteboard-push', 'Whiteboard Push (دفع باليد)', 'whiteboard', () => ({
+    name: 'Whiteboard Push', duration: 900,
+    whiteboard: { effect: 'push', handStyle: 'marker-dark', handSide: 'right' },
+    properties: {
+      x: [kf(0, 180, e('cubicOut')), kf(900, 0)],
+      opacity: [kf(0, 0, e('linear')), kf(120, 1)],
+    },
+  }), { kw: 'whiteboard push hand slide انزلاق دفع يد' }),
+
+  def('whiteboard-erase', 'Whiteboard Erase (مسح باليد)', 'whiteboard', () => ({
+    name: 'Whiteboard Erase', duration: 1200, reveal: { kind: 'wipe-right' },
+    whiteboard: { effect: 'erase', handStyle: 'eraser', handSide: 'right' },
+    properties: {
+      clip: [kf(0, 1, e('linear')), kf(1200, 0)],
+      opacity: [kf(0, 1, e('linear')), kf(1200, 0)],
+    },
+  }), { kw: 'whiteboard erase duster sponge ممحاة مسح سبورة' }),
+
+  def('whiteboard-stroke', 'Sketch Draw (تخطيط بدون يد)', 'whiteboard', () => ({
+    name: 'Sketch Draw', duration: 950, reveal: { kind: 'wipe-right' },
+    whiteboard: { effect: 'stroke' },
+    properties: {
+      clip: [kf(0, 0, e('cubicOut')), kf(950, 1)],
+      opacity: [kf(0, 0, e('linear')), kf(40, 1)],
+    },
+  }), { kw: 'whiteboard stroke sketch outline رسم خطوط' }),
+
+  def('whiteboard-write', 'Handwriting (كتابة يدوية)', 'whiteboard', () => ({
+    name: 'Handwriting', duration: 1400,
+    text: { mode: 'chars', stagger: 40, from: 'start' },
+    whiteboard: { effect: 'draw', handStyle: 'marker-blue', handSide: 'right' },
+    properties: {
+      opacity: [kf(0, 0, e('linear')), kf(60, 1)],
+    },
+  }), { kw: 'whiteboard write text handwriting كتابة يد قلم خط' }),
 ]
 
 export function presetById(id: string): PresetDef | undefined {
@@ -302,6 +348,7 @@ export interface PresetGroup {
 }
 
 export const PRESET_GROUPS: PresetGroup[] = [
+  { id: 'whiteboard', title: 'وايت بورد (Whiteboard)', items: PRESETS.filter((p) => p.kind === 'whiteboard') },
   { id: 'entrance', title: 'دخول (Entrance)', items: PRESETS.filter((p) => p.kind === 'entrance') },
   { id: 'exit', title: 'خروج (Exit)', items: PRESETS.filter((p) => p.kind === 'exit') },
   { id: 'emphasis', title: 'تأكيد (Emphasis)', items: PRESETS.filter((p) => p.kind === 'emphasis') },
@@ -320,6 +367,18 @@ export interface BundleDef {
 }
 
 export const ANIMATION_BUNDLES: BundleDef[] = [
+  {
+    id: 'bundle-whiteboard', label: 'Whiteboard Story', description: 'Hand Draw + Marker',
+    make: (t) => [base(t, {
+      name: 'Whiteboard Story', presetId: 'bundle-whiteboard', kind: 'whiteboard', duration: 1400,
+      reveal: { kind: 'wipe-right' },
+      whiteboard: { effect: 'draw', handStyle: 'marker-dark', handSide: 'right' },
+      properties: {
+        clip: [kf(0, 0, e('linear')), kf(1400, 1)],
+        opacity: [kf(0, 0, e('linear')), kf(40, 1)],
+      },
+    })],
+  },
   {
     id: 'bundle-elegant', label: 'Elegant', description: 'Fade + Rise',
     make: (t) => [base(t, {

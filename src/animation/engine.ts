@@ -18,6 +18,7 @@
 import { createTimeline, stagger, TextSplitter } from 'animejs'
 import type { Timeline } from 'animejs'
 import { compileEase, springSegmentDuration } from './easing'
+import { broadcastHandFrame, clearHandFrame, computeHandFrame } from './hand'
 import { sampleMotionPath, type PathSample } from './path'
 import type { AnimProp, AnimSpec, Keyframe, Pt, RevealSpec } from './types'
 import { animHasContent, animSpan, normalizeKeyframes } from './types'
@@ -184,7 +185,37 @@ export function sampleKeyframes(kfs: Keyframe[], t: number, spec: AnimSpec): num
 }
 
 export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
-  const tl = createTimeline({ autoplay: false })
+  let userCb: ((t: number) => void) | null = null
+  const hasWhiteboard = ctx.anims.some((a) => !!a.whiteboard && a.whiteboard.effect !== 'stroke')
+
+  const updateHand = (t: number) => {
+    if (!hasWhiteboard) return
+    let activeFrame = null
+    for (const raw of ctx.anims) {
+      if (!raw.whiteboard || raw.whiteboard.effect === 'stroke') continue
+      const localT = t - raw.delay
+      const el = ctx.elements[raw.target]
+      if (!el) continue
+      const frame = computeHandFrame(raw, el, localT)
+      if (frame && frame.active) {
+        activeFrame = frame
+        break
+      }
+    }
+    if (activeFrame) {
+      broadcastHandFrame(activeFrame)
+    } else {
+      clearHandFrame()
+    }
+  }
+
+  const tl = createTimeline({
+    autoplay: false,
+    onUpdate: () => {
+      updateHand(tl.currentTime)
+      userCb?.(tl.currentTime)
+    },
+  })
   const splitters: TextSplitter[] = []
   const touchedNodes = new Set<HTMLElement>()
   const targets = ctx.targets
@@ -238,7 +269,9 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
     duration,
     seek(t: number) {
       try {
-        tl.seek(Math.max(0, Math.min(t, Math.max(1, duration))))
+        const clamped = Math.max(0, Math.min(t, Math.max(1, duration)))
+        tl.seek(clamped)
+        updateHand(clamped)
       } catch {
         /* timeline mid-rebuild — ignore */
       }
@@ -253,6 +286,7 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
     stop() {
       tl.pause()
       tl.seek(0)
+      clearHandFrame()
     },
     restart() {
       tl.seek(0)
@@ -265,13 +299,13 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
       return !tl.paused && tl.currentTime < Math.max(0, duration - 1)
     },
     onUpdate(cb: (t: number) => void) {
-      const fn = () => cb(tl.currentTime)
-      tl.onUpdate = fn
+      userCb = cb
       return () => {
-        if (tl.onUpdate === fn) (tl as unknown as { onUpdate?: unknown }).onUpdate = undefined
+        if (userCb === cb) userCb = null
       }
     },
     destroy() {
+      clearHandFrame()
       try {
         tl.pause()
         tl.revert()
