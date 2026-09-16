@@ -10,6 +10,7 @@ import {
   Import,
   LayoutTemplate,
   Loader2,
+  Plug,
   Sparkles,
   Upload,
   Wand2,
@@ -31,7 +32,7 @@ import { downloadBlob, downloadUrl } from '../store/storage'
 import { importPptxFile } from '../services/importPptx'
 import { cn, fileNameSafe } from '../lib/cn'
 import { requestOpenProject } from '../services/openDeck'
-import { PROVIDERS, connLabel, isRemoteReady, providerDef, toConn, type ProviderId } from '../services/ai/providers'
+import { PROVIDERS, connLabel, isRemoteReady, providerDef, testConnection, toConn, type ConnTest, type ProviderId } from '../services/ai/providers'
 
 export function DialogHost() {
   const dialog = useUI((s) => s.dialog)
@@ -581,6 +582,12 @@ function AiSettingsDialog() {
   const ai = useUI((s) => s.ai)
   const setAi = useUI((s) => s.setAi)
   const def = providerDef(ai.provider)
+  const [test, setTest] = useState<{ busy: boolean; result?: ConnTest }>({ busy: false })
+  const runTest = async () => {
+    setTest({ busy: true })
+    const result = await testConnection(toConn(ai))
+    setTest({ busy: false, result })
+  }
   return (
     <Modal open onClose={close} title="إعدادات الذكاء الاصطناعي" width={600}>
       <div className="space-y-3.5">
@@ -632,6 +639,16 @@ function AiSettingsDialog() {
             الطلبات تخرج من متصفحك مباشرةً إلى {def.label}، والمفتاح مخزّن محليًا في هذا الجهاز فقط. لا تلصق مفتاحًا مشتركًا.
             {def.needsKey && !ai.keys[def.id] && ' بدون مفتاح سيُستخدم المحرك المحلي تلقائيًا.'}
           </p>
+        )}
+        {def.id !== 'local' && (
+          <Row className="items-center gap-2">
+            <Button size="sm" variant="surface" onClick={() => void runTest()} disabled={test.busy}>
+              {test.busy ? <Loader2 size={12} className="animate-spin" /> : <Plug size={12} />} اختبار الاتصال
+            </Button>
+            {test.result && (
+              <span className={cn('text-[11.5px]', test.result.ok ? 'text-emerald-400' : 'text-red-400')}>{test.result.message}</span>
+            )}
+          </Row>
         )}
         <div className="grid grid-cols-2 gap-3">
           <Field label="النبرة">

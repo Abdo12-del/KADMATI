@@ -55,10 +55,17 @@ POST {AUROVA_GATEWAY_URL}/v1/chat/completions
 - تقييم بشري للعربية على 200 عرض: العنوان فكرة؟ النقاط قصيرة؟ لا اختلاق أرقام؟
 - مقارنة A/B داخل الاستوديو عبر مبدّل المصدر في الإعدادات.
 
-## 7. خطوات التشغيل المحلي (للتطوير)
+## 7. البوابة `server/aurova-gateway.mjs`
+خادم Node بلا تبعيات يقدّم `POST /v1/chat/completions` و`GET /health` و`GET /v1/models`:
+- **وضع stub** (افتراضي): يردّ بهياكل حتمية — يكفي لتجربة الواجهة كاملة دون GPU.
+- **وضع upstream**: يمرّر إلى أي خادم متوافق مع OpenAI (vLLM / llama.cpp / TGI) ويحتفظ بالمفتاح على الخادم،
+  مع تحديد معدّل لكل IP وسقف لحجم الطلب وربط أسماء النماذج (`aurova-deck-1` → اسم checkpoint الفعلي).
+
 ```bash
-# أي خادم OpenAI-compatible يكفي للتجربة، مثال vLLM:
-vllm serve Qwen/Qwen2.5-7B-Instruct --served-model-name aurova-deck-1 --port 8787
-AUROVA_GATEWAY_URL=http://127.0.0.1:8787 npm run dev
+npm run gateway                     # stub على :8787
+npm run dev                         # Vite يمرّر /api/aurova → :8787
+# مع نموذج حقيقي:
+vllm serve Qwen/Qwen2.5-7B-Instruct --served-model-name aurova-deck-1 --port 8000
+AUROVA_UPSTREAM_URL=http://127.0.0.1:8000/v1/chat/completions npm run gateway
 ```
-ثم في الاستوديو: الإعدادات → الذكاء الاصطناعي → المصدر: **Aurova Model**.
+ثم في الاستوديو: الإعدادات → الذكاء الاصطناعي → المصدر: **Aurova Model** → «اختبار الاتصال».

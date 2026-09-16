@@ -27,9 +27,12 @@ import {
   Trash2,
   Underline,
   Wand2,
+  Loader2,
+  Sparkles,
 } from 'lucide-react'
 import { useDoc } from '../store/useDoc'
 import { toast, useUI } from '../store/useUI'
+import { connLabel, isRemoteReady, toConn } from '../services/ai/providers'
 import { Button, Chip, ColorField, Divider, Field, NumberField, Row, Section, Segmented, Select, Slider, Switch, TextArea, TextField } from '../components/ui'
 import { AnimationLibrary } from './anim/AnimationLibrary'
 import { previewOnCanvas } from './anim/preview'
@@ -1478,6 +1481,9 @@ function AiTab() {
   const slideIndex = useDoc((s) => s.slideIndex)
   const [busy, setBusy] = useState<string | null>(null)
   const review = useReview()
+  const ai = useUI((s) => s.ai)
+  const modelReady = isRemoteReady(toConn(ai))
+  const modelLabel = connLabel(toConn(ai))
 
   const run = async (label: string, fn: () => Promise<void>) => {
     setBusy(label)
@@ -1494,6 +1500,21 @@ function AiTab() {
         <p className="text-[11.5px] leading-relaxed text-ink-400">
           فحص محلي فوري (بدون إرسال بياناتك لأي مكان): تباين الألوان، طول النصوص، المحاذاة، التسلسل الهرمي، اتساق الخطوط.
         </p>
+        <Button
+          size="sm"
+          variant="surface"
+          className="w-full"
+          disabled={!!busy || !modelReady}
+          tip={modelReady ? `يرسل نصوص الشرائح إلى ${modelLabel} ويعيد ملاحظات على المحتوى` : 'اختر مصدرًا في إعدادات الذكاء الاصطناعي'}
+          onClick={() =>
+            run('مراجعة المحتوى', async () => {
+              const n = await review.scanContent()
+              toast({ kind: 'ai', title: n ? `${n} ملاحظات على المحتوى` : 'لا ملاحظات من النموذج', body: n ? `المصدر: ${modelLabel}` : 'المحتوى يبدو متماسكًا — أو تعذّر الاتصال.' })
+            })
+          }
+        >
+          {busy === 'مراجعة المحتوى' ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />} مراجعة المحتوى بالنموذج
+        </Button>
         {review.issues.length ? (
           <ul className="space-y-1.5">
             {review.issues.slice(0, 12).map((issue, i) => (
@@ -1505,6 +1526,7 @@ function AiTab() {
                       {SEVERITY[issue.severity].label} · شريحة {issue.slide + 1}
                     </p>
                     <p className="mt-0.5 text-ink-400">{issue.message}</p>
+                    {issue.hint ? <p className="mt-0.5 text-[11px] text-ink-500">{issue.hint}</p> : null}
                     <div className="mt-1 flex gap-1">
                       <button type="button" className="rounded border border-ink-700 px-1.5 py-0.5 text-[10.5px] text-ink-200 hover:bg-ink-800" onClick={() => useDoc.getState().gotoSlide(issue.slide)}>
                         الانتقال
@@ -1681,20 +1703,28 @@ function JoinIcon({ size = 12 }: { size?: number }) {
 function useReview() {
   const doc = useDoc((s) => s.doc)
   const [issues, setIssues] = useState<ReviewIssue[]>([])
+  const [modelIssues, setModelIssues] = useState<ReviewIssue[]>([])
   const scan = useCallback(async () => {
     const { reviewDeck } = await import('../services/ai/review')
     setIssues(reviewDeck(doc))
   }, [doc])
+  const scanContent = useCallback(async () => {
+    const { reviewContentWithModel } = await import('../services/ai/review')
+    const list = await reviewContentWithModel(doc)
+    setModelIssues(list)
+    return list.length
+  }, [doc])
   useEffect(() => {
     void scan()
   }, [scan])
-  return { issues, scan }
+  return { issues: [...issues, ...modelIssues], scan, scanContent }
 }
 
 export interface ReviewIssue {
   slide: number
   severity: 'error' | 'warn' | 'info'
   message: string
+  hint?: string
   fix?: () => void
 }
 

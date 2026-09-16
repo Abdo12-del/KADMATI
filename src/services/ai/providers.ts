@@ -333,3 +333,25 @@ async function callGemini(def: ProviderDef, conn: AiConn, model: string, req: Ch
 export function toConn(ai: { provider: ProviderId; model: string; endpoint: string; keys: Partial<Record<ProviderId, string>> }): AiConn {
   return { provider: ai.provider, model: ai.model, endpoint: ai.endpoint, apiKey: ai.keys[ai.provider] }
 }
+
+export interface ConnTest {
+  ok: boolean
+  /** Round-trip time in ms when ok. */
+  ms?: number
+  message: string
+}
+
+/** Cheap round-trip used by the settings dialog's "test connection" button. */
+export async function testConnection(conn: AiConn): Promise<ConnTest> {
+  if (!isRemoteReady(conn)) {
+    const def = providerDef(conn.provider)
+    if (def.id === 'local') return { ok: true, message: 'المحرك المحلي لا يحتاج اتصالًا.' }
+    if (def.id === 'custom') return { ok: false, message: 'أدخل عنوان API أولًا.' }
+    return { ok: false, message: 'أدخل مفتاح API أولًا.' }
+  }
+  const t0 = performance.now()
+  const text = await chat(conn, { system: 'Reply with the single word OK.', user: 'ping', temperature: 0, timeoutMs: 15000, maxTokens: 8 })
+  const ms = Math.round(performance.now() - t0)
+  if (text == null) return { ok: false, message: conn.provider === 'aurova' ? 'تعذّر الوصول إلى خادم Aurova — تأكد أن البوابة تعمل (انظر docs/AUROVA_MODEL.md).' : 'فشل الاتصال: تحقق من المفتاح والنموذج أو من قيود CORS لدى المزوّد.' }
+  return { ok: true, ms, message: `متصل · ${connLabel(conn)} · ${ms} ms` }
+}

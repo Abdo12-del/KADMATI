@@ -378,3 +378,60 @@ function alignmentDrift(elements: AnyElement[]): AnyElement[] {
 }
 
 void isLight
+
+/* ------------------------------------------------------------------ model pass (optional) */
+
+import { useUI } from '../../store/useUI'
+import { chat, isRemoteReady, toConn } from './providers'
+
+/**
+ * Content review by the configured model (Aurova Model or a third-party provider). The
+ * deterministic pass above covers design; this one covers the words: weak titles, filler,
+ * missing evidence, ordering. Returns [] when no provider is ready or the call fails, so the
+ * UI can always fall back to the local list alone.
+ */
+export async function reviewContentWithModel(doc: Presentation, opts: { slides?: number[]; lang?: 'ar' | 'en' } = {}): Promise<ReviewIssue[]> {
+  const ai = useUI.getState().ai
+  const conn = toConn(ai)
+  if (!isRemoteReady(conn)) return []
+  const indices = opts.slides ?? doc.slides.map((_, i) => i)
+  const outline = indices
+    .map((i) => {
+      const slide = doc.slides[i]
+      if (!slide) return null
+      const texts = slide.elements
+        .filter((el): el is TextElement => el.kind === 'text')
+        .map((el) => htmlToPlainText(el.content).trim())
+        .filter(Boolean)
+      return { index: i, texts: texts.slice(0, 8).map((t) => t.slice(0, 220)) }
+    })
+    .filter((x): x is { index: number; texts: string[] } => !!x && x.texts.length > 0)
+  if (!outline.length) return []
+  const lang = opts.lang ?? (/[؀-ۿ]/.test(outline.map((o) => o.texts.join(' ')).join(' ')) ? 'ar' : 'en')
+  const system = [
+    'أنت مراجع محتوى عروض تقديمية. أعد JSON فقط بالشكل:',
+    '{"issues":[{"slide":<index>,"severity":"warn|info","message":"...","hint":"..."}]}',
+    `اللغة: ${lang === 'ar' ? 'العربية' : 'English'}. أقصى ٨ ملاحظات، الأهم أولًا.`,
+    'ركّز على: عنوان لا يحمل فكرة، حشو، ادّعاء بلا دليل، ترتيب غير منطقي، نقاط متكررة، خاتمة بلا طلب واضح.',
+    'لا تعلّق على الألوان أو الخطوط أو التخطيط — يُفحص ذلك محليًا.',
+  ].join('\n')
+  const raw = await chat(conn, { system, user: JSON.stringify({ title: doc.metadata.title, slides: outline }), temperature: 0.3, json: true, timeoutMs: 25000 })
+  if (!raw) return []
+  let parsed: { issues?: { slide?: number; severity?: string; message?: string; hint?: string }[] } = {}
+  try {
+    parsed = JSON.parse(raw.replace(/^```(?:json)?\s*|\s*```$/g, ''))
+  } catch {
+    return []
+  }
+  const valid = new Set(indices)
+  return (parsed.issues ?? [])
+    .filter((x) => typeof x.slide === 'number' && valid.has(x.slide) && x.message)
+    .slice(0, 8)
+    .map((x, n) => ({
+      id: `model-${x.slide}-${n}`,
+      slide: x.slide as number,
+      severity: (x.severity === 'warn' ? 'warn' : 'info') as Severity,
+      message: String(x.message).trim(),
+      hint: x.hint ? String(x.hint).trim() : undefined,
+    }))
+}
