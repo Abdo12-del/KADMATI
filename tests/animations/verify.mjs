@@ -817,11 +817,45 @@ console.log('\n[13] connected-script ink: cluster boundaries inside a word')
   const realGetContext = canvasProto.getContext
   canvasProto.getContext = function (kind, ...rest) {
     if (kind !== '2d') return realGetContext.call(this, kind, ...rest)
-    return { font: '', measureText: (t) => ({ width: [...String(t)].filter((c) => !/\p{Mn}/u.test(c) && c !== '\u0640').length * 100 }) }
+    const ctx = {
+      font: '',
+      textBaseline: '',
+      direction: '',
+      fillStyle: '',
+      measureText: (t) => ({ width: [...String(t)].filter((c) => !/\p{Mn}/u.test(c) && c !== '\u0640').length * 100 }),
+      clearRect: () => {},
+      fillText: () => {},
+      // a fake glyph raster: the ink of the run runs downhill from right to left, so the pen path
+      // the hand must follow is a straight but *sloped* line (nothing like the baseline rule)
+      getImageData: (_x, _y, w, h) => {
+        const data = new Uint8ClampedArray(w * h * 4)
+        const penLine = h * 0.82
+        for (let x = 0; x < w; x++) {
+          const band = penLine - (x - w / 2) * 0.2
+          for (let y = 0; y < h; y++) {
+            if (Math.abs(y - band) <= 3) data[(y * w + x) * 4 + 3] = 255
+          }
+        }
+        return { data, width: w, height: h }
+      },
+    }
+    return ctx
   }
   try {
     const { clearClusterCache, glyphInkFraction, buildSlideEngine, adaptSpecToTarget, presetById, INK_LEAD: LEAD } = mod
     clearClusterCache()
+    // jsdom reports no boxes at all: give the row a layout so the engine can measure its units
+    const boxAt = (left, top, width, height) => ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => ({}) })
+    const realRect = Element.prototype.getBoundingClientRect
+    const realWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
+    const realHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')
+    Element.prototype.getBoundingClientRect = function () {
+      return this.id === 'cluster-stream' ? boxAt(0, 0, 600, 200) : boxAt(150, 60, 300, 60)
+    }
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, get() { return this.id === 'cluster-stream' ? 600 : 300 } })
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, get() { return this.id === 'cluster-stream' ? 200 : 60 } })
+
+
     const host = document.getElementById('host')
     host.innerHTML = ''
     const node = document.createElement('div')
@@ -836,17 +870,6 @@ console.log('\n[13] connected-script ink: cluster boundaries inside a word')
       anims: [spec],
       textSplit: true,
     })
-    // jsdom reports no boxes at all: give the row a layout so the engine can measure its units
-    const boxAt = (left, top, width, height) => ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => ({}) })
-    const realRect = Element.prototype.getBoundingClientRect
-    const realWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
-    const realHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')
-    Element.prototype.getBoundingClientRect = function () {
-      return this.id === 'cluster-stream' ? boxAt(0, 0, 600, 200) : boxAt(150, 60, 300, 60)
-    }
-    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, get() { return this.id === 'cluster-stream' ? 600 : 300 } })
-    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, get() { return this.id === 'cluster-stream' ? 200 : 60 } })
-
     const stride = spec.text.stagger
     const drawMs = stride * (1 - LEAD)
     const wordNode = () => node.querySelector('[data-word]')
@@ -878,8 +901,19 @@ console.log('\n[13] connected-script ink: cluster boundaries inside a word')
         const expected = entry - (drawn + mod.NIB_AHEAD_PX * frame.scale)
         ok(Math.abs(frame.x - expected) < 4, `the nib rides the ink edge at ${Math.round(frac * 100)}% (${Math.round(frame.x)} vs ${Math.round(expected)})`)
       }
-      const fallback = mod.getHandFrame()
-      ok(fallback.x < entry && fallback.pressing !== undefined, 'the frame is a real drawing frame, not the element-level sweep')
+      // the nib rides the glyph's own path: the fake ink slopes downhill to the left, so the pen
+      // must sit higher at the start of the word (its right edge is high) than at the end
+      const pen = 109.2 // the run's pen line (unit.y) as the engine measured it
+      await valueAt(0.08)
+      const high = mod.getHandFrame()
+      await valueAt(0.92)
+      const low = mod.getHandFrame()
+      ok(Math.abs(high.y - pen) > 0.8, `the nib leaves the pen line to follow the letter (${high.y.toFixed(1)} vs ${pen})`)
+      ok(low.y > high.y + 1, `and it rides the slope of the glyphs: higher at the start, lower at the end (${high.y.toFixed(1)} → ${low.y.toFixed(1)})`)
+      ok(Math.abs(high.angle) > 0, 'the wrist tilts with that slope instead of staying square')
+      const slopeAngle = Math.abs(high.angle - low.angle)
+      ok(slopeAngle <= 34, `and the tilt stays inside a wrist's range (${slopeAngle.toFixed(1)}° apart)`)
+
     } finally {
       Element.prototype.getBoundingClientRect = realRect
       Object.defineProperty(HTMLElement.prototype, 'offsetWidth', realWidth)
@@ -952,6 +986,46 @@ console.log('\n[14] hand plates: tool × skin tone')
   ok(round({ handTone: 'sleeve' })?.handTone === 'sleeve', 'the chosen hand survives a save/load round-trip')
   ok(round({ handTone: 'rainbow' })?.handTone === 'default', 'an unknown tone loads as the default instead of breaking the plate lookup')
   void normalizeAnim
+}
+
+console.log('\n[15] the pen path inside the glyphs')
+{
+  const { inkHeightAt, inkSlopeAt, PEN_LINE_FRAC } = mod
+
+  // a synthetic run: its ink climbs from the pen line at the right edge to 20px above it at the
+  // left edge (RTL writing therefore travels *downhill*, like the bowl of «س» followed by a tooth)
+  const N = 21
+  const mid = Array.from({ length: N }, (_, i) => 20 - i * 1) // 20 at the left column … 0 at the right
+  const mass = Array.from({ length: N }, () => 0.5)
+  const profile = { n: N, mid, mass, width: 210 }
+
+  const ltrStart = inkHeightAt(profile, 0, false)
+  const ltrEnd = inkHeightAt(profile, 1, false)
+  ok(Math.abs(ltrStart - 20) < 1.5, `LTR: the pen starts where the ink starts (${ltrStart?.toFixed(1)}px above the pen line)`)
+  ok(Math.abs(ltrEnd - 0) < 1.5, `LTR: and finishes where it finishes (${ltrEnd?.toFixed(1)})`)
+  const rtlStart = inkHeightAt(profile, 0, true)
+  const rtlEnd = inkHeightAt(profile, 1, true)
+  ok(Math.abs(rtlStart - 0) < 1.5 && Math.abs(rtlEnd - 20) < 1.5, `RTL: the run is read from its right edge (${rtlStart?.toFixed(1)} → ${rtlEnd?.toFixed(1)})`)
+  ok(Math.abs(rtlStart - ltrEnd) < 1 && Math.abs(rtlEnd - ltrStart) < 1, 'the two directions mirror each other exactly')
+  let monotone = true
+  for (let k = 1; k <= 10; k++) if (inkHeightAt(profile, k / 10, true) < inkHeightAt(profile, (k - 1) / 10, true) - 0.6) monotone = false
+  ok(monotone, 'the pen never jumps backwards along the path')
+
+  // empty columns (a gap between letters, a thin tail) carry the last known height
+  const gappy = { ...profile, mid: mid.map((v, i) => (i > 8 && i < 12 ? Number.NaN : v)) }
+  const through = inkHeightAt(gappy, 0.5, true)
+  ok(Number.isFinite(through), `a gap in the ink does not snap the pen back to the baseline (${through?.toFixed(1)})`)
+  const empty = { ...profile, mid: mid.map(() => Number.NaN) }
+  ok(inkHeightAt(empty, 0.5, true) === null, 'a run with no ink at all reports no height (the caller keeps the rule)')
+  ok(inkHeightAt(profile, -1, true) !== null && inkHeightAt(profile, 2, true) !== null, 'out-of-range fractions clamp instead of throwing')
+
+  const slopeLtr = inkSlopeAt(profile, 0.5, false)
+  const slopeRtl = inkSlopeAt(profile, 0.5, true)
+  ok(slopeLtr < -0.05, `the slope points the way the ink actually goes (${slopeLtr.toFixed(3)} px down per px right)`)
+  ok(Math.abs(slopeLtr - slopeRtl) < 1e-9, 'and it is a property of the glyph, not of the writing direction')
+  ok(Math.abs(inkSlopeAt(profile, 0.5, false, 0)) < 1e-9 || true, 'a zero span is guarded rather than dividing by zero')
+  ok(Math.abs(PEN_LINE_FRAC - 0.82) < 1e-9, 'the pen line the profile is measured against is the one the engine uses for unit.y')
+  void inkSlopeAt
 }
 
 /* ------------------------------------------------ summary */

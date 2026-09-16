@@ -26,6 +26,7 @@ import type { ElementBaseInfo } from './engine'
 import { handAsset, handDrawHeight, handKeyFor } from './handAssets'
 import { INK_LEAD, NIB_AHEAD_PX } from './types'
 import { glyphInkFraction } from './glyphClusters'
+import { inkHeightAt, inkSlopeAt, type InkProfile } from './inkProfile'
 import type { HandAssetKey } from './handAssets'
 import type { AnimSpec, WhiteboardHandSide, WhiteboardHandStyle } from './types'
 
@@ -94,6 +95,8 @@ export interface HandCtx {
     lead: number
     /** per-unit cluster widths (design px) — the pieces a pen draws inside one unit */
     clusters?: number[][]
+    /** per-unit pen paths read from the glyphs (null when the run could not be measured) */
+    profiles?: (InkProfile | null)[]
   }
 }
 
@@ -335,6 +338,21 @@ export function computeHandFrame(spec: AnimSpec, el: ElementBaseInfo, localT: nu
   return null
 }
 
+/** Where the pen is inside a unit: px of ink laid from its start edge, and the fraction done. */
+function clusterProgress(widths: number[], total: number, p: number): { drawn: number; frac: number } {
+  let cum = 0
+  for (let k = 0; k < widths.length; k++) {
+    const cw = widths[k]
+    // index, not value: two clusters of the same width must not look like the last one
+    if (p <= (cum + cw) / total || k === widths.length - 1) {
+      const q = clamp((p * total - cum) / cw, 0, 1)
+      return { drawn: cum + glyphInkFraction(q) * cw, frac: (cum + glyphInkFraction(q) * cw) / total }
+    }
+    cum += cw
+  }
+  return { drawn: total, frac: 1 }
+}
+
 /* -------------------------------------------------------------- text frame */
 
 /**
@@ -352,7 +370,7 @@ function streamFrame(
   pose: HandPose,
   localT: number,
   units: { x: number; y: number; w?: number; h?: number }[],
-  stream: { stride: number; lead: number; clusters?: number[][] },
+  stream: { stride: number; lead: number; clusters?: number[][]; profiles?: (InkProfile | null)[] },
   rtl: boolean,
 ): HandFrame {
   const n = units.length
@@ -377,34 +395,29 @@ function streamFrame(
   const travel = raw === i && w > drawMs && i < n - 1
 
   let x: number
-  let y: number
+  let y = u.y
+  let slopeTilt = 0
   if (w <= drawMs || i >= n - 1) {
     // drawing (or holding the last stroke while the pen has nowhere left to go)
     const p = clamp(w / drawMs, 0, 1)
     const widths = stream.clusters?.[i]
     const total = widths?.reduce((a, b) => a + b, 0) ?? 0
+    const profile = stream.profiles?.[i] ?? null
+    const inked = total > 0 && widths?.length ? clusterProgress(widths, total, p) : { drawn: p * box, frac: p }
     if (widths?.length && total > 0 && box > 0) {
-      // Inside the unit the ink advances cluster by cluster — the same boundaries and the same
-      // in-glyph speed profile the engine tweens, so the nib rides the edge of the glyph that is
-      // actually being drawn instead of gliding at an average speed.
-      let cum = 0
-      let drawn = 0
-      for (let k = 0; k < widths.length; k++) {
-        const cw = widths[k]
-        // index, not value: two clusters of the same width must not look like the last one
-        if (p <= (cum + cw) / total || k === widths.length - 1) {
-          const q = clamp((p * total - cum) / cw, 0, 1)
-          drawn = cum + glyphInkFraction(q) * cw
-          break
-        }
-        cum += cw
-      }
-      // the ink the pen has already laid, measured from the unit's start edge (right, for RTL)
-      x = entry + dir * (drawn + ahead)
+      x = entry + dir * (inked.drawn + ahead)
     } else {
       x = entry + dir * (p * box + ahead)
     }
-    y = u.y
+    // The pen path: the nib rises and dips with the letter it is inside of, and the wrist tilts
+    // with the local slope. Without a measured path (no canvas) the nib stays on the pen line.
+    if (profile) {
+      const height = inkHeightAt(profile, inked.frac, rtl)
+      if (height !== null) y = clamp(u.y + height, u.y - (u.h ?? 40) * 1.2, u.y + (u.h ?? 40) * 1.2)
+      slopeTilt = clamp(Math.atan(inkSlopeAt(profile, inked.frac, rtl)) * (180 / Math.PI), -16, 16)
+    } else {
+      y = u.y
+    }
   } else {
     // pen lift: leave this unit's exit edge and land on the next unit's entry edge
     const next = units[i + 1]
@@ -418,7 +431,7 @@ function streamFrame(
   return frame({
     x: x + tremor(t, 0.7),
     y: y + tremor(t, 3.9) + Math.sin(i * 0.6) * 0.4,
-    angle: wristTilt(dir * 0.9, 0) + tremor(t, 8.2) * 0.7,
+    angle: wristTilt(dir * 0.9, 0) + slopeTilt + tremor(t, 8.2) * 0.7,
     scale: scaleForText(units[i]?.h ?? units[units.length - 1]?.h),
     opacity: 1,
     asset,

@@ -33,7 +33,7 @@ jobs:
       - name: Unit tests
         run: npm run test:unit
 
-      # Animation engine (744 assertions) and the PDF → deck pipeline (54).
+      # Animation engine (759 assertions) and the PDF → deck pipeline (54).
       # test:pdf generates its own fixtures, so no cached state is needed.
       - name: Animation tests
         run: npm run test:anim

@@ -19,6 +19,7 @@ import { createTimeline, stagger, TextSplitter } from 'animejs'
 import type { Timeline } from 'animejs'
 import { compileEase, springSegmentDuration } from './easing'
 import { canvasFontOf, clusterWidthsFor, glyphInkFraction } from './glyphClusters'
+import { inkProfileFor, type InkProfile } from './inkProfile'
 import { broadcastHandFrame, clearHandFrame, computeHandFrame } from './hand'
 import { sampleMotionPath, type PathSample } from './path'
 import type { AnimProp, AnimSpec, Keyframe, Pt, RevealSpec, TextAnimSpec } from './types'
@@ -274,7 +275,7 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
   const splitNodes = new Map<string, TweenNodes>()
 
   /** Per-animation stream timing (unit stride + pen-travel lead + per-unit clusters), for the hand. */
-  const streams = new Map<string, { stride: number; lead: number; clusters: number[][] }>()
+  const streams = new Map<string, { stride: number; lead: number; clusters: number[][]; profiles: (InkProfile | null)[] }>()
 
   const measureUnits = (spec: AnimSpec): { x: number; y: number; w?: number; h?: number }[] | undefined => {
     const cached = unitCache.get(spec.id)
@@ -324,7 +325,10 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
         stagger: effectiveTextMode(spec, el) === 'words' ? spec.text!.stagger : undefined,
         // ink order: the DOM order, unless the animation inks the units backwards
         units: measured && spec.text?.from === 'end' ? [...measured].reverse() : measured,
-        stream: stream && measured?.length ? { stride: stream.stride, lead: stream.lead, clusters: stream.clusters } : undefined,
+        stream:
+          stream && measured?.length
+            ? { stride: stream.stride, lead: stream.lead, clusters: stream.clusters, profiles: stream.profiles }
+            : undefined,
       })
       if (frame && frame.active) {
         activeFrame = frame
@@ -404,7 +408,12 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
         const width = box?.width ?? 0
         return clusterWidthsFor(w.textContent ?? '', font, width) ?? []
       })
-      streams.set(spec.id, { stride, lead, clusters })
+      // the pen path of each word (from its own glyphs) so the nib follows the letter's shape
+      const profiles = wordNodes.map((w) => {
+        const box = w.getBoundingClientRect?.()
+        return inkProfileFor(w.textContent ?? '', font, box?.width ?? 0, box?.height ?? 0)
+      })
+      streams.set(spec.id, { stride, lead, clusters, profiles })
       // element-level properties (opacity/scale/…) belong to the whole element, not to a word
       nodes = node
     }
