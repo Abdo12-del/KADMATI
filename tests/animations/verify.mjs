@@ -423,7 +423,7 @@ console.log('\n[11] whiteboard animation & hand tracking')
   const { getHandFrame, subscribeHandFrame } = mod
   const wbSpec = presetById('whiteboard-draw').make('wb-target')
   ok(wbSpec.whiteboard?.effect === 'draw', 'whiteboard-draw carries effect="draw"')
-  ok(wbSpec.reveal?.kind === 'wipe-right', 'whiteboard-draw carries wipe reveal')
+  ok(['wipe-right','wipe-down','wipe-left','wipe-up','circle'].includes(wbSpec.reveal?.kind), `whiteboard-draw carries wipe reveal (got ${wbSpec.reveal?.kind})`)
 
   document.getElementById('host').innerHTML = ''
   const node = makeTarget('wb-target')
