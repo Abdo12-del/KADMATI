@@ -16,7 +16,8 @@
     "model:dataset": "node model/build.mjs",
     "model:distill": "node model/distill.mjs",
     "model:eval": "node model/eval.mjs",
-    "model:eval:stub": "node model/eval.mjs --url http://127.0.0.1:8787/v1/chat/completions --model aurova-deck-1"
+    "model:eval:stub": "node model/eval.mjs --url http://127.0.0.1:8787/v1/chat/completions --model aurova-deck-1",
+    "test:model": "node model/smoke.mjs"
   },
   "dependencies": {
     "@tanstack/react-virtual": "3.14.12",

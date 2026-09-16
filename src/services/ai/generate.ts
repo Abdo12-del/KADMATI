@@ -202,7 +202,7 @@ export function localOutline({ topic, count, lang, category }: LocalInput): Outl
     {
       kind: 'agenda',
       title: ar ? 'خريطة العرض' : 'What we will cover',
-      takeaways: chapters.slice(0, Math.min(6, Math.max(3, count - 4)).valueOf()).map((c) => c.title),
+      takeaways: chapters.slice(0, Math.min(5, Math.max(3, count - 4))).map((c) => c.title),
     },
   ]
 

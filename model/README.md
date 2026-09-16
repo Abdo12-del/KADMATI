@@ -11,6 +11,8 @@ model/
 ├─ validate.mjs       بوابة المخطط المشتركة (outline / rewrite / review)
 ├─ distill.mjs        يرفع جودة الأهداف بنموذج معلّم عبر أي endpoint متوافق مع OpenAI
 ├─ train.py           QLoRA على Qwen2.5-Instruct، خسارة على ردّ المساعد فقط، وزن للأمثلة الذهبية
+├─ train_dpo.py       مرحلة التفضيل (DPO) من تعديلات المستخدمين فوق محوّل SFT
+├─ smoke.mjs          فحص CI: البيانات تُبنى وتجتاز البوابة، والـ gateway يجيب على المهام الثلاث
 ├─ eval.mjs           تقييم أي endpoint بمقاييس المنتج (schema/frame/count/lang/latency)
 ├─ serve.sh           vLLM أو llama.cpp + البوابة
 ├─ docker-compose.yml vLLM (GPU) + gateway
@@ -29,6 +31,7 @@ npm run model:dataset
 | **planner** | المخطِّط المحلي على 180 موضوعًا × أعداد شرائح × لغتين | ×1 |
 | **rewrite** | أزواج (نص، عملية) من نصوص القوالب مع بوابة `acceptable()` | ×1 |
 | **review** | عروض ذهبية بعيوب محقونة معروفة (عنوان تسمية، رقم بلا مصدر، تكرار، خاتمة بلا طلب) + نسخ نظيفة → قائمة فارغة | ×2 |
+| **feedback** | تصدير المستخدم الاختياري من الاستوديو (`model/data/feedback.jsonl`): العرض **بعد تعديله** = هدف ذهبي، و(المولَّد، المعدَّل) = زوج تفضيل في `dpo.jsonl` | ×3 |
 
 الحجم الحالي ≈ 580 مثالًا (73% عربي). هذا كافٍ لتعليم **الشكل**؛ المحتوى الحقيقي يأتي من التقطير.
 
@@ -51,6 +54,13 @@ python model/train.py --base Qwen/Qwen2.5-1.5B-Instruct --out model/checkpoints/
 - QLoRA 4-bit افتراضيًا (7B على GPU 24GB). `--no-4bit` للبطاقات الأكبر.
 - الخسارة على توكنات المساعد فقط؛ `--merge` يكتب نموذجًا كاملًا جاهزًا لـ vLLM/llama.cpp.
 - لماذا Qwen2.5: عربية قوية، رخصة Apache-2.0، قالب محادثة أصلي، سلوك JSON جيد. البديل: Gemma 2 9B.
+
+## 3b) التفضيل (DPO) — بعد جمع ≥ 50 زوجًا من المستخدمين
+في الاستوديو: الإعدادات → الذكاء الاصطناعي → «المساهمة في تحسين نموذج Aurova» → تصدير JSONL → ضعه في `model/data/feedback.jsonl`.
+```bash
+npm run model:dataset          # يولّد dpo.jsonl
+python model/train_dpo.py --base Qwen/Qwen2.5-7B-Instruct --sft model/checkpoints/aurova-deck-1
+```
 
 ## 4) التقييم — بمقاييس المنتج لا perplexity
 ```bash
@@ -79,5 +89,5 @@ docker compose -f model/docker-compose.yml up   # إنتاج
 ## خارطة الطريق
 1. **v0 (الآن)**: stub يجتاز 86% من بوابة المخطط — الخط الأساس.
 2. **v1**: تقطير 3k مثال + QLoRA 7B → استهداف schema ≥ 98%، تقييم بشري عربي على 200 عرض.
-3. **v2**: بيانات من الاستخدام الحقيقي (بموافقة) — العروض التي عدّلها المستخدم بعد التوليد هي أفضل إشارة تفضيل → DPO.
+3. **v2**: بيانات من الاستخدام الحقيقي (بموافقة) — ✅ الالتقاط والتصدير و`train_dpo.py` جاهزة؛ ينقص فقط حجم البيانات.
 4. **v3**: مهمة رابعة: اقتراح التخطيط/الصورة لكل شريحة (`image`/`layout`) بدل قواعد `toSlideSpec`.
