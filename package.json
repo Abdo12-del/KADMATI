@@ -12,7 +12,7 @@
     "test": "npm run typecheck && npm run test:unit && npm run test:anim && npm run test:pdf && npm run test:model",
     "test:unit": "node tests/document/build.mjs && node tests/document/sanitize.test.mjs",
     "test:anim": "node tests/animations/verify.mjs",
-    "test:pdf": "node tests/pdf/build.mjs && node .tmp-verify/pdf-test.mjs",
+    "test:pdf": "node tests/pdf/fixtures.mjs && node tests/pdf/build.mjs && node .tmp-verify/pdf-test.mjs",
     "test:pdf:fixtures": "node tests/pdf/fixtures.mjs",
     "gateway": "node server/aurova-gateway.mjs",
     "model:dataset": "node model/build.mjs",
