@@ -10,6 +10,7 @@
     "preview": "vite preview --host 0.0.0.0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "icons:generate": "node scripts/gen-icon-set.mjs",
+    "assets:hands": "node scripts/build-hand-assets.mjs",
     "test": "npm run typecheck && npm run test:unit && npm run test:anim && npm run test:pdf && npm run test:model",
     "test:unit": "node tests/document/build.mjs && node tests/document/sanitize.test.mjs",
     "test:anim": "node tests/animations/verify.mjs",

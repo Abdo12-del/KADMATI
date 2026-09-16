@@ -18,10 +18,12 @@
 import { createTimeline, stagger, TextSplitter } from 'animejs'
 import type { Timeline } from 'animejs'
 import { compileEase, springSegmentDuration } from './easing'
+import { canvasFontOf, clusterWidthsFor, glyphInkFraction } from './glyphClusters'
+import { inkProfileFor, type InkProfile } from './inkProfile'
 import { broadcastHandFrame, clearHandFrame, computeHandFrame } from './hand'
 import { sampleMotionPath, type PathSample } from './path'
-import type { AnimProp, AnimSpec, Keyframe, Pt, RevealSpec } from './types'
-import { animHasContent, animSpan, normalizeKeyframes } from './types'
+import type { AnimProp, AnimSpec, Keyframe, Pt, RevealSpec, TextAnimSpec } from './types'
+import { animHasContent, animSpan, INK_LEAD, normalizeKeyframes } from './types'
 
 export interface ElementBaseInfo {
   x: number
@@ -29,6 +31,23 @@ export interface ElementBaseInfo {
   w: number
   h: number
   rotation: number
+  /** the target is a text element: whiteboard drawing is then inked per unit, not wiped */
+  isText?: boolean
+  /** text elements only: right-to-left paragraph direction (hand fallback grid) */
+  rtl?: boolean
+}
+
+/** Base geometry (+ text direction) the motion model needs for one element. */
+export function baseInfo(el: { x: number; y: number; w: number; h: number; rotation?: number; kind?: string; dir?: string }): ElementBaseInfo {
+  return {
+    x: el.x,
+    y: el.y,
+    w: el.w,
+    h: el.h,
+    rotation: el.rotation ?? 0,
+    isText: el.kind === 'text',
+    rtl: el.kind === 'text' ? el.dir === 'rtl' : undefined,
+  }
 }
 
 export interface BuildCtx {
@@ -97,6 +116,23 @@ function cssKey(prop: AnimProp): string {
   return prop
 }
 
+/* ------------------------------------------------------------ text stream
+ *
+ * Connected scripts (Arabic, Persian, Urdu) cannot be inked by splitting them into character
+ * runs: each run is shaped on its own, so the letters lose their joined forms. Instead the text
+ * is split into **words** (each word stays one run, so shaping survives) and every word is
+ * revealed by a horizontal clip edge that travels across it — the ink appears stroke by stroke
+ * while the letters stay connected. The hand rides that same edge (see hand.ts `streamFrame`).
+ */
+
+/** CSS variable carrying the per-unit reveal of a text stream. */
+const TEXT_INK_VAR = '--kad-tx'
+
+/** Clip template: reveal from the right edge leftwards (right-to-left writing). */
+function streamClip(rtl: boolean): string {
+  return rtl ? 'inset(0 0 0 var(--kad-tx, 100%))' : 'inset(0 var(--kad-tx, 100%) 0 0)'
+}
+
 /* ------------------------------------------------------------- clip reveal */
 
 const CLIP_VARS = {
@@ -159,11 +195,51 @@ function applyClipBaseline(nodes: TweenNodes, spec: AnimSpec): void {
 
 function clearClipAndFilters(n: HTMLElement): void {
   n.style.clipPath = ''
+  n.style.removeProperty?.(TEXT_INK_VAR)
   n.style.removeProperty?.(CLIP_VARS.ct)
   n.style.removeProperty?.(CLIP_VARS.cr)
   n.style.removeProperty?.(CLIP_VARS.cb)
   n.style.removeProperty?.(CLIP_VARS.cl)
   n.style.removeProperty?.(CLIP_VARS.cc)
+}
+
+/**
+ * Does this animation ink a text element unit by unit instead of wiping it as a block?
+ *
+ * Whiteboard drawing presets are authored as a vertical wipe, which is right for a shape or a
+ * picture and wrong for text: the wipe cuts whole lines through the middle of their letters.
+ * When such a preset reaches a text element (applied from the library, or saved in a document
+ * before this rule existed) the ink is the per-unit text animation and the wipe is dropped.
+ * Geometry for that case lives in `adaptSpecToTarget`, this is the engine-side guarantee.
+ */
+/**
+ * The split mode an animation is actually run with.
+ *
+ * Arabic (and every connected script) cannot be split into characters: each split unit is its
+ * own text run, so the letters come out in their isolated forms — "ر س م" instead of "رسم".
+ * A per-character ink on RTL text is therefore run per **word**: shaping survives, and the hand
+ * still travels the line unit by unit.
+ */
+export function effectiveTextMode(spec: AnimSpec, el: ElementBaseInfo | undefined): TextAnimSpec['mode'] | undefined {
+  const mode = spec.text?.mode
+  if (!mode) return undefined
+  if (mode === 'chars' && el?.rtl) return 'words'
+  return mode
+}
+
+export function usesTextInk(spec: AnimSpec, el: ElementBaseInfo | undefined): boolean {
+  return !!el?.isText && spec.whiteboard?.effect === 'draw' && !!spec.text
+}
+
+/**
+ * The element's current reveal fraction (0..1) — the position of the ink edge the hand has
+ * to sit on. Sampled from the clip keyframes with the same easing the tween uses, so hand and
+ * ink can never drift apart: both come from the same numbers.
+ */
+export function revealAt(spec: AnimSpec, localT: number): number | undefined {
+  const kfs = spec.properties.clip
+  if (!kfs?.length) return undefined
+  return sampleKeyframes(kfs, Math.max(0, Math.min(spec.duration, localT)), spec)
 }
 
 /* =============================================================== build === */
@@ -187,6 +263,48 @@ export function sampleKeyframes(kfs: Keyframe[], t: number, spec: AnimSpec): num
 export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
   let userCb: ((t: number) => void) | null = null
   const hasWhiteboard = ctx.anims.some((a) => !!a.whiteboard && a.whiteboard.effect !== 'stroke')
+  /**
+   * Measured ink positions per animated text element, in design px.
+   *
+   * A hand that writes text has to land on the glyphs, and only the DOM knows where the
+   * TextSplitter put them. The positions are measured once, right after the split exists
+   * (getBoundingClientRect forces layout — doing it per frame would cost more than the whole
+   * animation) and cached; a failed measurement is retried on a later frame.
+   */
+  const unitCache = new Map<string, { x: number; y: number; w?: number; h?: number }[]>()
+  const splitNodes = new Map<string, TweenNodes>()
+
+  /** Per-animation stream timing (unit stride + pen-travel lead + per-unit clusters), for the hand. */
+  const streams = new Map<string, { stride: number; lead: number; clusters: number[][]; profiles: (InkProfile | null)[] }>()
+
+  const measureUnits = (spec: AnimSpec): { x: number; y: number; w?: number; h?: number }[] | undefined => {
+    const cached = unitCache.get(spec.id)
+    if (cached) return cached
+    const root = ctx.targets[spec.target]
+    const el = ctx.elements[spec.target]
+    const list = splitNodes.get(spec.id)
+    if (!root || !el || !Array.isArray(list) || !list.length) return undefined
+    const rootBox = root.getBoundingClientRect?.()
+    if (!rootBox || !rootBox.width || !root.offsetWidth) return undefined
+    // client px → design px for this node (slide zoom × whatever the engine already applied)
+    const scale = rootBox.width / root.offsetWidth
+    const out: { x: number; y: number; w?: number; h?: number }[] = []
+    for (const node of list) {
+      const box = node.getBoundingClientRect?.()
+      if (!box) return undefined
+      out.push({
+        x: el.x + (box.left + box.width / 2 - rootBox.left) / scale,
+        // the nib sits on the baseline area of the glyph, not at the top of the ink box
+        y: el.y + (box.top + box.height * 0.82 - rootBox.top) / scale,
+        // the unit's own box: the hand sweeps across the word and is sized to the type
+        w: box.width / scale,
+        h: box.height / scale,
+      })
+    }
+    if (!out.length) return undefined
+    unitCache.set(spec.id, out)
+    return out
+  }
 
   const updateHand = (t: number) => {
     if (!hasWhiteboard) return
@@ -196,7 +314,22 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
       const localT = t - raw.delay
       const el = ctx.elements[raw.target]
       if (!el) continue
-      const frame = computeHandFrame(raw, el, localT)
+      const spec = normalizeSpec(raw)
+      const measured = measureUnits(spec)
+      // the running ink stream for this spec: without it the hand would sweep at its own pace
+      // instead of riding the clip edge the engine is animating
+      const stream = streams.get(spec.id)
+      const frame = computeHandFrame(spec, el, localT, {
+        reveal: usesTextInk(spec, el) ? undefined : revealAt(spec, localT),
+        // the pace of the ink is the pace of the *effective* unit, words included
+        stagger: effectiveTextMode(spec, el) === 'words' ? spec.text!.stagger : undefined,
+        // ink order: the DOM order, unless the animation inks the units backwards
+        units: measured && spec.text?.from === 'end' ? [...measured].reverse() : measured,
+        stream:
+          stream && measured?.length
+            ? { stride: stream.stride, lead: stream.lead, clusters: stream.clusters, profiles: stream.profiles }
+            : undefined,
+      })
       if (frame && frame.active) {
         activeFrame = frame
         break
@@ -229,36 +362,102 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
     const center: Pt = el ? { x: el.x + el.w / 2, y: el.y + el.h / 2 } : { x: 0, y: 0 }
 
     // Text splitting: animate the split units with stagger.
+    const textMode = effectiveTextMode(spec, el)
     let nodes: TweenNodes = node
-    if (spec.text && spec.text.mode !== 'text' && ctx.textSplit) {
+    if (textMode && textMode !== 'text' && ctx.textSplit) {
       try {
         // chars are wrapped inside word nodes, so enabling chars keeps words too;
         // lines mode needs no per-word/per-char units
         const params =
-          spec.text.mode === 'chars'
+          textMode === 'chars'
             ? { chars: true }
-            : spec.text.mode === 'lines'
+            : textMode === 'lines'
               ? { lines: true, words: false, chars: false }
               : undefined
         const splitter = new TextSplitter(node, params)
         splitters.push(splitter)
-        const split = spec.text.mode === 'chars' ? splitter.chars : spec.text.mode === 'lines' ? splitter.lines : splitter.words
+        const split = textMode === 'chars' ? splitter.chars : textMode === 'lines' ? splitter.lines : splitter.words
         nodes = (split as HTMLElement[]) ?? []
         if (!nodes.length) nodes = node
+        else splitNodes.set(spec.id, nodes)
       } catch {
         nodes = node
       }
+    }
+
+    const textInk = usesTextInk(spec, el)
+    // Connected script: ink each word through a moving clip edge instead of per-char runs.
+    const stream = textInk && !!el?.rtl && Array.isArray(nodes) && nodes.length > 0 && !!spec.text
+    const inkNodes = nodes
+    if (stream) {
+      const stride = Math.max(20, spec.text!.stagger)
+      const lead = stride * INK_LEAD
+      const wordNodes = nodes as HTMLElement[]
+      for (const w of wordNodes) {
+        touchedNodes.add(w)
+        w.style.willChange = 'clip-path'
+        w.style.clipPath = streamClip(true)
+        w.style.setProperty(TEXT_INK_VAR, '100%')
+      }
+      // Cluster widths per word, so the ink advances glyph by glyph instead of sweeping the whole
+      // word at a constant rate (the pen lands on real letter boundaries, and no glyph is halved
+      // by its neighbour's window). Falls back to a uniform sweep when measuring is impossible.
+      const font = canvasFontOf(typeof window !== 'undefined' ? window.getComputedStyle?.(wordNodes[0]) : undefined)
+      const clusters: number[][] = wordNodes.map((w) => {
+        const box = w.getBoundingClientRect?.()
+        const width = box?.width ?? 0
+        return clusterWidthsFor(w.textContent ?? '', font, width) ?? []
+      })
+      // the pen path of each word (from its own glyphs) so the nib follows the letter's shape
+      const profiles = wordNodes.map((w) => {
+        const box = w.getBoundingClientRect?.()
+        return inkProfileFor(w.textContent ?? '', font, box?.width ?? 0, box?.height ?? 0)
+      })
+      streams.set(spec.id, { stride, lead, clusters, profiles })
+      // element-level properties (opacity/scale/…) belong to the whole element, not to a word
+      nodes = node
     }
 
     eachNode(nodes, (n) => {
       touchedNodes.add(n)
       n.style.willChange = 'transform, opacity, filter, clip-path'
     })
-    applyClipBaseline(nodes, spec)
+    if (!textInk) applyClipBaseline(nodes, spec)
 
     const loop: boolean | number = spec.repeat === -1 ? true : spec.repeat > 0 ? spec.repeat : false
     const sub = createTimeline({ autoplay: false, loop, alternate: !!spec.yoyo })
-    addSpecTweens(sub, spec, nodes, center)
+    addSpecTweens(sub, spec, nodes, center, textInk)
+
+    if (stream) {
+      const { stride, lead, clusters } = streams.get(spec.id)!
+      const drawWindow = stride * (1 - INK_LEAD)
+      const wordNodes = inkNodes as HTMLElement[]
+      /** One linear run of the ink edge — the fallback when a word could not be measured. */
+      const sweep = (w: HTMLElement, at: number) =>
+        sub.add(w, { [TEXT_INK_VAR]: { from: '100%', to: '0%' }, duration: drawWindow, ease: 'linear' }, at)
+
+      wordNodes.forEach((w, j) => {
+        const start = lead + j * stride // the pen has landed on word j by now
+        const widths = clusters[j]
+        const total = widths.reduce((a, b) => a + b, 0)
+        if (!widths.length || !total) {
+          // This word was not measurable: keep it in step with the others by sweeping it whole.
+          sweep(w, start)
+          return
+        }
+        let cum = 0
+        let t = start
+        for (const cw of widths) {
+          const pct = (v: number) => `${(100 * (1 - v)).toFixed(2)}%`
+          const dur = (drawWindow * cw) / total
+          // the nib's own speed profile inside a glyph — the hand reads the same function
+          sub.add(w, { [TEXT_INK_VAR]: { from: pct(cum / total), to: pct((cum + cw) / total) }, duration: Math.max(1, dur), ease: glyphInkFraction }, t)
+          cum += cw
+          t += dur
+        }
+        sub.set(w, { [TEXT_INK_VAR]: '0%' }, spec.duration)
+      })
+    }
     tl.sync(sub, spec.delay)
     duration = Math.max(duration, animSpan(spec))
   }
@@ -306,6 +505,8 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
     },
     destroy() {
       clearHandFrame()
+      unitCache.clear()
+      streams.clear()
       try {
         tl.pause()
         tl.revert()
@@ -334,7 +535,7 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
   return engine
 }
 
-function addSpecTweens(sub: Timeline, spec: AnimSpec, nodes: TweenNodes, center: Pt): void {
+function addSpecTweens(sub: Timeline, spec: AnimSpec, nodes: TweenNodes, center: Pt, textInk = false): void {
   const hasPath = !!spec.motionPath
   const isWhiteboardDraw = !!spec.whiteboard && spec.whiteboard.effect === 'draw'
   // anime v4 stagger uses 'first'/'center'/'last' (we store 'start'/'center'/'end')
@@ -348,6 +549,8 @@ function addSpecTweens(sub: Timeline, spec: AnimSpec, nodes: TweenNodes, center:
     if (!kfs.length) continue
 
     if (prop === 'clip') {
+      // text inked unit by unit: a wipe on top of it would clip every unit again
+      if (textInk) continue
       addClipTweens(sub, spec, nodes, kfs, staggerOpt)
       continue
     }

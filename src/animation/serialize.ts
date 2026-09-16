@@ -70,6 +70,7 @@ function sanitizeAnim(v: unknown): AnimSpec | null {
     spec.whiteboard = {
       effect: (a.whiteboard as any).effect,
       handStyle: ['marker-dark', 'marker-blue', 'pencil', 'chalk', 'eraser'].includes((a.whiteboard as any).handStyle) ? (a.whiteboard as any).handStyle : 'marker-dark',
+      handTone: ['default', 'pale', 'sleeve'].includes((a.whiteboard as any).handTone) ? (a.whiteboard as any).handTone : 'default',
       handSide: (a.whiteboard as any).handSide === 'left' ? 'left' : 'right',
     }
   }

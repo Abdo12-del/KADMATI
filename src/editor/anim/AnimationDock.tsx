@@ -23,15 +23,16 @@ import {
   Trash2,
   X,
 } from 'lucide-react'
-import { buildSlideEngine, sampleKeyframes, type ElementBaseInfo, type SlideEngine } from '../../animation/engine'
+import { baseInfo, buildSlideEngine, sampleKeyframes, type ElementBaseInfo, type SlideEngine } from '../../animation/engine'
 import { EASING_OPTIONS, easingLabel } from '../../animation/easing'
 import { directionalPresetId, presetById, PRESET_GROUPS } from '../../animation/presets'
 import { cloneAnim, parseSlideAnims, slideAnimsJson } from '../../animation/serialize'
 import type { AnimProp, AnimSpec, AnimStart, EasingSpec, Keyframe } from '../../animation/types'
-import { MANUAL_PROPS, animSpan } from '../../animation/types'
+import { MANUAL_PROPS, animSpan, retimeAnim } from '../../animation/types'
 import { cn } from '../../lib/cn'
 import { toast, useUI } from '../../store/useUI'
 import { useCurrentSlide, useDoc } from '../../store/useDoc'
+import { adaptSpecToTarget } from './library'
 import { EasingEditor } from './EasingEditor'
 import { runPerfTest, type PerfReport } from './perf'
 import { animRegistry } from './registry'
@@ -151,6 +152,9 @@ export function AnimationDock() {
     )
   }
 
+  /** Element an animation targets (used to keep whiteboard specs honest for text). */
+  const elementFor = (target: string) => slide?.elements.find((e) => e.id === target)
+
   const mutateAnims = (fn: (list: AnimSpec[]) => void, label = 'تعديل الحركات') => {
     if (!slide) return
     useDoc.getState().updateSlide(
@@ -175,7 +179,7 @@ export function AnimationDock() {
     if (!slide) return
     const targets = animRegistry.all()
     const elements: Record<string, ElementBaseInfo> = {}
-    for (const el of slide.elements) elements[el.id] = { x: el.x, y: el.y, w: el.w, h: el.h, rotation: el.rotation ?? 0 }
+    for (const el of slide.elements) elements[el.id] = baseInfo(el)
     const engine = buildSlideEngine({ targets, elements, anims, textSplit: true })
     engineRef.current = engine
     engine.seek(lastT.current)
@@ -270,10 +274,8 @@ export function AnimationDock() {
         }, 'تحريك بداية الحركة')
       } else {
         const nd = Math.max(100, Math.round((startDur + dx) / 25) * 25)
-        mutateAnim(anim.id, (a) => {
-          a.duration = nd
-          for (const list of Object.values(a.properties)) if (list) for (const k of list) if (k.t > nd) k.t = nd
-        }, 'تعديل مدة الحركة')
+        // time-stretch instead of clamping: the whole motion (and the hand riding it) keeps its pace
+        mutateAnim(anim.id, (a) => retimeAnim(a, nd), 'تعديل مدة الحركة')
       }
     }
     const up = () => {
@@ -811,6 +813,22 @@ export function AnimationDock() {
                         <option value="eraser">🧽 ممحاة سبورة (Eraser)</option>
                       </select>
                     </label>
+                    <label className="block">
+                      <span className="mb-1 block text-[10.5px] text-ink-300">يد الكتابة (لون البشرة / الأكمام)</span>
+                      <select
+                        value={selAnim.whiteboard.handTone ?? 'default'}
+                        onChange={(e) =>
+                          mutateAnim(selAnim.id, (a) => {
+                            if (a.whiteboard) a.whiteboard.handTone = e.target.value as any
+                          }, 'تغيير يد الوايت بورد')
+                        }
+                        className="w-full rounded-md border border-ink-700 bg-ink-950 px-2 py-1 text-[11.5px] text-ink-100 outline-none"
+                      >
+                        <option value="default">✋ اليد الافتراضية (Default)</option>
+                        <option value="pale">🤍 بشرة فاتحة (Light skin)</option>
+                        <option value="sleeve">👔 يد بأكمام داكنة (Sleeve)</option>
+                      </select>
+                    </label>
 
                     <div className="grid grid-cols-2 gap-1.5">
                       <label className="block">
@@ -835,7 +853,11 @@ export function AnimationDock() {
                           value={selAnim.whiteboard.effect}
                           onChange={(e) =>
                             mutateAnim(selAnim.id, (a) => {
-                              if (a.whiteboard) a.whiteboard.effect = e.target.value as any
+                              if (!a.whiteboard) return
+                              a.whiteboard.effect = e.target.value as any
+                              const el = elementFor(a.target)
+                              // "draw" on a text element means writing it, not wiping the box
+                              if (el) adaptSpecToTarget(a, el)
                             }, 'تغيير نوع تأثير الوايت بورد')
                           }
                           className="w-full rounded-md border border-ink-700 bg-ink-950 px-2 py-1 text-[11.5px] text-ink-100 outline-none"
@@ -873,6 +895,8 @@ export function AnimationDock() {
                           end: a.end,
                         }
                         const fresh = def.make(a.target, keep)
+                        const el = elementFor(a.target)
+                        if (el) adaptSpecToTarget(fresh, el)
                         Object.assign(a, fresh)
                       },
                       'تطبيق Preset',
@@ -893,7 +917,7 @@ export function AnimationDock() {
 
               {/* timing */}
               <div className="grid grid-cols-2 gap-2">
-                <NumField label="المدة (ms)" value={selAnim.duration} step={50} min={100} onChange={(v) => mutateAnim(selAnim.id, (a) => { a.duration = v; for (const list of Object.values(a.properties)) if (list) for (const k of list) if (k.t > v) k.t = v })} />
+                <NumField label="المدة (ms)" value={selAnim.duration} step={50} min={100} onChange={(v) => mutateAnim(selAnim.id, (a) => retimeAnim(a, v))} />
                 <NumField label="التأخير (ms)" value={selAnim.delay} step={50} min={0} onChange={(v) => mutateAnim(selAnim.id, (a) => void (a.delay = v))} />
                 <label className="block">
                   <span className="mb-1 block text-[10.5px] text-ink-500">التكرار</span>

@@ -77,6 +77,20 @@ export interface TextAnimSpec {
 }
 
 /**
+ * Connected-script ink (Arabic, Persian, Urdu…): the fraction of a unit's writing window the
+ * pen spends travelling to the unit instead of drawing it. The engine must use the same value
+ * when it schedules the per-unit reveal, otherwise hand and ink disagree (see textStream.ts).
+ */
+export const INK_LEAD = 0.12
+
+/**
+ * How far the nib travels *ahead* of the ink edge, in design px (scaled with the hand at draw
+ * time). Ink appears at the nib, so the wet edge always trails the tip: without this the ink
+ * looks like it sprouts from under the middle of the pen.
+ */
+export const NIB_AHEAD_PX = 7
+
+/**
  * Clip-path reveal descriptor. The `clip` property runs 0 (hidden) → 1 (revealed);
  * this describes the geometry of the revealing edge.
  */
@@ -88,11 +102,14 @@ export type AnimKind = 'entrance' | 'exit' | 'emphasis' | 'motion' | 'reveal' | 
 
 export type WhiteboardEffect = 'draw' | 'push' | 'erase' | 'stroke'
 export type WhiteboardHandStyle = 'marker-dark' | 'marker-blue' | 'pencil' | 'chalk' | 'eraser'
+/** Who holds the tool: the photographed hand varies, the tool does not. */
+export type WhiteboardHandTone = 'default' | 'pale' | 'sleeve'
 export type WhiteboardHandSide = 'right' | 'left'
 
 export interface WhiteboardSpec {
   effect: WhiteboardEffect
   handStyle?: WhiteboardHandStyle
+  handTone?: WhiteboardHandTone
   handSide?: WhiteboardHandSide
 }
 
@@ -186,6 +203,25 @@ export function normalizeAnim(a: AnimSpec): AnimSpec {
     target: a.target,
     id: a.id,
   }
+}
+
+/**
+ * Retime an animation in place: every keyframe and the text stagger scale with the new
+ * duration, so a 2.2 s whiteboard draw stretched to 5 s still draws at the same *relative*
+ * pace. Without this, stretching a clip just piles the keyframes at the end of the old
+ * window and leaves the element (and the hand) parked for the rest of the timeline.
+ */
+export function retimeAnim(a: AnimSpec, duration: number): void {
+  const from = Math.max(1, a.duration)
+  const to = Math.max(100, Math.round(duration))
+  if (to === from) return
+  const k = to / from
+  for (const list of Object.values(a.properties)) {
+    if (!list) continue
+    for (const kf of list) kf.t = Math.max(0, Math.min(to, Math.round(kf.t * k)))
+  }
+  if (a.text) a.text = { ...a.text, stagger: Math.max(10, Math.round(a.text.stagger * k)) }
+  a.duration = to
 }
 
 /** Does this spec actually animate anything? */
