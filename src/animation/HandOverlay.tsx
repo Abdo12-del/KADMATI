@@ -17,8 +17,9 @@ import { getHandFrame, inkDotFor, plateFor, subscribeHandFrame, type HandFrame }
 import { handAsset, handDrawHeight, handDrawWidth } from './handAssets'
 
 /**
- * Which photo to show. `style` picks the tool; the pose (pen vs flat palm) decides between
- * the pen grips and the bare palm used for the "push" effect, and an eraser always wins.
+ * Which photo to show is already decided upstream: `computeHandFrame` resolves the tool and the
+ * skin tone into one plate key (see `plateFor`/`inkDotFor` in hand.ts), so the overlay only draws
+ * — it never guesses between a marker, a sleeved marker and a bare palm.
  */
 export const HandOverlay = memo(function HandOverlay({ slideId }: { slideId?: string }) {
   void slideId
