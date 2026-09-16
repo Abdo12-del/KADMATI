@@ -1,0 +1,23 @@
+# docker compose -f model/docker-compose.yml up
+# Serves aurova-deck-1 (merged checkpoint) on a GPU via vLLM, fronted by the gateway on :8787.
+services:
+  model:
+    image: vllm/vllm-openai:latest
+    command: >
+      --model /models/aurova-deck-1-merged --served-model-name aurova-deck-1
+      --max-model-len 4096 --dtype bfloat16
+    volumes:
+      - ./checkpoints:/models:ro
+    deploy:
+      resources:
+        reservations:
+          devices: [{ driver: nvidia, count: 1, capabilities: [gpu] }]
+  gateway:
+    build: { context: .., dockerfile: model/Dockerfile }
+    environment:
+      AUROVA_UPSTREAM_URL: http://model:8000/v1/chat/completions
+      AUROVA_MODEL_DECK: aurova-deck-1
+      AUROVA_MODEL_MINI: aurova-deck-1
+      AUROVA_RATE_LIMIT: "60"
+    ports: ["8787:8787"]
+    depends_on: [model]

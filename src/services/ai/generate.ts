@@ -95,7 +95,7 @@ function inferCount(topic: string): number {
   return 9
 }
 
-function inferCategory(topic: string, lang: string): TemplateCategory {
+export function inferCategory(topic: string, lang: string): TemplateCategory {
   const t = topic.toLowerCase()
   const has = (words: string[]) => words.some((w) => t.includes(w))
   if (has(['pitch', 'استثمار', 'مستثمر', 'شركة ناشئة', 'startup', 'fundrais', 'تمويل'])) return 'pitch'
@@ -132,7 +132,7 @@ function themeFor(style: GenerateOptions['style'], category: TemplateCategory): 
   return byName ?? (THEME_PRESETS.some((p) => p.id === fallback) ? fallback : THEME_PRESETS[0].id)
 }
 
-function cleanTitle(topic: string, lang: 'ar' | 'en'): string {
+export function cleanTitle(topic: string, lang: 'ar' | 'en'): string {
   let t = topic
     .replace(/^(اصنع|أنشئ|اعمل|صمم|أنشأ|create|make|build|generate)\s+(لي\s+)?(عرضًا تقديميًا|عرض تقديمي|معرض|presentation|deck|slides?)\s*(عن|لـ|about|for|on)?\s*/i, '')
     .replace(/[.!?؟]+\s*$/, '')
@@ -166,7 +166,7 @@ function tagsFor(topic: string, lang: 'ar' | 'en', category: TemplateCategory): 
 
 /* ------------------------------------------------------------------ planning */
 
-interface OutlineSlide {
+export interface OutlineSlide {
   kind: 'title' | 'agenda' | 'content' | 'stats' | 'quote' | 'comparison' | 'process' | 'timeline' | 'closing'
   title: string
   takeaways?: string[]
@@ -191,7 +191,7 @@ interface LocalInput {
  * questions, "vs", steps) and builds the deck around them, padding with genuinely useful framing
  * questions rather than filler prose.
  */
-function localOutline({ topic, count, lang, category }: LocalInput): OutlineSlide[] {
+export function localOutline({ topic, count, lang, category }: LocalInput): OutlineSlide[] {
   const ar = lang === 'ar'
   const clean = cleanTitle(topic, lang)
   const signals = extractSignals(topic)
@@ -268,13 +268,13 @@ function localOutline({ topic, count, lang, category }: LocalInput): OutlineSlid
     })
   }
 
-  outline.push({
+  const closing: OutlineSlide = {
     kind: 'closing',
     title: ar ? 'ما نطلبه الآن' : 'What we are asking for',
     takeaways: ar ? ['قرار واحد هذا الأسبوع', 'مالك وقت واضح للتجربة', 'مراجعة النتائج بعد ٣٠ يومًا'] : ['One decision this week', 'A named owner for the trial', 'Results review in 30 days'],
-  })
-
-  return outline.slice(0, Math.max(4, count))
+  }
+  // Trim the middle, never the closing — the deck must always end with an ask.
+  return [...outline.slice(0, Math.max(4, count) - 1), closing]
 }
 
 interface Signals {

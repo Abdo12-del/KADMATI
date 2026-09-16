@@ -1,0 +1,21 @@
+{
+  "total": 581,
+  "train": 535,
+  "valid": 46,
+  "byTask": {
+    "outline": 391,
+    "rewrite": 158,
+    "review": 32
+  },
+  "bySource": {
+    "gold": 44,
+    "planner": 505,
+    "synthetic": 32
+  },
+  "byLang": {
+    "ar": 425,
+    "en": 156
+  },
+  "topics": 180,
+  "goldDecks": 16
+}

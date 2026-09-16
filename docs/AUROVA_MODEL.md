@@ -35,7 +35,11 @@ POST {AUROVA_GATEWAY_URL}/v1/chat/completions
 | إعادة صياغة نص | `refine.ts → providerRewrite` | نص + عملية (improve/shorten/formal/title) | نص فقط |
 | مراجعة عرض (لاحقًا) | `review.ts` | Issues محلية | Issues مُثراة |
 
-## 4. بيانات التدريب المقترحة
+## 4. بيانات التدريب
+
+> **منفَّذ**: خط الإنتاج الكامل في `model/` (dataset → distill → train → eval → serve). انظر `model/README.md`.
+
+### الخطة الأصلية
 1. **Instruction pairs** من قوالبنا: كل `DeckSpec` في `templates/catalog.ts` و`demo/decks.ts` يُعكس إلى
    (موضوع + فئة) → JSON. هذا يعطي أمثلة "ذهبية" ملتزمة بالمخطط.
 2. **توسيع اصطناعي**: توليد مواضيع متنوعة (أعمال/تعليم/تسويق/أكاديمي/تقرير) بنموذج كبير ثم تصفية

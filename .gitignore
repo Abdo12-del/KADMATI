@@ -11,3 +11,8 @@ coverage
 
 # local harnesses
 .tmp-verify/
+
+model/data/*.jsonl
+model/checkpoints/
+model/reports/
+.tmp-verify/
