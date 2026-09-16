@@ -53,6 +53,20 @@ if (!window.ResizeObserver) window.ResizeObserver = class { observe() {} unobser
 
 const tick = (ms = 40) => new Promise((r) => setTimeout(r, ms))
 
+/** Wait until `cond()` is true (or give up) — for engine renders that land on a rAF. */
+async function waitFor(cond, ms = 600) {
+  const deadline = Date.now() + ms
+  for (;;) {
+    try {
+      if (cond()) return true
+    } catch {
+      /* keep waiting */
+    }
+    if (Date.now() > deadline) return false
+    await tick(20)
+  }
+}
+
 // bundle the TS sources with esbuild then import the temp file
 import { build } from 'esbuild'
 import { writeFileSync, mkdirSync, rmSync } from 'node:fs'
@@ -437,7 +451,7 @@ console.log('\n[11] whiteboard animation & hand tracking')
 
   const engine = buildSlideEngine({ targets, elements, anims: [wbSpec] })
   engine.seek(wbSpec.duration * 0.5)
-  await tick(30)
+  await waitFor(() => getHandFrame().active)
   const midFrame = getHandFrame()
   ok(midFrame.active === true, 'hand is active during drawing mid-timeline')
   ok(midFrame.x >= 50 && midFrame.x <= 260, `hand X is within element bounds (got ${midFrame.x})`)
@@ -634,7 +648,7 @@ console.log('\n[12] whiteboard drawing presets land correctly on text')
   host.appendChild(node)
   const engineLegacy = buildSlideEngine({ targets: { legacy: node }, elements: { legacy: baseEl }, anims: [legacy], textSplit: true })
   engineLegacy.seek(30)
-  await tick(30)
+  await waitFor(() => !!node.innerHTML)
   ok(!node.style.clipPath, 'a whiteboard draw on text never writes a block clip-path, even from an imported spec')
   ok(node.style.getPropertyValue('--kad-ct') === '', 'and never sets the wipe variable')
   engineLegacy.destroy()
@@ -647,7 +661,7 @@ console.log('\n[12] whiteboard drawing presets land correctly on text')
   host.appendChild(shapeNode)
   const engineShape = buildSlideEngine({ targets: { 'shape-target': shapeNode }, elements: { 'shape-target': { x: 0, y: 0, w: 200, h: 200, rotation: 0 } }, anims: [shapeSpec] })
   engineShape.seek(30)
-  await tick(30)
+  await waitFor(() => !!shapeNode.style.clipPath)
   ok(!!shapeNode.style.clipPath, 'the same preset still wipes a non-text element')
   engineShape.destroy()
 
@@ -666,22 +680,21 @@ console.log('\n[12] whiteboard drawing presets land correctly on text')
   host.appendChild(arNode)
   const arSpec2 = adaptSpecToTarget(presetById('whiteboard-draw').make('ar-stream'), textEl)
   const engineStream = buildSlideEngine({ targets: { 'ar-stream': arNode }, elements: { 'ar-stream': baseEl }, anims: [arSpec2], textSplit: true })
+  const inkValues = () => [...arNode.querySelectorAll('[data-word]')].map((w) => parseFloat(w.style.getPropertyValue('--kad-tx')))
   engineStream.seek(arSpec2.text.stagger * 1.5) // mid-word: the edge is inside a word run
-  await tick(30)
+  // CI runners are slower than a dev machine: wait for the render instead of a fixed tick
+  await waitFor(() => inkValues().some((v) => v > 0 && v < 100))
   const words = [...arNode.querySelectorAll('[data-word]')] // TextSplitter's own word runs
   ok(!arNode.querySelector('span[style*="clip: rect"]')?.getAttribute('data-word'), 'the off-screen accessible copy is not a word run')
   ok(words.length >= 4, `Arabic text is split into words, not characters (${words.length} runs)`)
   ok(words.every((w) => w.textContent.trim().indexOf(' ') === -1), 'each run is a single word — the letters keep their joined forms')
   const clipped = words.filter((w) => (w.style.clipPath || '').includes('inset(0 0 0'))
   ok(clipped.length >= 4, `every word is revealed by a right-to-left clip edge (${clipped.length} word runs)`)
-  const half = clipped.filter((w) => {
-    const v = parseFloat(w.style.getPropertyValue('--kad-tx'))
-    return v > 0 && v < 100
-  })
-  ok(half.length >= 1, `the edge is mid-word on the word being written (${half.length} partially inked)`)
+  const half = inkValues().filter((v) => v > 0 && v < 100)
+  ok(half.length >= 1, `the edge is mid-word on the word being written (${half.length} partially inked, values ${inkValues().map((v) => (Number.isFinite(v) ? Math.round(v) : '—')).join(',')})`)
   ok(!arNode.style.clipPath, 'still no block wipe anywhere on the element')
   engineStream.destroy()
-  await tick(20)
+  await waitFor(() => !words.some((w) => w.style.clipPath))
   ok(!words.some((w) => w.style.clipPath), 'destroying the engine clears the stream clips')
 
   // the hand rides that edge: inside a word it advances right-to-left with the ink
