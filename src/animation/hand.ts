@@ -50,7 +50,14 @@ export interface HandCtx {
    * so a measured array is passed straight through; `from: 'end'` reverses it, which is what
    * the engine does when it builds this array.
    */
-  units?: { x: number; y: number }[]
+  units?: { x: number; y: number; w?: number }[]
+  /**
+   * ms between inked units, when it differs from `spec.text.stagger` — e.g. an RTL spec authored
+   * per character is run per word (see `effectiveTextMode`), so the hand must advance per word too.
+   */
+  stagger?: number
+  /** paragraph direction of the target text (decides which side a unit is written from) */
+  rtl?: boolean
 }
 
 const DEFAULT_FRAME: HandFrame = {
@@ -168,8 +175,8 @@ export function computeHandFrame(spec: AnimSpec, el: ElementBaseInfo, localT: nu
 
     if (wb.effect === 'draw') {
       if (spec.text) {
-        const units = ctx.units?.length ? ctx.units : estimatedUnits(spec, el)
-        return textFrame(spec, style, side, pose, localT, units)
+        const units = ctx.units?.length ? ctx.units : estimatedUnits(spec, el, ctx.stagger)
+        return textFrame(spec, style, side, pose, localT, units, ctx.stagger, ctx.rtl ?? el.rtl)
       }
 
       // The ink edge is the element's own reveal; when the engine did not hand us one
@@ -287,25 +294,54 @@ export function computeHandFrame(spec: AnimSpec, el: ElementBaseInfo, localT: nu
 
 /* -------------------------------------------------------------- text frame */
 
-function textFrame(spec: AnimSpec, style: WhiteboardHandStyle, side: WhiteboardHandSide, pose: HandPose, localT: number, units: { x: number; y: number }[]): HandFrame {
-  const stagger = Math.max(20, spec.text?.stagger ?? 55)
+function textFrame(
+  spec: AnimSpec,
+  style: WhiteboardHandStyle,
+  side: WhiteboardHandSide,
+  pose: HandPose,
+  localT: number,
+  units: { x: number; y: number; w?: number }[],
+  staggerOverride?: number,
+  rtlHint?: boolean,
+): HandFrame {
+  const stagger = Math.max(20, staggerOverride ?? spec.text?.stagger ?? 55)
   const n = units.length
-  // Ink appears per unit every `stagger` ms (each unit fades in over ~80 ms), so the nib is
-  // on whichever unit is being inked right now.
+  // Ink appears per unit every `stagger` ms, so the nib is on whichever unit is being inked now.
   const order = clamp(Math.max(0, localT - 30) / stagger, 0, n - 1)
-  const i0 = Math.floor(order)
-  const i1 = Math.min(n - 1, i0 + 1)
-  const f = easeInOutSine(order - i0)
-  const a = units[i0]
-  const b = units[i1]
-  const x = a.x + (b.x - a.x) * f
-  const y = a.y + (b.y - a.y) * f
-  const dx = b.x - a.x
+  const i = Math.floor(order)
+  const f = order - i
+  const u = units[i]
+  const next = units[Math.min(n - 1, i + 1)]
+
+  // Writing direction: how the ink order travels along the line (RTL text is stored right-first,
+  // so a line of Arabic is written right-to-left). Falls back to the element's paragraph direction.
+  const travel = next.x - u.x
+  const dir = Math.abs(travel) > 1 ? Math.sign(travel) : rtlHint || spec.text?.from === 'end' ? -1 : 1
+
+  let x: number
+  let y: number
+  if (u.w && u.w > 4) {
+    // The unit's box is known (measured from the DOM): sweep across it, from the edge the pen
+    // arrives at to the edge it leaves by, then hop to the next unit in the rest of the window.
+    const half = u.w / 2
+    const sweep = u.x - dir * half + dir * 2 * half * clamp(f / 0.86, 0, 1)
+    const from = { x: sweep, y: u.y }
+    const hopP = f < 0.86 ? 0 : (f - 0.86) / 0.14
+    const targetX = next.w && next.w > 4 ? next.x - dir * (next.w / 2) : next.x
+    x = from.x + (targetX - from.x) * hopP
+    y = u.y + (next.y - u.y) * hopP
+  } else {
+    // No measured width (estimated grid): travel between unit centres.
+    const g = easeInOutSine(f)
+    x = u.x + (next.x - u.x) * g
+    y = u.y + (next.y - u.y) * g
+  }
+
   const t = localT / 1000
   return frame({
     x: x + tremor(t, 0.7),
     y: y + tremor(t, 3.9) + Math.sin(order * 0.9) * 0.5,
-    angle: wristTilt(Math.sign(dx) * 0.8, 0) + tremor(t, 8.2) * 0.7,
+    angle: wristTilt(dir * 0.8, 0) + tremor(t, 8.2) * 0.7,
     opacity: 1,
     style,
     side,
@@ -320,8 +356,8 @@ function textFrame(spec: AnimSpec, style: WhiteboardHandStyle, side: WhiteboardH
  * right, or right to left for RTL — so the grid is line-major with a pen lift between lines;
  * the wrap width is estimated from the element box.
  */
-function estimatedUnits(spec: AnimSpec, el: ElementBaseInfo): { x: number; y: number }[] {
-  const stagger = Math.max(20, spec.text?.stagger ?? 55)
+function estimatedUnits(spec: AnimSpec, el: ElementBaseInfo, staggerOverride?: number): { x: number; y: number; w: number }[] {
+  const stagger = Math.max(20, staggerOverride ?? spec.text?.stagger ?? 55)
   const count = clamp(Math.round(spec.duration / stagger), 4, 160)
   const padX = 16
   const usable = Math.max(40, el.w - padX * 2)
@@ -329,12 +365,13 @@ function estimatedUnits(spec: AnimSpec, el: ElementBaseInfo): { x: number; y: nu
   const lines = Math.max(1, Math.ceil(count / perLine))
   const lineH = el.h / lines
   const rtl = el.rtl === true
-  const out: { x: number; y: number }[] = []
+  const slot = usable / perLine
+  const out: { x: number; y: number; w: number }[] = []
   for (let i = 0; i < count; i++) {
     const row = Math.floor(i / perLine)
     const col = i % perLine
     const u = col / perLine
-    out.push({ x: el.x + padX + (rtl ? 1 - u : u) * usable, y: el.y + lineH * (row + 0.72) })
+    out.push({ x: el.x + padX + (rtl ? 1 - u : u) * usable, y: el.y + lineH * (row + 0.72), w: slot })
   }
   return out
 }

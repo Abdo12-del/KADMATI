@@ -491,9 +491,25 @@ console.log('\n[11] whiteboard animation & hand tracking')
     { x: 820, y: 420 },
     { x: 740, y: 420 },
   ]
-  const measured = computeHandFrame(arSpec, arEl, 65 * 1 + 20, { units })
+  const wideUnits = [
+    { x: 900, y: 420, w: 200 },
+    { x: 620, y: 420, w: 200 },
+    { x: 340, y: 420, w: 200 },
+  ]
+  // the hand advances one unit per stagger (the preset's own pace, not a hard-coded one)
+  const measured = computeHandFrame(arSpec, arEl, arSpec.text.stagger + 20, { units, stagger: arSpec.text.stagger })
   ok(Math.abs(measured.x - units[1].x) < 45, `measured units drive the nib (x=${Math.round(measured.x)} vs unit ${units[1].x})`)
   ok(Math.abs(measured.y - units[1].y) < 2, 'the nib sits on the measured baseline, not the box top')
+
+  // a measured unit carries its own box width, so the hand sweeps across the word: first the
+  // near edge, then the middle, then the far edge — instead of parking on the centre
+  const st = arSpec.text.stagger
+  const withW = (frac) => computeHandFrame(arSpec, arEl, st * 1 + 30 + frac * st, { units: wideUnits, stagger: st, rtl: true }).x
+  const enter = withW(0.1)
+  const middle = withW(0.45)
+  const leave = withW(0.8)
+  ok(enter > middle && middle > leave, `the nib sweeps across the word right to left (${Math.round(enter)} → ${Math.round(middle)} → ${Math.round(leave)})`)
+  ok(middle > 620 - 100 && middle < 620 + 100, `the sweep stays inside the measured unit (x=${Math.round(middle)}, unit 620±100)`)
 
   /* ---- erase: the pad is centred on the shrinking ink ---- */
   const eraseSpec = presetById('whiteboard-erase').make('er')
@@ -547,8 +563,117 @@ console.log('\n[11] whiteboard animation & hand tracking')
   const expectedStretch = el.y + 10 + revealAt(stretched, 2200) * (el.h - 20)
   ok(Math.abs(midStretch.y - expectedStretch) < 26, 'after retiming, the hand still rides the ink edge')
   const wri = presetById('whiteboard-write-ar').make('wr')
+  const beforeStagger = wri.text.stagger
   retimeAnim(wri, wri.duration * 2)
-  ok(wri.text.stagger === 130, `retime scales the text stagger too (${wri.text.stagger}ms)`)
+  ok(wri.text.stagger === beforeStagger * 2, `retime scales the text stagger too (${beforeStagger} → ${wri.text.stagger}ms)`)
+}
+
+/* ------------------------------------------------ 12. drawing presets on text ------------------
+ *
+ * A whiteboard drawing preset is authored as a vertical wipe. On a text element that wipe cuts
+ * whole lines through the middle of their letters — no hand writes like that. Text must be inked
+ * unit by unit (the handwriting model), with the wipe dropped; shapes and pictures keep the wipe.
+ */
+console.log('\n[12] whiteboard drawing presets land correctly on text')
+{
+  const { useDoc, applyPreset, adaptSpecToTarget, usesTextInk, effectiveTextMode, createShape, createText, presetById, buildSlideEngine } = mod
+  const state = useDoc.getState()
+  const slideId = state.doc.slides[state.slideIndex].id
+  let textEl
+  let shapeEl
+  state.updateSlide(
+    slideId,
+    (s) => {
+      s.animations = []
+      s.elements = []
+      textEl = createText(state.doc.theme, { x: 120, y: 180, w: 700, h: 200 })
+      textEl.content = '<p>رسم يدوي على السبورة</p>'
+      textEl.font = { ...textEl.font, dir: 'rtl' }
+      shapeEl = createShape(state.doc.theme, { shape: 'rect', x: 120, y: 430, w: 300, h: 160 })
+      s.elements.push(textEl, shapeEl)
+    },
+    'setup',
+  )
+  const current = () => useDoc.getState().doc.slides.find((s) => s.id === slideId)
+
+  applyPreset('whiteboard-draw', [textEl.id], 'same')
+  const onText = current().animations.at(-1)
+  ok(!!onText.text, 'whiteboard draw on text gains a per-unit text animation')
+  ok(onText.text.mode === 'words' && onText.text.from === 'start', 'Arabic text is written word by word from the start of the line (letters stay connected)')
+  ok(onText.text.stagger >= 90 && onText.text.stagger <= 420, `the derived writing pace is sane (${onText.text.stagger}ms per word)`)
+  ok(!onText.properties.clip && !onText.reveal, 'the block wipe is dropped — it would clip every letter')
+  ok(effectiveTextMode(onText, baseElForTest()) === 'words', 'the engine runs an RTL character spec per word')
+
+  function baseElForTest() {
+    return { x: 120, y: 180, w: 700, h: 200, rotation: 0, isText: true, rtl: true }
+  }
+
+  applyPreset('whiteboard-draw', [shapeEl.id], 'same')
+  const onShape = current().animations.at(-1)
+  ok(!!onShape.properties.clip && onShape.reveal?.kind === 'wipe-down', 'a shape keeps the vertical wipe it was authored with')
+  ok(!onShape.text, 'a shape does not get a text animation')
+
+  const baseEl = baseElForTest()
+  ok(usesTextInk(onText, baseEl), 'the engine recognises the text-ink case')
+  ok(!usesTextInk(onShape, { ...baseEl, isText: false }), 'and not for shapes')
+
+  // LTR text keeps per-character ink at a human pace
+  const ltrEl = { kind: 'text', content: '<p>Hand drawn on a whiteboard</p>', x: 120, y: 180, w: 700, h: 200, font: { dir: 'ltr' } }
+  const ltrSpec = adaptSpecToTarget(presetById('whiteboard-draw').make('ltr'), ltrEl)
+  ok(ltrSpec.text.mode === 'chars' && ltrSpec.text.stagger <= 120, 'LTR text is written character by character')
+
+  // an imported/legacy spec may still carry both: the engine must not wipe it
+  const legacy = presetById('whiteboard-draw').make('legacy')
+  legacy.text = { mode: 'chars', stagger: 40, from: 'start' }
+  const px = 18
+  const host = document.getElementById('host')
+  host.innerHTML = ''
+  const node = document.createElement('div')
+  node.id = 'legacy'
+  node.textContent = 'نص'
+  host.appendChild(node)
+  const engineLegacy = buildSlideEngine({ targets: { legacy: node }, elements: { legacy: baseEl }, anims: [legacy], textSplit: true })
+  engineLegacy.seek(30)
+  await tick(30)
+  ok(!node.style.clipPath, 'a whiteboard draw on text never writes a block clip-path, even from an imported spec')
+  ok(node.style.getPropertyValue('--kad-ct') === '', 'and never sets the wipe variable')
+  engineLegacy.destroy()
+
+  // …while the same spec on a shape does clip (the wipe is what the hand rides)
+  const shapeSpec = presetById('whiteboard-draw').make('shape-target')
+  host.innerHTML = ''
+  const shapeNode = document.createElement('div')
+  shapeNode.id = 'shape-target'
+  host.appendChild(shapeNode)
+  const engineShape = buildSlideEngine({ targets: { 'shape-target': shapeNode }, elements: { 'shape-target': { x: 0, y: 0, w: 200, h: 200, rotation: 0 } }, anims: [shapeSpec] })
+  engineShape.seek(30)
+  await tick(30)
+  ok(!!shapeNode.style.clipPath, 'the same preset still wipes a non-text element')
+  engineShape.destroy()
+
+  // a per-character spec on RTL text is run per word, so Arabic shaping survives
+  const arabicPreset = presetById('whiteboard-write-ar').make('ar2')
+  ok(arabicPreset.text.mode === 'words', 'the Arabic handwriting preset inks whole words')
+  const charSpec = presetById('whiteboard-write').make('ar3')
+  ok(effectiveTextMode(charSpec, { ...baseEl, rtl: true }) === 'words', 'even a character spec is upgraded for RTL targets')
+  ok(effectiveTextMode(charSpec, { ...baseEl, rtl: false }) === 'chars', 'and stays per character for LTR targets')
+
+  // erasing text stays a block wipe: that is what an eraser does
+  applyPreset('whiteboard-erase', [textEl.id], 'same')
+  const eraseText = current().animations.at(-1)
+  ok(!!eraseText.properties.clip && !eraseText.text, 'erasing a text element keeps the wipe (an eraser does not erase letter by letter)')
+
+  // adaptSpecToTarget is idempotent and leaves other specs alone
+  const untouched = presetById('zoom-in').make(textEl.id)
+  const before = JSON.stringify(untouched)
+  adaptSpecToTarget(untouched, textEl)
+  ok(JSON.stringify(untouched) === before, 'non-whiteboard presets pass through untouched')
+  const twice = presetById('whiteboard-draw').make(textEl.id)
+  adaptSpecToTarget(twice, textEl)
+  const once = JSON.stringify(twice)
+  adaptSpecToTarget(twice, textEl)
+  ok(JSON.stringify(twice) === once, 'adapting twice is the same as adapting once')
+  void px
 }
 
 /* ------------------------------------------------ summary */

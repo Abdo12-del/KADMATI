@@ -32,6 +32,7 @@ import { MANUAL_PROPS, animSpan, retimeAnim } from '../../animation/types'
 import { cn } from '../../lib/cn'
 import { toast, useUI } from '../../store/useUI'
 import { useCurrentSlide, useDoc } from '../../store/useDoc'
+import { adaptSpecToTarget } from './library'
 import { EasingEditor } from './EasingEditor'
 import { runPerfTest, type PerfReport } from './perf'
 import { animRegistry } from './registry'
@@ -150,6 +151,9 @@ export function AnimationDock() {
       label,
     )
   }
+
+  /** Element an animation targets (used to keep whiteboard specs honest for text). */
+  const elementFor = (target: string) => slide?.elements.find((e) => e.id === target)
 
   const mutateAnims = (fn: (list: AnimSpec[]) => void, label = 'تعديل الحركات') => {
     if (!slide) return
@@ -833,7 +837,11 @@ export function AnimationDock() {
                           value={selAnim.whiteboard.effect}
                           onChange={(e) =>
                             mutateAnim(selAnim.id, (a) => {
-                              if (a.whiteboard) a.whiteboard.effect = e.target.value as any
+                              if (!a.whiteboard) return
+                              a.whiteboard.effect = e.target.value as any
+                              const el = elementFor(a.target)
+                              // "draw" on a text element means writing it, not wiping the box
+                              if (el) adaptSpecToTarget(a, el)
                             }, 'تغيير نوع تأثير الوايت بورد')
                           }
                           className="w-full rounded-md border border-ink-700 bg-ink-950 px-2 py-1 text-[11.5px] text-ink-100 outline-none"
@@ -871,6 +879,8 @@ export function AnimationDock() {
                           end: a.end,
                         }
                         const fresh = def.make(a.target, keep)
+                        const el = elementFor(a.target)
+                        if (el) adaptSpecToTarget(fresh, el)
                         Object.assign(a, fresh)
                       },
                       'تطبيق Preset',

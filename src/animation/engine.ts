@@ -20,7 +20,7 @@ import type { Timeline } from 'animejs'
 import { compileEase, springSegmentDuration } from './easing'
 import { broadcastHandFrame, clearHandFrame, computeHandFrame } from './hand'
 import { sampleMotionPath, type PathSample } from './path'
-import type { AnimProp, AnimSpec, Keyframe, Pt, RevealSpec } from './types'
+import type { AnimProp, AnimSpec, Keyframe, Pt, RevealSpec, TextAnimSpec } from './types'
 import { animHasContent, animSpan, normalizeKeyframes } from './types'
 
 export interface ElementBaseInfo {
@@ -29,6 +29,8 @@ export interface ElementBaseInfo {
   w: number
   h: number
   rotation: number
+  /** the target is a text element: whiteboard drawing is then inked per unit, not wiped */
+  isText?: boolean
   /** text elements only: right-to-left paragraph direction (hand fallback grid) */
   rtl?: boolean
 }
@@ -41,6 +43,7 @@ export function baseInfo(el: { x: number; y: number; w: number; h: number; rotat
     w: el.w,
     h: el.h,
     rotation: el.rotation ?? 0,
+    isText: el.kind === 'text',
     rtl: el.kind === 'text' ? el.dir === 'rtl' : undefined,
   }
 }
@@ -181,6 +184,34 @@ function clearClipAndFilters(n: HTMLElement): void {
 }
 
 /**
+ * Does this animation ink a text element unit by unit instead of wiping it as a block?
+ *
+ * Whiteboard drawing presets are authored as a vertical wipe, which is right for a shape or a
+ * picture and wrong for text: the wipe cuts whole lines through the middle of their letters.
+ * When such a preset reaches a text element (applied from the library, or saved in a document
+ * before this rule existed) the ink is the per-unit text animation and the wipe is dropped.
+ * Geometry for that case lives in `adaptSpecToTarget`, this is the engine-side guarantee.
+ */
+/**
+ * The split mode an animation is actually run with.
+ *
+ * Arabic (and every connected script) cannot be split into characters: each split unit is its
+ * own text run, so the letters come out in their isolated forms — "ر س م" instead of "رسم".
+ * A per-character ink on RTL text is therefore run per **word**: shaping survives, and the hand
+ * still travels the line unit by unit.
+ */
+export function effectiveTextMode(spec: AnimSpec, el: ElementBaseInfo | undefined): TextAnimSpec['mode'] | undefined {
+  const mode = spec.text?.mode
+  if (!mode) return undefined
+  if (mode === 'chars' && el?.rtl) return 'words'
+  return mode
+}
+
+export function usesTextInk(spec: AnimSpec, el: ElementBaseInfo | undefined): boolean {
+  return !!el?.isText && spec.whiteboard?.effect === 'draw' && !!spec.text
+}
+
+/**
  * The element's current reveal fraction (0..1) — the position of the ink edge the hand has
  * to sit on. Sampled from the clip keyframes with the same easing the tween uses, so hand and
  * ink can never drift apart: both come from the same numbers.
@@ -220,10 +251,10 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
    * (getBoundingClientRect forces layout — doing it per frame would cost more than the whole
    * animation) and cached; a failed measurement is retried on a later frame.
    */
-  const unitCache = new Map<string, { x: number; y: number }[]>()
+  const unitCache = new Map<string, { x: number; y: number; w?: number }[]>()
   const splitNodes = new Map<string, TweenNodes>()
 
-  const measureUnits = (spec: AnimSpec): { x: number; y: number }[] | undefined => {
+  const measureUnits = (spec: AnimSpec): { x: number; y: number; w?: number }[] | undefined => {
     const cached = unitCache.get(spec.id)
     if (cached) return cached
     const root = ctx.targets[spec.target]
@@ -234,7 +265,7 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
     if (!rootBox || !rootBox.width || !root.offsetWidth) return undefined
     // client px → design px for this node (slide zoom × whatever the engine already applied)
     const scale = rootBox.width / root.offsetWidth
-    const out: { x: number; y: number }[] = []
+    const out: { x: number; y: number; w?: number }[] = []
     for (const node of list) {
       const box = node.getBoundingClientRect?.()
       if (!box) return undefined
@@ -242,6 +273,8 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
         x: el.x + (box.left + box.width / 2 - rootBox.left) / scale,
         // the nib sits on the baseline area of the glyph, not at the top of the ink box
         y: el.y + (box.top + box.height * 0.82 - rootBox.top) / scale,
+        // the unit's own width: the hand sweeps across the word instead of parking on its centre
+        w: box.width / scale,
       })
     }
     if (!out.length) return undefined
@@ -260,7 +293,9 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
       const spec = normalizeSpec(raw)
       const measured = measureUnits(spec)
       const frame = computeHandFrame(spec, el, localT, {
-        reveal: revealAt(spec, localT),
+        reveal: usesTextInk(spec, el) ? undefined : revealAt(spec, localT),
+        // the pace of the ink is the pace of the *effective* unit, words included
+        stagger: effectiveTextMode(spec, el) === 'words' ? spec.text!.stagger : undefined,
         // ink order: the DOM order, unless the animation inks the units backwards
         units: measured && spec.text?.from === 'end' ? [...measured].reverse() : measured,
       })
@@ -296,20 +331,21 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
     const center: Pt = el ? { x: el.x + el.w / 2, y: el.y + el.h / 2 } : { x: 0, y: 0 }
 
     // Text splitting: animate the split units with stagger.
+    const textMode = effectiveTextMode(spec, el)
     let nodes: TweenNodes = node
-    if (spec.text && spec.text.mode !== 'text' && ctx.textSplit) {
+    if (textMode && textMode !== 'text' && ctx.textSplit) {
       try {
         // chars are wrapped inside word nodes, so enabling chars keeps words too;
         // lines mode needs no per-word/per-char units
         const params =
-          spec.text.mode === 'chars'
+          textMode === 'chars'
             ? { chars: true }
-            : spec.text.mode === 'lines'
+            : textMode === 'lines'
               ? { lines: true, words: false, chars: false }
               : undefined
         const splitter = new TextSplitter(node, params)
         splitters.push(splitter)
-        const split = spec.text.mode === 'chars' ? splitter.chars : spec.text.mode === 'lines' ? splitter.lines : splitter.words
+        const split = textMode === 'chars' ? splitter.chars : textMode === 'lines' ? splitter.lines : splitter.words
         nodes = (split as HTMLElement[]) ?? []
         if (!nodes.length) nodes = node
         else splitNodes.set(spec.id, nodes)
@@ -318,15 +354,16 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
       }
     }
 
+    const textInk = usesTextInk(spec, el)
     eachNode(nodes, (n) => {
       touchedNodes.add(n)
       n.style.willChange = 'transform, opacity, filter, clip-path'
     })
-    applyClipBaseline(nodes, spec)
+    if (!textInk) applyClipBaseline(nodes, spec)
 
     const loop: boolean | number = spec.repeat === -1 ? true : spec.repeat > 0 ? spec.repeat : false
     const sub = createTimeline({ autoplay: false, loop, alternate: !!spec.yoyo })
-    addSpecTweens(sub, spec, nodes, center)
+    addSpecTweens(sub, spec, nodes, center, textInk)
     tl.sync(sub, spec.delay)
     duration = Math.max(duration, animSpan(spec))
   }
@@ -402,7 +439,7 @@ export function buildSlideEngine(ctx: BuildCtx): SlideEngine {
   return engine
 }
 
-function addSpecTweens(sub: Timeline, spec: AnimSpec, nodes: TweenNodes, center: Pt): void {
+function addSpecTweens(sub: Timeline, spec: AnimSpec, nodes: TweenNodes, center: Pt, textInk = false): void {
   const hasPath = !!spec.motionPath
   const isWhiteboardDraw = !!spec.whiteboard && spec.whiteboard.effect === 'draw'
   // anime v4 stagger uses 'first'/'center'/'last' (we store 'start'/'center'/'end')
@@ -416,6 +453,8 @@ function addSpecTweens(sub: Timeline, spec: AnimSpec, nodes: TweenNodes, center:
     if (!kfs.length) continue
 
     if (prop === 'clip') {
+      // text inked unit by unit: a wipe on top of it would clip every unit again
+      if (textInk) continue
       addClipTweens(sub, spec, nodes, kfs, staggerOpt)
       continue
     }
