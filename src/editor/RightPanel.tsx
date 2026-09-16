@@ -1267,6 +1267,42 @@ function BackgroundEditor({ value, onApply, onApplyAll }: { value: Slide['backgr
       {mode === 'image' && value.type !== 'image' ? (
         <p className="text-[11px] text-ink-500">أفلت صورة على الشريحة لتعيينها خلفية — أو استخدم «ملء الشريحة» من قائمة الصورة.</p>
       ) : null}
+
+      <div className="border-t border-ink-800 pt-2">
+        <span className="mb-1.5 block text-[10.5px] font-semibold text-ink-400">قوالب سبورة (Whiteboard)</span>
+        <div className="grid grid-cols-3 gap-1">
+          <button
+            type="button"
+            onClick={() => {
+              setMode('solid')
+              patch({ type: 'solid', color: '#ffffff' })
+            }}
+            className="rounded border border-ink-700 bg-white px-1.5 py-1 text-[10.5px] font-semibold text-zinc-900 hover:border-signal"
+          >
+            📋 وايت بورد
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMode('solid')
+              patch({ type: 'solid', color: '#1a261f' })
+            }}
+            className="rounded border border-ink-700 bg-[#1a261f] px-1.5 py-1 text-[10.5px] font-semibold text-emerald-100 hover:border-signal"
+          >
+            🎓 طباشير
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMode('pattern')
+              patch({ type: 'pattern', color: '#cbd5e1', patternColor: '#ffffff', pattern: 'grid' })
+            }}
+            className="rounded border border-ink-700 bg-zinc-100 px-1.5 py-1 text-[10.5px] font-semibold text-zinc-800 hover:border-signal"
+          >
+            📐 ورق شبكي
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

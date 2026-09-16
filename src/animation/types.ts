@@ -84,7 +84,17 @@ export interface RevealSpec {
   kind: 'wipe-down' | 'wipe-up' | 'wipe-left' | 'wipe-right' | 'circle'
 }
 
-export type AnimKind = 'entrance' | 'exit' | 'emphasis' | 'motion' | 'reveal' | 'custom'
+export type AnimKind = 'entrance' | 'exit' | 'emphasis' | 'motion' | 'reveal' | 'whiteboard' | 'custom'
+
+export type WhiteboardEffect = 'draw' | 'push' | 'erase' | 'stroke'
+export type WhiteboardHandStyle = 'marker-dark' | 'marker-blue' | 'pencil' | 'chalk' | 'eraser'
+export type WhiteboardHandSide = 'right' | 'left'
+
+export interface WhiteboardSpec {
+  effect: WhiteboardEffect
+  handStyle?: WhiteboardHandStyle
+  handSide?: WhiteboardHandSide
+}
 
 /** PowerPoint-style start trigger. */
 export type AnimStart = 'onClick' | 'with' | 'after'
@@ -122,6 +132,8 @@ export interface AnimSpec {
   motionPath?: MotionPathSpec
   /** clip-path reveal geometry when properties.clip is present */
   reveal?: RevealSpec
+  /** whiteboard hand-drawing animation parameters */
+  whiteboard?: WhiteboardSpec
   /** text-split animation (text elements) */
   text?: TextAnimSpec
 }
@@ -164,6 +176,15 @@ export function normalizeAnim(a: AnimSpec): AnimSpec {
     end: a.end === 'revert' ? 'revert' : undefined,
     easing: isNamedEasing(a.easing) ? a.easing : defaultEasing(),
     properties,
+    whiteboard: a.whiteboard,
+    reveal: a.reveal,
+    motionPath: a.motionPath,
+    text: a.text,
+    presetId: a.presetId,
+    name: a.name,
+    kind: a.kind,
+    target: a.target,
+    id: a.id,
   }
 }
 

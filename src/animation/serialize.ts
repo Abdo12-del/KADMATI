@@ -41,7 +41,7 @@ function sanitizeAnim(v: unknown): AnimSpec | null {
     if (kfs) properties[p] = kfs
   }
   const kind =
-    a.kind === 'entrance' || a.kind === 'exit' || a.kind === 'emphasis' || a.kind === 'motion' || a.kind === 'reveal' || a.kind === 'custom'
+    a.kind === 'entrance' || a.kind === 'exit' || a.kind === 'emphasis' || a.kind === 'motion' || a.kind === 'reveal' || a.kind === 'whiteboard' || a.kind === 'custom'
       ? a.kind
       : 'custom'
   const spec: AnimSpec = {
@@ -65,6 +65,13 @@ function sanitizeAnim(v: unknown): AnimSpec | null {
   }
   if (a.reveal && typeof a.reveal === 'object' && ['wipe-down', 'wipe-up', 'wipe-left', 'wipe-right', 'circle'].includes(a.reveal.kind)) {
     spec.reveal = { kind: a.reveal.kind }
+  }
+  if (a.whiteboard && typeof a.whiteboard === 'object' && ['draw', 'push', 'erase', 'stroke'].includes((a.whiteboard as any).effect)) {
+    spec.whiteboard = {
+      effect: (a.whiteboard as any).effect,
+      handStyle: ['marker-dark', 'marker-blue', 'pencil', 'chalk', 'eraser'].includes((a.whiteboard as any).handStyle) ? (a.whiteboard as any).handStyle : 'marker-dark',
+      handSide: (a.whiteboard as any).handSide === 'left' ? 'left' : 'right',
+    }
   }
   if (a.motionPath && typeof a.motionPath === 'object' && (a.motionPath.kind === 'bezier' || a.motionPath.kind === 'circle' || a.motionPath.kind === 'svg')) {
     spec.motionPath = a.motionPath
