@@ -102,11 +102,14 @@ export type AnimKind = 'entrance' | 'exit' | 'emphasis' | 'motion' | 'reveal' | 
 
 export type WhiteboardEffect = 'draw' | 'push' | 'erase' | 'stroke'
 export type WhiteboardHandStyle = 'marker-dark' | 'marker-blue' | 'pencil' | 'chalk' | 'eraser'
+/** Who holds the tool: the photographed hand varies, the tool does not. */
+export type WhiteboardHandTone = 'default' | 'pale' | 'sleeve'
 export type WhiteboardHandSide = 'right' | 'left'
 
 export interface WhiteboardSpec {
   effect: WhiteboardEffect
   handStyle?: WhiteboardHandStyle
+  handTone?: WhiteboardHandTone
   handSide?: WhiteboardHandSide
 }
 

@@ -35,6 +35,9 @@ const REVIEW_DIR = '.tmp-verify/hands'
 const ASSETS = [
   // pens/pencils: tall, so they are normalised by height and drawn at `designH` design-px
   { name: 'marker-dark', file: 'marker-dark', anchor: 'nib', angle: 42, designH: 340 },
+  // the same rig in another skin tone / with a sleeve: the *hand* varies, the tool does not
+  { name: 'marker-pale', file: 'marker-light', anchor: 'nib', angle: 42, designH: 340 },
+  { name: 'marker-sleeve', file: 'marker-sleeve', anchor: 'nib', angle: 42, designH: 340 },
   { name: 'marker-blue', file: 'marker-light', anchor: 'nib', angle: 42, designH: 340, recolorBarrel: '#2f6bd8' },
   { name: 'pencil', file: 'pencil-light', anchor: 'nib', angle: 42, designH: 340 },
   { name: 'chalk', file: 'chalk-light', anchor: 'nib', angle: 42, designH: 330 },
@@ -312,10 +315,27 @@ ${entries}
 }
 
 /** Copy from the surveyed engines: one main hand, one off hand (docs/WHITEBOARD_HAND.md §2). */
-export type HandAssetKey = 'marker-dark' | 'marker-blue' | 'pencil' | 'chalk' | 'eraser' | 'palm'
+export type HandAssetKey = 'marker-dark' | 'marker-blue' | 'marker-pale' | 'marker-sleeve' | 'pencil' | 'chalk' | 'eraser' | 'palm'
 
 export function handAsset(key: HandAssetKey): HandAsset {
   return HAND_ASSETS[key] ?? HAND_ASSETS['marker-dark']
+}
+
+/** Hand variants that only change who is holding the tool (skin tone / sleeve). */
+export type HandTone = 'default' | 'pale' | 'sleeve'
+const TONE_KEYS: Record<HandTone, Partial<Record<HandAssetKey, HandAssetKey>>> = {
+  default: {},
+  // only the marker is photographed in other tones; every other tool falls back to its plate
+  pale: { 'marker-dark': 'marker-pale' },
+  sleeve: { 'marker-dark': 'marker-sleeve' },
+}
+
+export function handKeyFor(key: HandAssetKey, tone: HandTone = 'default'): HandAssetKey {
+  return TONE_KEYS[tone]?.[key] ?? key
+}
+
+export function handAssetFor(key: HandAssetKey, tone: HandTone = 'default'): HandAsset {
+  return handAsset(handKeyFor(key, tone))
 }
 
 /** Design-space width of an asset once drawn. */
@@ -376,9 +396,11 @@ manifest.forEach((m, i) => {
   )
   sheet += panel(i, `${m.name}  ${m.w}×${m.h} → ${Math.round(m.drawW ?? 0)}×${Math.round(m.drawH ?? 0)} design px`, inner)
 })
+// the sheet grows with the plate list — a hard-coded 2-row height silently dropped new plates
+const sheetRows = Math.max(1, Math.ceil(manifest.length / 3))
 fs.writeFileSync(
   path.join(REVIEW_DIR, 'sheet.svg'),
-  `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${PANEL_W * 3}" height="${PANEL_H * 2}"><rect width="100%" height="100%" fill="#eef1f6"/>${sheet}</svg>`,
+  `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${PANEL_W * 3}" height="${PANEL_H * sheetRows}"><rect width="100%" height="100%" fill="#eef1f6"/>${sheet}</svg>`,
 )
 
 // Trail: the marker writing along a wavy line, and the eraser wiping — the poses the

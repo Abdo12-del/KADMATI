@@ -22,7 +22,9 @@ export interface HandAsset {
 
 export const HAND_ASSETS: Record<string, HandAsset> = {
   'marker-dark': { src: '/hands/marker-dark.png', natW: 954, natH: 760, ax: 1, ay: 2, designH: 340 },
-  'marker-blue': { src: '/hands/marker-blue.png', natW: 1013, natH: 760, ax: 1, ay: 27, designH: 340 },
+  'marker-pale': { src: '/hands/marker-pale.png', natW: 819, natH: 760, ax: 1, ay: 20, designH: 340 },
+  'marker-sleeve': { src: '/hands/marker-sleeve.png', natW: 876, natH: 760, ax: 3, ay: 26, designH: 340 },
+  'marker-blue': { src: '/hands/marker-blue.png', natW: 819, natH: 760, ax: 1, ay: 20, designH: 340 },
   'pencil': { src: '/hands/pencil.png', natW: 926, natH: 760, ax: 0, ay: 0, designH: 340 },
   'chalk': { src: '/hands/chalk.png', natW: 957, natH: 760, ax: 10, ay: 4, designH: 330 },
   'eraser': { src: '/hands/eraser.png', natW: 760, natH: 629, ax: 353, ay: 628, designW: 430 },
@@ -30,10 +32,27 @@ export const HAND_ASSETS: Record<string, HandAsset> = {
 }
 
 /** Copy from the surveyed engines: one main hand, one off hand (docs/WHITEBOARD_HAND.md §2). */
-export type HandAssetKey = 'marker-dark' | 'marker-blue' | 'pencil' | 'chalk' | 'eraser' | 'palm'
+export type HandAssetKey = 'marker-dark' | 'marker-blue' | 'marker-pale' | 'marker-sleeve' | 'pencil' | 'chalk' | 'eraser' | 'palm'
 
 export function handAsset(key: HandAssetKey): HandAsset {
   return HAND_ASSETS[key] ?? HAND_ASSETS['marker-dark']
+}
+
+/** Hand variants that only change who is holding the tool (skin tone / sleeve). */
+export type HandTone = 'default' | 'pale' | 'sleeve'
+const TONE_KEYS: Record<HandTone, Partial<Record<HandAssetKey, HandAssetKey>>> = {
+  default: {},
+  // only the marker is photographed in other tones; every other tool falls back to its plate
+  pale: { 'marker-dark': 'marker-pale' },
+  sleeve: { 'marker-dark': 'marker-sleeve' },
+}
+
+export function handKeyFor(key: HandAssetKey, tone: HandTone = 'default'): HandAssetKey {
+  return TONE_KEYS[tone]?.[key] ?? key
+}
+
+export function handAssetFor(key: HandAssetKey, tone: HandTone = 'default'): HandAsset {
+  return handAsset(handKeyFor(key, tone))
 }
 
 /** Design-space width of an asset once drawn. */

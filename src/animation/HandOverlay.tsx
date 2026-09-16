@@ -13,24 +13,13 @@
  * (docs/WHITEBOARD_HAND.md §2).
  */
 import { memo, useEffect, useState } from 'react'
-import { getHandFrame, subscribeHandFrame, type HandFrame } from './hand'
+import { getHandFrame, plateFor, subscribeHandFrame, type HandFrame } from './hand'
 import { handAsset, handDrawHeight, handDrawWidth, type HandAssetKey } from './handAssets'
-import type { WhiteboardHandStyle } from './types'
 
 /**
  * Which photo to show. `style` picks the tool; the pose (pen vs flat palm) decides between
  * the pen grips and the bare palm used for the "push" effect, and an eraser always wins.
  */
-function assetKey(f: HandFrame): HandAssetKey {
-  const tool: WhiteboardHandStyle = f.style
-  if (tool === 'eraser') return 'eraser'
-  if (f.pose === 'palm') return 'palm'
-  if (tool === 'pencil') return 'pencil'
-  if (tool === 'chalk') return 'chalk'
-  if (tool === 'marker-blue') return 'marker-blue'
-  return 'marker-dark'
-}
-
 /** The ink a tool leaves at the working point, or null when it leaves none (eraser). */
 function inkDot(key: HandAssetKey): string | null {
   switch (key) {
@@ -56,7 +45,7 @@ export const HandOverlay = memo(function HandOverlay({ slideId }: { slideId?: st
 
   if (!frame.active || frame.opacity <= 0.01) return null
 
-  const key = assetKey(frame)
+  const key = plateFor(frame)
   const asset = handAsset(key)
   const w = handDrawWidth(asset)
   const h = handDrawHeight(asset)

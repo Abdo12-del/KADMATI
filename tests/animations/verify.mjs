@@ -912,6 +912,48 @@ console.log('\n[13] connected-script ink: cluster boundaries inside a word')
   ok(uniform.x < start.x && uniform.x > end.x, 'without clusters the sweep still works (fallback path)')
 }
 
+console.log('\n[14] hand plates: tool × skin tone')
+{
+  const { handKeyFor, handAssetFor, handAsset, plateFor, computeHandFrame, presetById, normalizeAnim } = mod
+  const el = { x: 120, y: 180, w: 700, h: 200, rotation: 0, isText: true, rtl: false }
+
+  ok(handKeyFor('marker-dark', 'default') === 'marker-dark', 'the default tone keeps the original plate')
+  ok(handKeyFor('marker-dark', 'pale') === 'marker-pale', 'the pale tone swaps in the light-skin plate')
+  ok(handKeyFor('marker-dark', 'sleeve') === 'marker-sleeve', 'the sleeve tone swaps in the sleeved plate')
+  ok(handKeyFor('pencil', 'sleeve') === 'pencil', 'a tool with no variant of a tone falls back to its own plate')
+  ok(handKeyFor('eraser', 'pale') === 'eraser', 'and the eraser is never replaced by a marker hand')
+  ok(handAssetFor('marker-dark', 'sleeve').src === '/hands/marker-sleeve.png', 'the asset resolver returns the sleeved PNG')
+  ok(handAsset(handKeyFor('marker-dark', 'pale')).natH === 760, 'the new plates go through the same normalisation (760px tall)')
+  for (const key of ['marker-pale', 'marker-sleeve']) {
+    const a = mod.HAND_ASSETS[key]
+    ok(!!a && a.ax >= 0 && a.ay >= 0 && a.ax < a.natW && a.ay < a.natH, `${key}: the working point sits inside the image (${a?.ax},${a?.ay})`)
+    ok(!!a?.designH, `${key}: fitted by height like the other pen grips`)
+  }
+
+  const spec = { ...presetById('whiteboard-draw').make('tone'), duration: 2000 }
+  spec.whiteboard = { ...spec.whiteboard, handTone: 'sleeve' }
+  const frame = computeHandFrame(spec, el, 200, {})
+  ok(frame.asset === 'marker-sleeve', `the frame carries the resolved plate, not the tool name (${frame.asset})`)
+  ok(plateFor(frame) === 'marker-sleeve', 'and the overlay draws exactly that plate')
+
+  const pale = { ...spec, whiteboard: { ...spec.whiteboard, handTone: 'pale' } }
+  ok(computeHandFrame(pale, el, 200, {}).asset === 'marker-pale', 'a pale hand is one field away')
+  const push = { ...spec, whiteboard: { ...spec.whiteboard, effect: 'push', handTone: 'sleeve' } }
+  const pushFrame = computeHandFrame(push, el, 400, {})
+  ok(pushFrame.pose === 'palm' && plateFor(pushFrame) === 'palm', 'the push pose always draws the flat palm plate')
+
+  // the spec must survive save/load with the tone, and reject nonsense
+  const { parseSlideAnims } = mod
+  const round = (wb) => {
+    const json = JSON.stringify([{ ...spec, whiteboard: { effect: 'draw', ...wb } }])
+    const parsed = parseSlideAnims(json)
+    return parsed.ok ? parsed.anims[0].whiteboard : null
+  }
+  ok(round({ handTone: 'sleeve' })?.handTone === 'sleeve', 'the chosen hand survives a save/load round-trip')
+  ok(round({ handTone: 'rainbow' })?.handTone === 'default', 'an unknown tone loads as the default instead of breaking the plate lookup')
+  void normalizeAnim
+}
+
 /* ------------------------------------------------ summary */
 rmSync('.tmp-verify', { recursive: true, force: true })
 console.log(`\n${fail === 0 ? '✓ ALL' : '✗ FAIL'} — ${pass} passed, ${fail} failed`)

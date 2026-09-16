@@ -23,9 +23,10 @@
  */
 
 import type { ElementBaseInfo } from './engine'
-import { handAsset, handDrawHeight } from './handAssets'
+import { handAsset, handDrawHeight, handKeyFor } from './handAssets'
 import { INK_LEAD, NIB_AHEAD_PX } from './types'
 import { glyphInkFraction } from './glyphClusters'
+import type { HandAssetKey } from './handAssets'
 import type { AnimSpec, WhiteboardHandSide, WhiteboardHandStyle } from './types'
 
 /** Which asset the overlay should draw. */
@@ -40,10 +41,21 @@ export interface HandFrame {
   /** 1 = the asset's authored size; smaller when the ink is smaller than the rig was designed for */
   scale: number
   opacity: number
-  style: WhiteboardHandStyle
+  /** the exact plate to draw: tool × skin tone (resolved once, in computeHandFrame) */
+  asset: HandAssetKey
   side: WhiteboardHandSide
   pressing: boolean
   pose: HandPose
+}
+
+/**
+ * Which plate the overlay must draw for a frame. The tool × skin tone is already resolved on the
+ * frame; the pose overrides it (the flat palm is always the palm plate) and an eraser always wins.
+ */
+export function plateFor(f: HandFrame): HandAssetKey {
+  if (f.asset === 'eraser') return 'eraser'
+  if (f.pose === 'palm') return 'palm'
+  return f.asset
 }
 
 /** The height the hand rig is authored at (design px) — the reference for `scale`. */
@@ -92,7 +104,7 @@ const DEFAULT_FRAME: HandFrame = {
   angle: 0,
   scale: 1,
   opacity: 0,
-  style: 'marker-dark',
+  asset: 'marker-dark',
   side: 'right',
   pressing: false,
   pose: 'pen',
@@ -171,6 +183,8 @@ export function computeHandFrame(spec: AnimSpec, el: ElementBaseInfo, localT: nu
   if (!wb || wb.effect === 'stroke') return null
 
   const style: WhiteboardHandStyle = wb.handStyle ?? (wb.effect === 'erase' ? 'eraser' : 'marker-dark')
+  // resolve the plate once (tool × skin tone) and let every pose carry it
+  const asset = handKeyFor(style, wb.handTone ?? 'default')
   const side: WhiteboardHandSide = wb.handSide ?? 'right'
   const duration = Math.max(200, spec.duration)
   const isRight = side === 'right'
@@ -192,7 +206,7 @@ export function computeHandFrame(spec: AnimSpec, el: ElementBaseInfo, localT: nu
     const fromY = el.y + el.h + 150
     const x = start.x + (fromX - start.x) * (1 - eased)
     const y = start.y + (fromY - start.y) * (1 - eased)
-    return frame({ x, y, angle: (isRight ? -6 : 6) * (1 - eased), opacity: Math.pow(eased, 0.8), style, side, pressing: false, pose })
+    return frame({ x, y, angle: (isRight ? -6 : 6) * (1 - eased), opacity: Math.pow(eased, 0.8), asset, side, pressing: false, pose })
   }
 
   /* --------------------------------------------------------------- active */
@@ -202,10 +216,10 @@ export function computeHandFrame(spec: AnimSpec, el: ElementBaseInfo, localT: nu
     if (wb.effect === 'draw') {
       if (spec.text) {
         if (ctx.units?.length && ctx.stream) {
-          return streamFrame(style, side, pose, localT, ctx.units, ctx.stream, ctx.rtl ?? el.rtl === true)
+          return streamFrame(asset, side, pose, localT, ctx.units, ctx.stream, ctx.rtl ?? el.rtl === true)
         }
         const units = ctx.units?.length ? ctx.units : estimatedUnits(spec, el, ctx.stagger)
-        return textFrame(spec, style, side, pose, localT, units, ctx.stagger, ctx.rtl ?? el.rtl)
+        return textFrame(spec, asset, side, pose, localT, units, ctx.stagger, ctx.rtl ?? el.rtl)
       }
 
       // The ink edge is the element's own reveal; when the engine did not hand us one
@@ -232,7 +246,7 @@ export function computeHandFrame(spec: AnimSpec, el: ElementBaseInfo, localT: nu
       const x = el.x + padX + xNorm * wSpan + tremor(t, 0.4)
       const y = lineY - lift + tremor(t, 2.1) + (drawing ? Math.sin(inBand * Math.PI) * 1.5 : 0)
       const angle = wristTilt(speedX, 0) + tremor(t, 5.3) * 0.6
-      return frame({ x, y, angle, opacity: 1, style, side, pressing: drawing, pose })
+      return frame({ x, y, angle, opacity: 1, asset, side, pressing: drawing, pose })
     }
 
     if (wb.effect === 'push') {
@@ -246,7 +260,7 @@ export function computeHandFrame(spec: AnimSpec, el: ElementBaseInfo, localT: nu
           y: palmRest.y + (1 - a) * 40,
           angle: (isRight ? 8 : -8) * (1 - a),
           opacity: Math.pow(a, 0.7),
-          style,
+          asset,
           side,
           pressing: false,
           pose,
@@ -261,7 +275,7 @@ export function computeHandFrame(spec: AnimSpec, el: ElementBaseInfo, localT: nu
           y: palmRest.y + Math.sin(q * Math.PI) * 4 + tremor(t, 3.3),
           angle: (isRight ? -4 : 4) * q + tremor(t, 7.1) * 0.5,
           opacity: 1,
-          style,
+          asset,
           side,
           pressing: true,
           pose,
@@ -273,7 +287,7 @@ export function computeHandFrame(spec: AnimSpec, el: ElementBaseInfo, localT: nu
         y: palmRest.y + f * 26,
         angle: (isRight ? -6 : 6) * (1 - f),
         opacity: 1 - Math.pow(f, 2) * 0.55,
-        style,
+        asset,
         side,
         pressing: f < 0.4,
         pose,
@@ -293,7 +307,7 @@ export function computeHandFrame(spec: AnimSpec, el: ElementBaseInfo, localT: nu
         y: lineY + tremor(t, 4.4) * 1.4,
         angle: scrub * 4 + tremor(t, 6.6) * 0.5,
         opacity: 1,
-        style: 'eraser',
+        asset: 'eraser',
         side,
         pressing: true,
         pose: 'eraser',
@@ -311,7 +325,7 @@ export function computeHandFrame(spec: AnimSpec, el: ElementBaseInfo, localT: nu
       y: l.y + out * 170 - Math.sin(clamp(e * 3, 0, 1) * Math.PI * 0.5) * 18,
       angle: (isRight ? -8 : 8) * (1 - out * 0.4),
       opacity: 1 - Math.pow(clamp((e - 0.55) / 0.45, 0, 1), 2),
-      style,
+      asset,
       side,
       pressing: false,
       pose,
@@ -333,7 +347,7 @@ export function computeHandFrame(spec: AnimSpec, el: ElementBaseInfo, localT: nu
  * Writing and travelling share the same clock, so the nib rides the ink edge the whole way.
  */
 function streamFrame(
-  style: WhiteboardHandStyle,
+  asset: HandAssetKey,
   side: WhiteboardHandSide,
   pose: HandPose,
   localT: number,
@@ -407,7 +421,7 @@ function streamFrame(
     angle: wristTilt(dir * 0.9, 0) + tremor(t, 8.2) * 0.7,
     scale: scaleForText(units[i]?.h ?? units[units.length - 1]?.h),
     opacity: 1,
-    style,
+    asset,
     side,
     pressing: !travel,
     pose,
@@ -416,7 +430,7 @@ function streamFrame(
 
 function textFrame(
   spec: AnimSpec,
-  style: WhiteboardHandStyle,
+  asset: HandAssetKey,
   side: WhiteboardHandSide,
   pose: HandPose,
   localT: number,
@@ -464,7 +478,7 @@ function textFrame(
     angle: wristTilt(dir * 0.8, 0) + tremor(t, 8.2) * 0.7,
     scale: scaleForText(units[Math.min(i, units.length - 1)]?.h),
     opacity: 1,
-    style,
+    asset,
     side,
     pressing: true,
     pose,
@@ -527,7 +541,7 @@ function frame(f: Omit<HandFrame, 'active' | 'scale'> & { active?: boolean; scal
     angle: Math.round(f.angle * 100) / 100,
     scale: f.scale ?? 1,
     opacity: Math.round(clamp(f.opacity, 0, 1) * 1000) / 1000,
-    style: f.style,
+    asset: f.asset,
     side: f.side,
     pressing: f.pressing,
     pose: f.pose,
