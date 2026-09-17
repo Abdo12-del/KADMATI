@@ -11,7 +11,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "icons:generate": "node scripts/gen-icon-set.mjs",
     "assets:hands": "node scripts/build-hand-assets.mjs",
-    "test": "npm run typecheck && npm run test:unit && npm run test:anim && npm run test:pdf && npm run test:model",
+    "test": "npm run typecheck && npm run test:unit && npm run test:anim && npm run test:pdf && npm run test:model && npm run test:zoom",
     "test:unit": "node tests/document/build.mjs && node tests/document/sanitize.test.mjs",
     "test:anim": "node tests/animations/verify.mjs",
     "test:pdf": "node tests/pdf/fixtures.mjs && node tests/pdf/build.mjs && node .tmp-verify/pdf-test.mjs",
@@ -21,7 +21,8 @@
     "model:distill": "node model/distill.mjs",
     "model:eval": "node model/eval.mjs",
     "model:eval:stub": "node model/eval.mjs --url http://127.0.0.1:8787/v1/chat/completions --model aurova-deck-1",
-    "test:model": "node model/smoke.mjs"
+    "test:model": "node model/smoke.mjs",
+    "test:zoom": "node tests/zoom/build.mjs && node tests/zoom/verify.mjs"
   },
   "dependencies": {
     "@tanstack/react-virtual": "3.14.12",

@@ -1,6 +1,7 @@
 import { memo, type CSSProperties } from 'react'
-import { Lock, Spline } from 'lucide-react'
+import { AlertTriangle, Lock, Spline, ZoomIn } from 'lucide-react'
 import { rotatedBounds } from '../document/geometry'
+import { resolveZoomTarget, slideLabel } from '../document/zoom'
 import type { AnyElement, Presentation, Slide } from '../document/types'
 import type { HandleId, Guide } from './useInteraction'
 import { useUI } from '../store/useUI'
@@ -34,6 +35,7 @@ export interface OverlayProps {
 export const SelectionOverlay = memo(function SelectionOverlay({ slide, doc, selection, zoom, guides, badge, marquee, gesture, hidden, onHandleDown, onRotateDown }: OverlayProps) {
   // Hooks run unconditionally — the early return only skips the drawing.
   const setRightPanel = useUI((s) => s.setRightPanel)
+  const openZoomPicker = useUI((s) => s.openZoomPicker)
 
   if (hidden) return null
   const els = slide.elements.filter((e) => selection.includes(e.id))
@@ -46,6 +48,14 @@ export const SelectionOverlay = memo(function SelectionOverlay({ slide, doc, sel
     e.stopPropagation()
     setRightPanel('animate')
   }
+
+  const openZoom = (e: React.PointerEvent) => {
+    e.stopPropagation()
+    if (single) openZoomPicker([single.id])
+  }
+
+  const zoomTargetId = single?.zoom ? resolveZoomTarget(doc, single.zoom.target) : null
+  const zoomBroken = !!single?.zoom && !zoomTargetId
 
   return (
     <div className="pointer-events-none absolute inset-0" style={{ width: px(doc.size.w), height: px(doc.size.h) }}>
@@ -114,6 +124,24 @@ export const SelectionOverlay = memo(function SelectionOverlay({ slide, doc, sel
           title="إضافة حركة إلى التحديد"
         >
           <Spline size={11} /> حركة{els.length > 1 ? ` (${els.length})` : ''}
+        </button>
+      ) : null}
+
+      {/* zoom relationship chip — sits below the selection, opens the picker to edit */}
+      {single?.zoom ? (
+        <button
+          type="button"
+          onPointerDown={openZoom}
+          className={
+            zoomBroken
+              ? 'pointer-events-auto absolute z-10 flex items-center gap-1 whitespace-nowrap rounded-full border border-red-500/60 bg-ink-1000/92 px-2 py-0.5 text-[10.5px] font-semibold text-red-300 shadow-lg transition-transform hover:scale-105'
+              : 'pointer-events-auto absolute z-10 flex items-center gap-1 whitespace-nowrap rounded-full border border-sky-400/50 bg-ink-1000/92 px-2 py-0.5 text-[10.5px] font-semibold text-sky-200 shadow-lg transition-transform hover:scale-105'
+          }
+          style={{ left: px(single.x), top: px(single.y + single.h) + 6 }}
+          title={zoomBroken ? 'رابط الزوم معطّل — انقر للإصلاح' : zoomTargetId ? slideLabel(doc, zoomTargetId) : ''}
+        >
+          {zoomBroken ? <AlertTriangle size={11} /> : <ZoomIn size={11} />}
+          {zoomBroken ? 'زوم معطّل — إصلاح' : `زوم ← ${zoomTargetId ? slideLabel(doc, zoomTargetId) : ''}`}
         </button>
       ) : null}
 

@@ -41,6 +41,7 @@ import { containsArabic } from '../lib/fonts'
 const uid = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', 10)
 
 import { migrateSlideAnimations } from '../animation/migrate'
+import { normalizeZoomLink } from './zoom'
 
 export function newId(prefix = 'e'): string {
   return `${prefix}_${uid()}${nanoid(4).slice(0, 4)}`
@@ -464,6 +465,13 @@ export function normalizeElement(el: AnyElement): AnyElement {
   out.opacity = out.opacity ?? 1
   out.visible = out.visible !== false
   out.locked = out.locked === true
+  // Zoom links keep their (possibly dangling) target: a missing slide is a *broken link*
+  // the UI surfaces for repair, never silent data loss.
+  if (out.zoom !== undefined) {
+    const z = normalizeZoomLink(out.zoom)
+    if (z) out.zoom = z
+    else delete out.zoom
+  }
   return out as AnyElement
 }
 

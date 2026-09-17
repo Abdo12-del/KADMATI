@@ -19,6 +19,7 @@ import { chartData } from '../render/ChartView'
 import type { AnyElement, Background, ChartElement, ImageElement, ImageFilters, Presentation, ShapeElement, Slide, TableElement, TextStyle } from '../document/types'
 import { CANVAS_W } from '../document/types'
 import { normalizePresentation } from '../document/factory'
+import { slideLabel } from '../document/zoom'
 
 /** Our design space is 1280×720 px; PowerPoint widescreen is 13.333×7.5 in. */
 const IN_PER_PX = 13.3333 / CANVAS_W
@@ -28,6 +29,8 @@ export interface PptxExportResult {
   fileName: string
   bytes: number
   rasterized: { id: string; name: string; reason: string }[]
+  /** Zoom navigation report: nearest behavior is internal slide hyperlinks (jump, no zoom motion). */
+  zoom: { links: number; broken: string[]; unsupported: string[] }
 }
 
 export interface PptxExportOptions {
@@ -54,6 +57,7 @@ export async function exportToPptx(input: Presentation, opts: PptxExportOptions 
 
   const total = doc.slides.length
   let index = 0
+  const zoom: PptxExportResult['zoom'] = { links: 0, broken: [], unsupported: [] }
 
   for (const slide of doc.slides) {
     index++
@@ -69,7 +73,7 @@ export async function exportToPptx(input: Presentation, opts: PptxExportOptions 
       if (!el.visible) continue
       const geo = { x: scale(el.x), y: scale(el.y), w: scale(el.w), h: scale(el.h) }
       try {
-        await writeElement(out, el, geo, doc, scale, rasterized, opts)
+        await writeElement(out, el, geo, doc, scale, rasterized, zoom, opts)
       } catch (err) {
         rasterized.push({ id: el.id, name: el.name, reason: `تعذّر تصديره (${(err as Error).message})` })
       }
@@ -79,7 +83,28 @@ export async function exportToPptx(input: Presentation, opts: PptxExportOptions 
   opts.onProgress?.('بناء الملف', total, total)
   const blob = (await pptx.write({ outputType: 'blob' })) as Blob
   const fileName = `${safeName(doc.metadata.title)}.pptx`
-  return { blob, result: { fileName, bytes: blob.size, rasterized } }
+  return { blob, result: { fileName, bytes: blob.size, rasterized, zoom } }
+}
+
+/**
+ * Nearest behavior for a zoom link in OOXML: an internal slide hyperlink.
+ * The zoom *motion* is an Aurova runtime feature and intentionally has no PPTX equivalent —
+ * PowerPoint jumps to the target slide instead. Broken links are dropped silently here and
+ * reported in the result (the editor surfaces them in the navigation map).
+ */
+function zoomHyperlink(doc: Presentation, el: AnyElement, zoom: PptxExportResult['zoom']): pptxgen.HyperlinkProps | undefined {
+  const target = el.zoom?.target
+  if (!target) return undefined
+  if (target.kind !== 'slide') {
+    zoom.unsupported.push(`${el.name} (نوع الهدف غير مدعوم في PPTX)`)
+    return undefined
+  }
+  const i = doc.slides.findIndex((s) => s.id === target.slideId)
+  if (i < 0) {
+    zoom.broken.push(el.name)
+    return undefined
+  }
+  return { slide: i + 1, tooltip: `زوم ← ${slideLabel(doc, target.slideId)}` }
 }
 
 /* ------------------------------------------------------------------ background */
@@ -126,6 +151,7 @@ async function writeElement(
   doc: Presentation,
   scale: (v: number) => number,
   rasterized: PptxExportResult['rasterized'],
+  zoom: PptxExportResult['zoom'],
   opts: PptxExportOptions,
 ): Promise<void> {
   const common = {
@@ -134,6 +160,12 @@ async function writeElement(
     w: geo.w,
     h: geo.h,
     rotate: el.rotation || 0,
+  }
+  const zoomLink = zoomHyperlink(doc, el, zoom)
+  const countZoom = (emitted: boolean) => {
+    if (!zoomLink) return
+    if (emitted) zoom.links++
+    else zoom.unsupported.push(`${el.name} (نوع العنصر لا يقبل ارتباطًا في PPTX)`)
   }
 
   switch (el.kind) {
@@ -148,7 +180,10 @@ async function writeElement(
         inset: 0,
         fit: el.font.autoFit === 'shrink' ? 'shrink' : 'none',
         transparency: opacityToTransparency(el.opacity),
+        // box-level link: runs carrying their own explicit link keep it (run-level wins in PPTX)
+        hyperlink: zoomLink,
       })
+      countZoom(true)
       return
     }
     case 'shape': {
@@ -156,8 +191,9 @@ async function writeElement(
       if (needsRaster) {
         const data = (await rasterElement(el, opts)) ?? (await shapeFallbackPng(el))
         if (data) {
-          out.addImage({ data, ...common, sizing: { type: 'contain', w: geo.w, h: geo.h }, transparency: opacityToTransparency(el.opacity) })
+          out.addImage({ data, ...common, hyperlink: zoomLink, sizing: { type: 'contain', w: geo.w, h: geo.h }, transparency: opacityToTransparency(el.opacity) })
           rasterized.push({ id: el.id, name: el.name, reason: needsRaster })
+          countZoom(true)
         }
         return
       }
@@ -168,6 +204,7 @@ async function writeElement(
       out.addShape(shapeName, {
         ...common,
         fill: fillOf(el.fill),
+        hyperlink: zoomLink,
         line,
         rectRadius: el.shape === 'roundRect' || el.shape === 'pill' ? Math.min(0.5, scale(Math.min(el.w, el.h) * 0.5 * (el.radius?.[0] ? 0.6 : 1))) : undefined,
         shadow: shadowOf(el.shadow),
@@ -186,15 +223,18 @@ async function writeElement(
             }
           : {}),
       })
+      countZoom(true)
       return
     }
     case 'line': {
       const shape = el.endArrow && el.endArrow !== 'none' ? 'lineArrow' : 'line'
       out.addShape(shape as keyof typeof pptxgen.ShapeType, {
         ...common,
+        hyperlink: zoomLink,
         line: { color: toHex(el.stroke.color, '#000000').replace('#', ''), width: Math.max(0.5, scalePxToPt(el.stroke.width)), dashType: dashOf(el.stroke.dash), endArrowType: arrowOf(el.endArrow), beginArrowType: arrowOf(el.startArrow) },
         fill: { type: 'none' as never },
       })
+      countZoom(true)
       return
     }
     case 'image': {
@@ -206,14 +246,16 @@ async function writeElement(
           rasterized.push({ id: el.id, name: el.name, reason: 'صيغة الصورة لا يمكن تضمينها في PPTX (blob/شبكة خارجية)' })
           return
         }
-        out.addImage({ data: embedded, ...common, sizing: { type: el.fit === 'contain' ? 'contain' : 'cover', w: geo.w, h: geo.h }, transparency: opacityToTransparency(el.opacity) })
+        out.addImage({ data: embedded, ...common, hyperlink: zoomLink, sizing: { type: el.fit === 'contain' ? 'contain' : 'cover', w: geo.w, h: geo.h }, transparency: opacityToTransparency(el.opacity) })
+        countZoom(true)
         return
       }
       if (asset && mustRaster) {
         const data = (await rasterElement(el, opts)) ?? (await rasterizeImageElement(el, await toEmbeddableImageData(asset.src)))
         if (data) {
-          out.addImage({ data, ...common, transparency: opacityToTransparency(el.opacity) })
+          out.addImage({ data, ...common, hyperlink: zoomLink, transparency: opacityToTransparency(el.opacity) })
           rasterized.push({ id: el.id, name: el.name, reason: 'تأثيرات صورتية (فلاتر/قناع/ظل) مسطّحة' })
+          countZoom(true)
           return
         }
       }
@@ -222,18 +264,21 @@ async function writeElement(
       return
     }
     case 'table': {
-      writeTable(out, el, common, doc, scale)
+      writeTable(out, el, common, doc, scale, zoomLink)
+      countZoom(true)
       return
     }
     case 'chart': {
       writeChart(out, el, common, scale)
+      countZoom(false) // OOXML charts carry no hyperlink — documented limit
       return
     }
     case 'icon': {
       const png = await svgToPngDataUrl(iconSvg(el.icon, { color: el.color, strokeWidth: el.strokeWidth, size: 256 }), el.w, el.h)
       if (png) {
-        out.addImage({ data: png, ...common })
+        out.addImage({ data: png, ...common, hyperlink: zoomLink })
         rasterized.push({ id: el.id, name: el.name, reason: 'أيقونة متجهية → PNG' })
+        countZoom(true)
         return
       }
       return
@@ -241,8 +286,9 @@ async function writeElement(
     case 'svg': {
       const png = await svgToPngDataUrl(el.markup, el.w, el.h)
       if (png) {
-        out.addImage({ data: png, ...common })
+        out.addImage({ data: png, ...common, hyperlink: zoomLink })
         rasterized.push({ id: el.id, name: el.name, reason: 'SVG مخصص → صورة' })
+        countZoom(true)
       }
       return
     }
@@ -253,10 +299,12 @@ async function writeElement(
         return
       }
       out.addMedia({ data: media, type: 'video', ...common })
+      countZoom(false) // OOXML media frames carry no hyperlink — documented limit
       return
     }
     case 'frame': {
-      out.addShape('rect' as keyof typeof pptxgen.ShapeType, { ...common, fill: fillOf(el.background), line: el.stroke ? { color: toHex(el.stroke.color, '#000').replace('#', ''), width: scalePxToPt(el.stroke.width) } : { type: 'none' as never } })
+      out.addShape('rect' as keyof typeof pptxgen.ShapeType, { ...common, hyperlink: zoomLink, fill: fillOf(el.background), line: el.stroke ? { color: toHex(el.stroke.color, '#000').replace('#', ''), width: scalePxToPt(el.stroke.width) } : { type: 'none' as never } })
+      countZoom(true)
       return
     }
     default:
@@ -394,11 +442,12 @@ function scalePxToPt(px: number): number {
 
 /* ------------------------------------------------------------------ table */
 
-function writeTable(out: pptxgen.Slide, el: TableElement, geo: Geo, doc: Presentation, scale: (v: number) => number) {
+function writeTable(out: pptxgen.Slide, el: TableElement, geo: Geo, doc: Presentation, scale: (v: number) => number, zoomLink?: pptxgen.HyperlinkProps) {
   const rows: pptxgen.TextProps[][] = el.cells.map((row, ri) =>
     row.map((cell) => ({
       text: cell.text ?? '',
       options: {
+        hyperlink: zoomLink,
         bold: cell.bold ?? (el.header && ri === 0),
         color: toHex(cell.color ?? el.font.color, doc.theme.palette.text).replace('#', ''),
         fill: cell.fill

@@ -296,4 +296,12 @@ export const SHORTCUTS: { group: string; items: { keys: string[]; label: string 
       { keys: ['End'], label: 'الأخيرة' },
     ],
   },
+  {
+    group: 'زوم وتنقل (وضع العرض)',
+    items: [
+      { keys: ['Tab'], label: 'التنقل بين روابط الزوم' },
+      { keys: ['Enter', '/'], label: 'تفعيل رابط الزوم' },
+      { keys: ['⌫'], label: 'عودة بالزوم للمصدر' },
+    ],
+  },
 ]

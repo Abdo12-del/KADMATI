@@ -397,9 +397,16 @@ function ExportDialog() {
         downloadBlob(blob, result.fileName)
         setReport({
           title: `${result.fileName} · ${Math.round(result.bytes / 1024)} ك.ب`,
-          lines: result.rasterized.length
-            ? [`${result.rasterized.length} عنصر حُوّل إلى صورة لأنه لا يمثَّل في PPTX:`, ...result.rasterized.slice(0, 6).map((r) => `· ${r.name}: ${r.reason}`)]
-            : ['كل العناصر صدّرت كعناصر PPTX أصلية قابلة للتحرير — لم نُصغّر أي شريحة إلى صورة.'],
+          lines: [
+            ...(result.rasterized.length
+              ? [`${result.rasterized.length} عنصر حُوّل إلى صورة لأنه لا يمثَّل في PPTX:`, ...result.rasterized.slice(0, 6).map((r) => `· ${r.name}: ${r.reason}`)]
+              : ['كل العناصر صدّرت كعناصر PPTX أصلية قابلة للتحرير — لم نُصغّر أي شريحة إلى صورة.']),
+            ...(result.zoom.links
+              ? [`${result.zoom.links} روابط زوم صُدّرت كارتباطات داخلية تقفز للشريحة المستهدفة (حركة الزوم نفسها تعمل في Aurova فقط).`]
+              : []),
+            ...(result.zoom.broken.length ? [`· ${result.zoom.broken.length} روابط زوم معطّلة أُسقطت: ${result.zoom.broken.slice(0, 3).join('، ')}`] : []),
+            ...(result.zoom.unsupported.length ? [`· ${result.zoom.unsupported.length} روابط لا يدعمها PPTX: ${result.zoom.unsupported.slice(0, 3).join('، ')}`] : []),
+          ],
         })
         toast({ kind: 'success', title: 'صُدِّر PPTX', body: `${doc.slides.length} شريحة قابلة للتحرير في PowerPoint` })
       } else if (format === 'pdf') {

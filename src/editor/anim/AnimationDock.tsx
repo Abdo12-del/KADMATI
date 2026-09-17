@@ -22,8 +22,10 @@ import {
   Sparkles,
   Trash2,
   X,
+  ZoomIn,
 } from 'lucide-react'
 import { baseInfo, buildSlideEngine, sampleKeyframes, type ElementBaseInfo, type SlideEngine } from '../../animation/engine'
+import { clampDuration, slideLabel, zoomsFromSlide } from '../../document/zoom'
 import { EASING_OPTIONS, easingLabel } from '../../animation/easing'
 import { directionalPresetId, presetById, PRESET_GROUPS } from '../../animation/presets'
 import { cloneAnim, parseSlideAnims, slideAnimsJson } from '../../animation/serialize'
@@ -63,7 +65,9 @@ const PROP_LABELS: Record<AnimProp, string> = {
 
 export function AnimationDock() {
   const slide = useCurrentSlide()
+  const doc = useDoc((s) => s.doc)
   const selection = useDoc((s) => s.selection)
+  const zoomEdges = useMemo(() => (slide ? zoomsFromSlide(doc, slide.id) : []), [doc, slide])
   const selElId = selection[0] ?? null
   const anims = slide?.animations
 
@@ -657,6 +661,59 @@ export function AnimationDock() {
               </div>
             </div>
           </div>
+          {/* zoom navigation events — not element animations, but they share the timeline */}
+          {zoomEdges.length ? (
+            <div className="flex h-9 shrink-0 items-center gap-1.5 overflow-x-auto border-t border-ink-800 px-2" dir="rtl">
+              <span className="flex shrink-0 items-center gap-1 text-[10.5px] font-semibold text-sky-200">
+                <ZoomIn size={11} /> تنقل
+              </span>
+              {zoomEdges.map((e) => {
+                const trigger = slide?.elements.find((el) => el.id === e.triggerElementId)
+                const targetName = e.target.kind === 'slide' ? slideLabel(doc, e.target.slideId) : 'قسم'
+                return (
+                  <span
+                    key={e.id}
+                    className="flex shrink-0 items-center gap-1.5 rounded-md border border-sky-400/25 bg-sky-400/8 py-0.5 pe-1.5 ps-1"
+                    title={`${trigger?.name ?? 'عنصر'} ← ${targetName} · ${e.link.duration}ms`}
+                  >
+                    <span className="h-3.5 w-1 shrink-0 rounded-full bg-sky-300" style={{ width: Math.max(3, Math.min(90, e.link.duration * pxPerMs * 0.5)) }} />
+                    <button
+                      type="button"
+                      onClick={() => trigger && useDoc.getState().select([trigger.id])}
+                      className="max-w-[90px] truncate text-[10.5px] text-ink-200 hover:text-ink-50"
+                    >
+                      {trigger?.name ?? 'عنصر'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const target = e.target
+                        if (target.kind !== 'slide') return
+                        const i = doc.slides.findIndex((s) => s.id === target.slideId)
+                        if (i >= 0) useDoc.getState().gotoSlide(i)
+                      }}
+                      className="max-w-[110px] truncate text-[10.5px] text-sky-200 hover:text-sky-100"
+                    >
+                      ← {targetName}
+                    </button>
+                    <input
+                      type="number"
+                      value={e.link.duration}
+                      step={100}
+                      min={150}
+                      onChange={(ev) => {
+                        const v = clampDuration(Number(ev.target.value) || e.link.duration)
+                        const el = slide?.elements.find((x) => x.id === e.triggerElementId)
+                        if (el?.zoom) useDoc.getState().updateElement(el.id, { zoom: { ...el.zoom, duration: v } }, 'مدة الزوم')
+                      }}
+                      className="w-[52px] rounded border border-ink-700 bg-ink-950 px-1 py-px font-mono text-[10px] text-ink-200 outline-none focus:border-sky-400/60"
+                      title="مدة الانتقال (ms)"
+                    />
+                  </span>
+                )
+              })}
+            </div>
+          ) : null}
           {/* property tabs */}
           <div className="flex h-8 shrink-0 items-center gap-1 border-t border-ink-800 px-2" dir="rtl">
             <span className="me-1 text-[10.5px] text-ink-500">الخاصية:</span>
