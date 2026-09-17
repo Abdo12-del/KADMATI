@@ -29,12 +29,17 @@ import {
   Wand2,
   Loader2,
   Sparkles,
+  ZoomIn,
 } from 'lucide-react'
 import { useDoc } from '../store/useDoc'
 import { toast, useUI } from '../store/useUI'
 import { connLabel, isRemoteReady, toConn } from '../services/ai/providers'
+import { suggestZoomLinks } from '../services/ai/zoomSuggest'
+import { createZoomLink } from '../document/zoom'
 import { Button, Chip, ColorField, Divider, Field, NumberField, Row, Section, Segmented, Select, Slider, Switch, TextArea, TextField } from '../components/ui'
 import { AnimationLibrary } from './anim/AnimationLibrary'
+import { ZoomPickerHost } from './zoom/ZoomPicker'
+import { ZoomSection } from './zoom/ZoomSection'
 import { previewOnCanvas } from './anim/preview'
 import { cloneAnim } from '../animation/serialize'
 import { FONTS } from '../lib/fonts'
@@ -86,6 +91,7 @@ export function RightPanel() {
         {tab === 'notes' ? <NotesTab /> : null}
         {tab === 'ai' ? <AiTab /> : null}
       </div>
+      <ZoomPickerHost />
     </aside>
   )
 }
@@ -165,6 +171,8 @@ function ElementTab() {
           </div>
         </Row>
       </Section>
+
+      <ZoomSection elements={selected} />
 
       {kinds.size === 1 && kinds.has('text') ? <TextInspection elements={selected as TextElement[]} /> : null}
       {kinds.size === 1 && kinds.has('image') ? <ImageInspection elements={selected as ImageElement[]} /> : null}
@@ -1648,6 +1656,8 @@ function AiTab() {
         </div>
       </Section>
 
+      <ZoomSuggestSection busy={busy !== null} />
+
       <Section title="النص المحدد">
         <div className="flex flex-wrap gap-1">
           {(['improve', 'shorten', 'formal', 'title'] as const).map((op) => (
@@ -1670,6 +1680,100 @@ const AI_OP_LABEL: Record<string, string> = {
   shorten: 'اختصار',
   formal: 'أكثر رسمية',
   title: 'اقتراح عنوان',
+}
+
+/** Zoom link proposals from the local suggester — apply one by one or all in one undo step. */
+function ZoomSuggestSection({ busy }: { busy: boolean }) {
+  const doc = useDoc((s) => s.doc)
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set())
+  const [suggestions, setSuggestions] = useState(() => suggestZoomLinks(doc))
+
+  const refresh = () => {
+    setDismissed(new Set())
+    setSuggestions(suggestZoomLinks(useDoc.getState().doc))
+  }
+  const visible = suggestions.filter((s) => !dismissed.has(s.elementId))
+  const applyAll = () => {
+    if (!visible.length) return
+    useDoc.getState().applyZoomBatch(
+      visible.map((s) => ({ slideId: s.slideId, elementId: s.elementId, link: createZoomLink(s.targetSlideId) })),
+      `زوم مقترح (${visible.length})`,
+    )
+    toast({ kind: 'ai', title: `أُنشئ ${visible.length} روابط زوم`, body: 'راجعها من تبويب الخريطة — والتراجع متاح.' })
+    refresh()
+  }
+
+  return (
+    <Section title="اقتراحات الزوم">
+      <p className="text-[11px] leading-relaxed text-ink-500">
+        تحليل محلي فوري: عناصر تطابق عناوين الشرائح، وأزرار واضحة. التطبيق دفعة واحدة قابلة للتراجع.
+      </p>
+      {visible.length === 0 ? (
+        <p className="flex items-center gap-1.5 rounded-md border border-ink-750 bg-ink-900/60 p-2 text-[12px] text-ink-400">
+          <Check size={13} /> لا اقتراحات جديدة — كل الروابط الواضحة موجودة.
+        </p>
+      ) : (
+        <ul className="space-y-1.5">
+          {visible.map((s) => (
+            <li key={s.elementId} className="rounded-md border border-ink-750 bg-ink-900/60 p-2">
+              <div className="flex items-center gap-1.5 text-[11.5px]">
+                <ZoomIn size={12} className="shrink-0 text-sky-300" />
+                <span className="min-w-0 flex-1 truncate text-ink-100">{s.elementName}</span>
+                <span className="shrink-0 font-mono text-[10px] text-ink-500">{Math.round(s.confidence * 100)}٪</span>
+              </div>
+              <p className="mt-1 truncate text-[11px] text-sky-200">← {s.targetLabel}</p>
+              <p className="mt-0.5 text-[10.5px] text-ink-500">{s.why}</p>
+              <div className="mt-1.5 flex gap-1">
+                <button
+                  type="button"
+                  disabled={busy}
+                  className="flex-1 rounded border border-sky-400/40 bg-sky-400/10 px-1.5 py-1 text-[10.5px] text-sky-100 hover:bg-sky-400/20 disabled:opacity-40"
+                  onClick={() => {
+                    useDoc.getState().applyZoomBatch(
+                      [{ slideId: s.slideId, elementId: s.elementId, link: createZoomLink(s.targetSlideId) }],
+                      'زوم مقترح',
+                    )
+                    setDismissed((d) => new Set(d).add(s.elementId))
+                  }}
+                >
+                  تطبيق
+                </button>
+                <button
+                  type="button"
+                  className="flex-1 rounded border border-ink-700 px-1.5 py-1 text-[10.5px] text-ink-400 hover:bg-ink-800"
+                  onClick={() => {
+                    const i = useDoc.getState().doc.slides.findIndex((x) => x.id === s.slideId)
+                    if (i >= 0) {
+                      useDoc.getState().gotoSlide(i)
+                      useDoc.getState().select([s.elementId])
+                    }
+                  }}
+                >
+                  معاينة العنصر
+                </button>
+                <button
+                  type="button"
+                  className="rounded border border-ink-700 px-1.5 py-1 text-[10.5px] text-ink-500 hover:bg-ink-800"
+                  onClick={() => setDismissed((d) => new Set(d).add(s.elementId))}
+                  title="تجاهل"
+                >
+                  ✕
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="flex gap-1.5">
+        <Button size="sm" variant="surface" className="flex-1" disabled={busy || !visible.length} onClick={applyAll}>
+          <Sparkles size={12} /> تطبيق الكل ({visible.length})
+        </Button>
+        <Button size="sm" variant="ghost" disabled={busy} onClick={refresh}>
+          إعادة الفحص
+        </Button>
+      </div>
+    </Section>
+  )
 }
 
 function AiChip({ id, op, label }: { id: string; op: 'improve' | 'shorten' | 'formal' | 'title'; label: string }) {

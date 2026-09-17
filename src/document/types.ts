@@ -84,6 +84,7 @@ export type ElementRole =
   | 'list'
 
 import type { AnimSpec } from '../animation/types'
+import type { ZoomLink } from './zoom'
 
 export type TextAlign = 'start' | 'center' | 'end' | 'justify'
 export type VAlign = 'start' | 'center' | 'end'
@@ -119,6 +120,8 @@ export interface ElementBase {
   /** Parent frame id — frames clip and translate their children. */
   frameId?: string
   link?: string
+  /** Zoom Navigation relationship: this element jumps to another slide in present mode. */
+  zoom?: ZoomLink
   animation?: AnimationSpec
   shadow?: Shadow
   blendMode?: 'normal' | 'multiply' | 'screen' | 'overlay' | 'difference'

@@ -541,3 +541,36 @@ input[type='color']::-webkit-color-swatch {
 [dir='rtl'] .kad-t-push {
   --kad-tx: -6%;
 }
+
+/* ------------------------------------------------------------------ zoom navigation hotspots */
+.kad-zoom-hotspots {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+}
+.kad-zoom-hotspot {
+  position: absolute;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 6px;
+  outline: none;
+}
+.kad-zoom-hotspot-ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: 8px;
+  border: 1.5px solid transparent;
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+  pointer-events: none;
+}
+.kad-zoom-hotspot:hover .kad-zoom-hotspot-ring {
+  border-color: rgba(125, 180, 255, 0.55);
+  background: rgba(90, 140, 255, 0.07);
+}
+.kad-zoom-hotspot:focus-visible .kad-zoom-hotspot-ring {
+  border-color: #7db4ff;
+  background: rgba(90, 140, 255, 0.1);
+  box-shadow: 0 0 0 3px rgba(125, 180, 255, 0.25);
+}

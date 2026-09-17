@@ -40,6 +40,10 @@ jobs:
       - name: PDF pipeline tests
         run: npm run test:pdf
 
+      # Zoom navigation model + suggester (73 assertions).
+      - name: Zoom navigation tests
+        run: npm run test:zoom
+
       # Dataset + gateway stub smoke.
       - name: Model smoke
         run: npm run test:model

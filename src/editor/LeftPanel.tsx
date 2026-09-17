@@ -9,6 +9,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import {
+  AlertTriangle,
+  ArrowDownRight,
   BarChart3,
   Copy,
   Eye,
@@ -18,6 +20,7 @@ import {
   Image as ImageIcon,
   Layers,
   Lock,
+  Network,
   Plus,
   Trash2,
   Type,
@@ -30,12 +33,14 @@ import {
   Spline,
   Play,
   Group as GroupIcon,
+  ZoomIn,
 } from 'lucide-react'
 import { SlideView } from '../render/SlideView'
 import { useDoc } from '../store/useDoc'
 import { toast, useUI } from '../store/useUI'
 import { Button, Chip, IconButton, Popover } from '../components/ui'
 import { SHAPE_LIBRARY } from '../document/shapes'
+import { collectZoomEdges, slideLabel, type ZoomEdge } from '../document/zoom'
 import { LAYOUTS, buildLayout } from '../templates/layouts'
 import { ICON_CATEGORIES, iconSvg } from '../lib/iconLibrary'
 import { fileToDataUrl } from '../store/storage'
@@ -43,11 +48,12 @@ import { createAsset } from '../document/factory'
 import { cn } from '../lib/cn'
 import type { AnyElement } from '../document/types'
 
-type Tab = 'slides' | 'layers' | 'shapes' | 'icons' | 'media'
+type Tab = 'slides' | 'layers' | 'shapes' | 'icons' | 'media' | 'map'
 
 const TABS: { id: Tab; label: string; icon: typeof Layers }[] = [
   { id: 'slides', label: 'الشرائح', icon: FileText },
   { id: 'layers', label: 'الطبقات', icon: Layers },
+  { id: 'map', label: 'الخريطة', icon: Network },
   { id: 'shapes', label: 'أشكال', icon: Square },
   { id: 'icons', label: 'أيقونات', icon: GripVertical },
   { id: 'media', label: 'صور', icon: ImageIcon },
@@ -56,7 +62,7 @@ const TABS: { id: Tab; label: string; icon: typeof Layers }[] = [
 export function LeftPanel() {
   const leftPanel = useUI((s) => s.leftPanel)
   const setLeftPanel = useUI((s) => s.setLeftPanel)
-  const tab: Tab = (['slides', 'layers', 'shapes', 'icons', 'images'].includes(leftPanel) ? (leftPanel === 'images' ? 'media' : leftPanel) : 'slides') as Tab
+  const tab: Tab = (['slides', 'layers', 'shapes', 'icons', 'images', 'map'].includes(leftPanel) ? (leftPanel === 'images' ? 'media' : leftPanel) : 'slides') as Tab
   const setTab = (next: Tab) => setLeftPanel(next === 'media' ? 'images' : next)
 
   return (
@@ -80,6 +86,7 @@ export function LeftPanel() {
       </nav>
       {tab === 'slides' ? <SlidesTab /> : null}
       {tab === 'layers' ? <LayersTab /> : null}
+      {tab === 'map' ? <MapTab /> : null}
       {tab === 'shapes' ? <ShapesTab /> : null}
       {tab === 'icons' ? <IconsTab /> : null}
       {tab === 'media' ? <MediaTab /> : null}
@@ -106,6 +113,11 @@ function SlidesTab() {
   const width = 216
   const scale = (width - 16) / doc.size.w
   const height = Math.round(doc.size.h * scale) + 34
+  const zoomCount = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const e of collectZoomEdges(doc)) map.set(e.sourceSlideId, (map.get(e.sourceSlideId) ?? 0) + 1)
+    return map
+  }, [doc])
 
   const virtualizer = useVirtualizer({
     count: doc.slides.length,
@@ -178,6 +190,14 @@ function SlidesTab() {
               </button>
               <div className="mt-1 flex items-center gap-1 px-0.5">
                 <span className={cn('w-4 shrink-0 text-[10px] tabular-nums', active ? 'text-signal-soft' : 'text-ink-500')}>{index + 1}</span>
+                {(zoomCount.get(slide.id) ?? 0) > 0 ? (
+                  <span
+                    className="flex shrink-0 items-center gap-0.5 rounded bg-sky-400/12 px-1 py-px text-[9.5px] font-semibold text-sky-200"
+                    title={`${zoomCount.get(slide.id)} روابط زوم صادرة — انظر تبويب الخريطة`}
+                  >
+                    <ZoomIn size={10} /> {zoomCount.get(slide.id)}
+                  </span>
+                ) : null}
                 <span className="min-w-0 flex-1 truncate text-[11px] text-ink-300">{slide.name || slideTitle(slide, doc)}</span>
                 <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
                   <IconButton
@@ -200,8 +220,20 @@ function SlidesTab() {
                     tip="حذف الشريحة"
                     disabled={doc.slides.length <= 1}
                     onClick={() => {
+                      const doomed = collectZoomEdges(doc).filter(
+                        (e) => e.target.kind === 'slide' && e.target.slideId === slide.id && e.sourceSlideId !== slide.id,
+                      ).length
                       removeSlide(index)
-                      toast({ kind: 'info', title: 'حُذفت الشريحة', body: '⌘Z للتراجع.', action: { label: 'تراجع', run: () => useDoc.getState().undo() } })
+                      if (doomed > 0) {
+                        toast({
+                          kind: 'error',
+                          title: `حُذفت الشريحة — ${doomed} روابط زوم أصبحت معطّلة`,
+                          body: 'العرض يعمل، لكن أصلح الروابط من تبويب الخريطة.',
+                          action: { label: 'فتح الخريطة', run: () => { if (useUI.getState().leftPanel !== 'map') useUI.getState().setLeftPanel('map') } },
+                        })
+                      } else {
+                        toast({ kind: 'info', title: 'حُذفت الشريحة', body: '⌘Z للتراجع.', action: { label: 'تراجع', run: () => useDoc.getState().undo() } })
+                      }
                     }}
                   >
                     <Trash2 size={11} />
@@ -350,6 +382,11 @@ function LayersTab() {
             onClick={(e) => select([el.id], { additive: e.shiftKey || e.metaKey || e.ctrlKey })}
           >
             <Icon size={12} className={cn('shrink-0', selected ? 'text-signal-soft' : 'text-ink-500')} />
+            {el.zoom ? (
+              <span title="مرتبط بزوم — انظر لوحة الخصائص">
+                <ZoomIn size={11} className="shrink-0 text-sky-300" />
+              </span>
+            ) : null}
             {renaming === el.id ? (
               <input
                 autoFocus
@@ -414,6 +451,145 @@ function LayersTab() {
           <Ungroup size={11} className="inline" /> فك
         </Chip>
       </div>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ navigation map */
+
+function MapTab() {
+  const doc = useDoc((s) => s.doc)
+  const gotoSlide = useDoc((s) => s.gotoSlide)
+  const select = useDoc((s) => s.select)
+  const openZoomPicker = useUI((s) => s.openZoomPicker)
+  const edges = useMemo(() => collectZoomEdges(doc), [doc])
+  const broken = edges.filter((e) => e.status !== 'ok')
+  const bySource = useMemo(() => {
+    const map = new Map<string, ZoomEdge[]>()
+    for (const e of edges) {
+      const list = map.get(e.sourceSlideId) ?? []
+      list.push(e)
+      map.set(e.sourceSlideId, list)
+    }
+    return map
+  }, [edges])
+
+  const triggerName = (e: ZoomEdge) =>
+    doc.slides.find((s) => s.id === e.sourceSlideId)?.elements.find((el) => el.id === e.triggerElementId)?.name ?? 'عنصر'
+
+  const jumpToTrigger = (e: ZoomEdge) => {
+    const i = doc.slides.findIndex((s) => s.id === e.sourceSlideId)
+    if (i >= 0) {
+      gotoSlide(i)
+      select([e.triggerElementId])
+    }
+  }
+  const jumpToTarget = (e: ZoomEdge) => {
+    const target = e.target
+    if (target.kind !== 'slide') return
+    const i = doc.slides.findIndex((s) => s.id === target.slideId)
+    if (i >= 0) gotoSlide(i)
+  }
+
+  if (!edges.length) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
+        <Network size={20} className="text-ink-600" />
+        <p className="text-[12px] leading-relaxed text-ink-400">
+          لا روابط زوم بعد. حدد بطاقة أو زرًا أو صورة ثم اختر «زوم إلى شريحة» من لوحة الخصائص.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="panel-x min-h-0 flex-1 overflow-y-auto p-2">
+      {broken.length ? (
+        <div className="mb-2 rounded-lg border border-red-500/30 bg-red-500/8 p-2">
+          <p className="flex items-center gap-1.5 text-[11.5px] font-bold text-red-300">
+            <AlertTriangle size={12} /> روابط معطّلة ({broken.length})
+          </p>
+          <div className="mt-1.5 space-y-1.5">
+            {broken.map((e) => (
+              <div key={e.id} className="rounded-md border border-red-500/20 bg-ink-950/60 p-1.5">
+                <button type="button" onClick={() => jumpToTrigger(e)} className="block w-full truncate text-start text-[11px] text-ink-200 hover:text-ink-50" title="انتقال إلى العنصر">
+                  {slideLabel(doc, e.sourceSlideId).split(' — ')[0]} · {triggerName(e)}
+                </button>
+                <p className="mt-0.5 text-[10.5px] text-ink-500">
+                  {e.status === 'unsupported-section' ? 'يستهدف قسمًا (الأقسام غير مدعومة بعد)' : 'الشريحة المستهدفة محذوفة'}
+                </p>
+                <div className="mt-1 flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      jumpToTrigger(e)
+                      openZoomPicker([e.triggerElementId])
+                    }}
+                    className="flex-1 rounded border border-ink-600 px-1.5 py-1 text-[10.5px] text-ink-100 hover:bg-ink-800"
+                  >
+                    اختيار شريحة
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const i = doc.slides.findIndex((s) => s.id === e.sourceSlideId)
+                      if (i < 0) return
+                      gotoSlide(i)
+                      useDoc.getState().updateElement(e.triggerElementId, { zoom: undefined }, 'إزالة الزوم')
+                    }}
+                    className="flex-1 rounded border border-ink-700 px-1.5 py-1 text-[10.5px] text-ink-400 hover:bg-ink-800"
+                  >
+                    إزالة الرابط
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {doc.slides.map((s, i) => {
+        const out = bySource.get(s.id) ?? []
+        if (!out.length) return null
+        return (
+          <div key={s.id} className="mb-2 rounded-lg border border-ink-800 bg-ink-900/40">
+            <button
+              type="button"
+              onClick={() => gotoSlide(i)}
+              className="flex w-full items-center gap-1.5 px-2 py-1.5 text-start"
+              title="انتقال إلى الشريحة"
+            >
+              <span className="grid size-5 shrink-0 place-items-center rounded bg-ink-750 font-mono text-[10px] text-ink-200">{i + 1}</span>
+              <span className="min-w-0 flex-1 truncate text-[11.5px] font-semibold text-ink-100">{s.name || slideLabel(doc, s.id).replace(/^شريحة \d+ — /, '') || `شريحة ${i + 1}`}</span>
+              <span className="text-[10px] text-ink-500">{out.length} ←</span>
+            </button>
+            <div className="space-y-1 px-2 pb-2">
+              {out.map((e) => {
+                const ok = e.status === 'ok' && e.target.kind === 'slide'
+                return (
+                  <div key={e.id} className="flex items-center gap-1 text-[11px]">
+                    <ArrowDownRight size={11} className={ok ? 'shrink-0 text-sky-300' : 'shrink-0 text-red-400'} />
+                    <button type="button" onClick={() => jumpToTrigger(e)} className="min-w-0 max-w-[86px] truncate rounded px-1 py-0.5 text-ink-300 hover:bg-ink-800 hover:text-ink-50" title={`العنصر: ${triggerName(e)} — انقر للتحديد`}>
+                      {triggerName(e)}
+                    </button>
+                    <span className="shrink-0 text-ink-600">←</span>
+                    {ok ? (
+                      <button type="button" onClick={() => jumpToTarget(e)} className="min-w-0 flex-1 truncate rounded bg-sky-400/10 px-1.5 py-0.5 text-start text-sky-200 hover:bg-sky-400/20" title="انتقال إلى الشريحة المستهدفة">
+                        {slideLabel(doc, (e.target as { slideId: string }).slideId)}
+                      </button>
+                    ) : (
+                      <span className="min-w-0 flex-1 truncate rounded bg-red-500/10 px-1.5 py-0.5 text-red-300">معطّل</span>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })}
+      <p className="px-1 pb-2 text-[10.5px] leading-relaxed text-ink-500">
+        الروابط تُحفظ بمعرّف الشريحة — إعادة الترتيب لا تكسرها أبدًا.
+      </p>
     </div>
   )
 }

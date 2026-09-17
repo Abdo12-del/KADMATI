@@ -5,14 +5,17 @@
  * data-driven per-element animations with PowerPoint-style click sequencing.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight, FileText, Minimize2, Moon, Play, Square } from 'lucide-react'
+import { ChevronLeft, ChevronRight, FileText, Minimize2, Moon, Play, Square, Undo2 } from 'lucide-react'
 import { SlideView } from '../render/SlideView'
 import { baseInfo, buildSlideEngine, type ElementBaseInfo, type SlideEngine } from '../animation/engine'
 import { scheduleAnims } from '../animation/schedule'
 import { buildMorphSpecs, MORPH_OLD_PREFIX } from '../animation/morph'
+import { playZoomTransition } from '../animation/zoomPlayer'
+import { resolveZoomTarget, slideLabel, type ZoomLink } from '../document/zoom'
+import { ZoomHotspots } from './zoom/ZoomHotspots'
 import { useDoc } from '../store/useDoc'
 import { cn } from '../lib/cn'
-import type { Presentation, Slide } from '../document/types'
+import type { AnyElement, Presentation, Slide } from '../document/types'
 
 interface PresentModeProps {
   doc: Presentation
@@ -27,11 +30,40 @@ const TRANSITION_CLASS: Record<string, string> = {
   zoom: 'kad-t-zoom',
 }
 
+interface ZoomFlight {
+  fromId: string
+  toId: string
+  link: ZoomLink
+  /** trigger rect in design px (source slide space) */
+  trigger: { x: number; y: number; w: number; h: number }
+  /** click point in design px (for 'click' origin) */
+  click?: { x: number; y: number }
+  direction: 'in' | 'out'
+}
+
+interface BackEntry {
+  slideId: string
+  link: ZoomLink
+  trigger: { x: number; y: number; w: number; h: number }
+  click?: { x: number; y: number }
+}
+
 export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
   const visible = useMemo(() => doc.slides.filter((s) => !s.hidden), [doc.slides])
   const initial = Math.max(0, visible.findIndex((s) => s.id === doc.slides[startAt]?.id))
   const [index, setIndex] = useState(initial >= 0 ? initial : 0)
   const [morph, setMorph] = useState<{ fromId: string; duration: number } | null>(null)
+  /** an in-flight zoom transition (renders its own from/to layers, like morph does) */
+  const [zoomNav, setZoomNav] = useState<ZoomFlight | null>(null)
+  /** return stack for zooms with returnToSource (cleared by linear navigation) */
+  const [backStack, setBackStack] = useState<BackEntry[]>([])
+  /** visiting a hidden slide via zoom (linear position stays index-based) */
+  const [overrideId, setOverrideId] = useState<string | null>(null)
+  const fromLayerRef = useRef<HTMLDivElement>(null)
+  const toLayerRef = useRef<HTMLDivElement>(null)
+  const zoomAbortRef = useRef<AbortController | null>(null)
+  /** slide whose entrance was expressed by a zoom — don't replay a CSS transition on arrival */
+  const zoomedInto = useRef<string | null>(null)
   const [playNonce, setPlayNonce] = useState(0)
   const [showNotes, setShowNotes] = useState(false)
   const [blank, setBlank] = useState<null | 'black' | 'white'>(null)
@@ -42,7 +74,8 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
   const hideTimer = useRef<number | null>(null)
   /** slide whose entrance was already expressed by a morph — don't replay its own anims */
   const morphedInto = useRef<string | null>(null)
-  const slide = visible[Math.min(index, visible.length - 1)] ?? doc.slides[0]
+  const linearSlide = visible[Math.min(index, visible.length - 1)] ?? doc.slides[0]
+  const slide = overrideId ? (doc.slides.find((s) => s.id === overrideId) ?? linearSlide) : linearSlide
   const dir = doc.metadata.dir === 'rtl' ? 'rtl' : 'ltr'
 
   /* ------------------------------------------------- engine registries (current + morph outgoing) */
@@ -77,11 +110,13 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
     else animTargets.current.delete(key)
   }, [])
 
-  const outgoingSlide: Slide | null = morph ? visible.find((s) => s.id === morph.fromId) ?? null : null
+  const outgoingSlide: Slide | null = morph ? (doc.slides.find((s) => s.id === morph.fromId) ?? null) : null
+  const zoomFromSlide: Slide | null = zoomNav ? (doc.slides.find((s) => s.id === zoomNav.fromId) ?? null) : null
+  const zoomToSlide: Slide | null = zoomNav ? (doc.slides.find((s) => s.id === zoomNav.toId) ?? null) : null
 
   /* ------------------------------------------------- normal per-slide animation playback */
   useEffect(() => {
-    if (morph) return // morph effect owns the slide while active
+    if (morph || zoomNav) return // morph/zoom effects own the slide while active
     const anims = slide?.animations
     if (morphedInto.current === slide?.id) {
       // morph already moved every element into place — hold still
@@ -116,7 +151,7 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
       if (engineRef.current === engine) engineRef.current = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slide?.id, morph, playNonce])
+  }, [slide?.id, morph, zoomNav, playNonce])
 
   /* ------------------------------------------------- morph transition playback */
   useEffect(() => {
@@ -150,9 +185,113 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
       // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [morph?.fromId, morph?.duration, slide?.id])
 
+  /* ------------------------------------------------- zoom transition playback */
+  useEffect(() => {
+    if (!zoomNav || !zoomFromSlide || !zoomToSlide) return
+    const flight = zoomNav
+    const controller = new AbortController()
+    zoomAbortRef.current = controller
+    let settled = false
+    const commit = () => {
+      if (settled) return
+      settled = true
+      zoomedInto.current = flight.toId
+      const vi = visible.findIndex((s) => s.id === flight.toId)
+      if (vi >= 0) {
+        setOverrideId(null)
+        setIndex(vi)
+      } else {
+        // hidden target: visit it without disturbing the linear position
+        setOverrideId(flight.toId)
+      }
+      setZoomNav(null)
+      setPlayNonce((n) => n + 1)
+      setBlank(null)
+    }
+    const run = window.setTimeout(() => {
+      const fromLayer = fromLayerRef.current
+      const toLayer = toLayerRef.current
+      if (!fromLayer || !toLayer) {
+        commit()
+        return
+      }
+      void playZoomTransition({
+        link: flight.link,
+        stage: { w: doc.size.w, h: doc.size.h },
+        trigger: flight.trigger,
+        click: flight.click,
+        direction: flight.direction,
+        fromLayer,
+        toLayer,
+        signal: controller.signal,
+      }).then(() => commit())
+    }, 60)
+    return () => {
+      controller.abort()
+      window.clearTimeout(run)
+      if (zoomAbortRef.current === controller) zoomAbortRef.current = null
+    }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zoomNav?.fromId, zoomNav?.toId, zoomNav?.direction])
+
+  /** Jump to a slide through a zoom link (destroys the running click-sequence). */
+  const zoomTo = useCallback(
+    (targetId: string, flight: Pick<ZoomFlight, 'link' | 'trigger' | 'click' | 'direction'>) => {
+      if (morph || zoomNav) return
+      const to = doc.slides.find((s) => s.id === targetId)
+      if (!to || !slide || to.id === slide.id) return
+      engineRef.current?.destroy()
+      engineRef.current = null
+      if (flight.direction === 'in' && flight.link.returnToSource) {
+        setBackStack((st) => [...st.slice(-19), { slideId: slide.id, link: flight.link, trigger: flight.trigger, click: flight.click }])
+      }
+      setOverrideId(null)
+      zoomedInto.current = null
+      setZoomNav({ ...flight, fromId: slide.id, toId: targetId })
+      setBlank(null)
+    },
+    [morph, zoomNav, doc.slides, slide],
+  )
+
+  /** Zoom back out to the source of the last zoom (Backspace / back button). */
+  const goBack = useCallback(() => {
+    if (morph || zoomNav) return false
+    const entry = backStack[backStack.length - 1]
+    if (!entry || !slide) return false
+    const to = doc.slides.find((s) => s.id === entry.slideId)
+    if (!to) {
+      // source vanished mid-session (shouldn't happen — doc is fixed): drop the entry
+      setBackStack((st) => st.slice(0, -1))
+      return true
+    }
+    engineRef.current?.destroy()
+    engineRef.current = null
+    setBackStack((st) => st.slice(0, -1))
+    setOverrideId(null)
+    zoomedInto.current = null
+    setZoomNav({ fromId: slide.id, toId: to.id, link: entry.link, trigger: entry.trigger, click: entry.click, direction: 'out' })
+    setBlank(null)
+    return true
+  }, [morph, zoomNav, backStack, slide, doc.slides])
+
+  const activateZoom = useCallback(
+    (el: AnyElement, point: { x: number; y: number }) => {
+      if (!el.zoom || !slide) return
+      const targetId = resolveZoomTarget(doc, el.zoom.target)
+      if (!targetId || targetId === slide.id) return
+      zoomTo(targetId, {
+        link: el.zoom,
+        trigger: { x: el.x, y: el.y, w: el.w, h: el.h },
+        click: { x: point.x, y: point.y },
+        direction: 'in',
+      })
+    },
+    [doc, slide, zoomTo],
+  )
+
   const go = useCallback(
     (delta: number) => {
-      if (morph) return
+      if (morph || zoomNav) return
       // advance click-triggered animation groups first
       const engine = engineRef.current
       const { starts } = groupsRef.current
@@ -163,11 +302,21 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
         playGroup(nextStep)
         return
       }
-      const next = Math.max(0, Math.min(visible.length - 1, index + delta))
-      if (next === index) return
+      // linear movement leaves the zoom trail behind (return is for the immediate visit)
+      setBackStack([])
+      // from a hidden override slide, continue from its linear neighbourhood
+      let base = index
+      if (overrideId) {
+        const docPos = doc.slides.findIndex((s) => s.id === overrideId)
+        base = visible.filter((s) => doc.slides.findIndex((x) => x.id === s.id) < docPos).length - (delta < 0 ? 0 : 1)
+      }
+      const next = Math.max(0, Math.min(visible.length - 1, base + delta))
+      if (!overrideId && next === index) return
       const incoming = visible[next]
       engineRef.current?.destroy()
       engineRef.current = null
+      setOverrideId(null)
+      zoomedInto.current = null
       if (incoming.transition.type === 'morph') {
         setMorph({ fromId: slide.id, duration: incoming.transition.duration || 650 })
         setIndex(next)
@@ -177,7 +326,7 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
       }
       setBlank(null)
     },
-    [morph, visible, index, slide, playGroup],
+    [morph, zoomNav, visible, index, slide, overrideId, doc.slides, playGroup],
   )
 
   // Keep the editor's cursor in sync so exiting presentation leaves you where you presented.
@@ -204,6 +353,10 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // a focused hotspot consumes its own Enter/Space (React stopPropagation shields us);
+      // presenter chrome (back button, transport…) keeps native button activation
+      const target = e.target as HTMLElement | null
+      if ((e.key === 'Enter' || e.key === ' ') && target?.closest?.('[data-present-ui]')) return
       switch (e.key) {
         case 'Escape':
           onExit()
@@ -215,9 +368,12 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
           e.preventDefault()
           go(dir === 'rtl' && e.key === 'ArrowRight' ? -1 : 1)
           return
+        case 'Backspace':
+          e.preventDefault()
+          if (!goBack()) go(-1)
+          return
         case 'ArrowLeft':
         case 'PageUp':
-        case 'Backspace':
           e.preventDefault()
           go(dir === 'rtl' && e.key === 'ArrowLeft' ? 1 : -1)
           return
@@ -230,9 +386,15 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
           go(-1)
           return
         case 'Home':
+          setBackStack([])
+          setOverrideId(null)
+          zoomedInto.current = null
           setIndex(0)
           return
         case 'End':
+          setBackStack([])
+          setOverrideId(null)
+          zoomedInto.current = null
           setIndex(visible.length - 1)
           return
         case 'n':
@@ -255,13 +417,18 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
           if (/^[0-9]$/.test(e.key)) {
             // PowerPoint behaviour: number + Enter jumps to that slide.
             const n = Number(e.key)
-            if (n >= 1 && n <= visible.length) setIndex(n - 1)
+            if (n >= 1 && n <= visible.length) {
+              setBackStack([])
+              setOverrideId(null)
+              zoomedInto.current = null
+              setIndex(n - 1)
+            }
           }
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [go, onExit, dir, visible.length])
+  }, [go, goBack, onExit, dir, visible.length])
 
   const wake = useCallback(() => {
     setChromeVisible(true)
@@ -283,7 +450,12 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
 
   if (!slide) return null
   const transition = slide.transition
-  const tClass = morph ? '' : transition.type === 'none' ? '' : (TRANSITION_CLASS[transition.type] ?? 'kad-t-fade')
+  const tClass =
+    morph || zoomNav || zoomedInto.current === slide.id
+      ? ''
+      : transition.type === 'none'
+        ? ''
+        : (TRANSITION_CLASS[transition.type] ?? 'kad-t-fade')
 
   const slideBox = (s: Slide, old: boolean) => (
     <div
@@ -311,6 +483,38 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
     </div>
   )
 
+  /** A zoom layer: the viewport fitter is static; the player animates the inner design-size box. */
+  const zoomLayer = (s: Slide, ref: React.Ref<HTMLDivElement>, above: boolean) => (
+    <div
+      key={`zoom-${above ? 'to' : 'from'}-${s.id}`}
+      className="absolute"
+      style={{
+        left: '50%',
+        top: '50%',
+        width: doc.size.w,
+        height: doc.size.h,
+        transform: `translate(-50%, -50%) scale(${scale})`,
+        transformOrigin: 'center center',
+        zIndex: above ? 2 : 1,
+      }}
+    >
+      <div ref={ref} style={{ width: doc.size.w, height: doc.size.h, position: 'relative' }}>
+        <SlideView
+          slide={s}
+          doc={doc}
+          mode="present"
+          static
+          style={{ width: doc.size.w, height: doc.size.h, borderRadius: 0, position: 'absolute', inset: 0 }}
+        />
+      </div>
+    </div>
+  )
+
+  const backEntry = backStack[backStack.length - 1] ?? null
+  const counter = overrideId
+    ? { pos: doc.slides.findIndex((s) => s.id === overrideId) + 1, total: doc.slides.length }
+    : { pos: index + 1, total: visible.length }
+
   return (
     <div
       ref={rootRef}
@@ -318,12 +522,15 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
       className={cn('fixed inset-0 z-50 select-none bg-black', blank === 'white' && 'bg-white')}
       onMouseMove={wake}
       onWheel={(e) => {
-        if (Math.abs(e.deltaY) < 12) return
+        if (zoomNav || Math.abs(e.deltaY) < 12) return
         go(e.deltaY > 0 ? 1 : -1)
       }}
       onClick={(e) => {
+        if (zoomNav) return
         const target = e.target as HTMLElement
         if (target.closest('[data-present-ui]')) return
+        // inline hyperlinks keep working in present mode
+        if (target.closest('a[href]')) return
         go(dir === 'rtl' ? -1 : 1)
       }}
       style={{ cursor: chromeVisible ? 'default' : 'none' }}
@@ -332,10 +539,22 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
 
       <div className="grid h-full w-full place-items-center overflow-hidden">
         <div className="relative" style={{ width: doc.size.w * scale, height: doc.size.h * scale }}>
-          {morph && outgoingSlide ? (
-            <div className="absolute inset-0 grid place-items-center">{slideBox(outgoingSlide, true)}</div>
-          ) : null}
-          {slideBox(slide, false)}
+          {zoomNav && zoomFromSlide && zoomToSlide ? (
+            <>
+              {zoomLayer(zoomFromSlide, fromLayerRef, false)}
+              {zoomLayer(zoomToSlide, toLayerRef, true)}
+            </>
+          ) : (
+            <>
+              {morph && outgoingSlide ? (
+                <div className="absolute inset-0 grid place-items-center">{slideBox(outgoingSlide, true)}</div>
+              ) : null}
+              {slideBox(slide, false)}
+              {!morph ? (
+                <ZoomHotspots doc={doc} slide={slide} scale={scale} onActivate={activateZoom} />
+              ) : null}
+            </>
+          )}
         </div>
       </div>
 
@@ -343,11 +562,21 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
         <>
           <div data-present-ui className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-gradient-to-t from-black/70 to-transparent p-3">
             <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-white/10 bg-black/55 p-1 backdrop-blur-md">
+              {backEntry ? (
+                <button
+                  type="button"
+                  onClick={() => goBack()}
+                  className="flex h-8 items-center gap-1 rounded-full bg-white/12 px-2.5 text-[11.5px] text-white hover:bg-white/20"
+                  title={`عودة بالزوم إلى ${slideLabel(doc, backEntry.slideId)} (Backspace)`}
+                >
+                  <Undo2 size={13} /> عودة
+                </button>
+              ) : null}
               <button type="button" onClick={() => go(-1)} className="grid size-8 place-items-center rounded-full text-white/80 hover:bg-white/12" title="السابق">
                 {dir === 'rtl' ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
               </button>
               <span className="min-w-[62px] text-center font-mono text-[11.5px] text-white/80">
-                {index + 1} / {visible.length}
+                {counter.pos} / {counter.total}
               </span>
               <button type="button" onClick={() => go(1)} className="grid size-8 place-items-center rounded-full text-white/80 hover:bg-white/12" title="التالي">
                 {dir === 'rtl' ? <ChevronLeft size={15} /> : <ChevronRight size={15} />}

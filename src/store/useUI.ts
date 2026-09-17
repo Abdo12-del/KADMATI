@@ -50,9 +50,11 @@ interface UIState {
   ai: AiSettings
   hydrated: boolean
   /** Panel content shown in the left rail (thumbnails by default, browse panels override it). */
-  leftPanel: 'slides' | 'templates' | 'images' | 'shapes' | 'icons' | 'tables-charts' | 'layers'
+  leftPanel: 'slides' | 'templates' | 'images' | 'shapes' | 'icons' | 'tables-charts' | 'layers' | 'map'
   rightPanel: 'design' | 'element' | 'animate' | 'transition' | 'brand' | 'notes' | 'ai'
   dialog: null | 'new-presentation' | 'import' | 'shortcuts' | 'share' | 'profile' | 'ai-settings' | 'export'
+  /** Open zoom-target picker for these element ids (current slide), or null when closed. */
+  zoomPicker: { elementIds: string[] } | null
   hydrate: () => Promise<void>
   toast: (t: Omit<Toast, 'id'>) => string
   dismiss: (id: string) => void
@@ -63,6 +65,8 @@ interface UIState {
   setRightPanel: (p: UIState['rightPanel']) => void
   openDialog: (d: UIState['dialog']) => void
   closeDialog: () => void
+  openZoomPicker: (elementIds: string[]) => void
+  closeZoomPicker: () => void
 }
 
 const DEFAULT_PREFS: Prefs = {
@@ -110,6 +114,7 @@ export const useUI = create<UIState>()((set, get) => ({
   leftPanel: 'slides',
   rightPanel: 'design',
   dialog: null,
+  zoomPicker: null,
 
   hydrate: async () => {
     const [prefs, ai, profile] = await Promise.all([
@@ -159,6 +164,8 @@ export const useUI = create<UIState>()((set, get) => ({
   setRightPanel: (rightPanel) => set({ rightPanel }),
   openDialog: (dialog) => set({ dialog }),
   closeDialog: () => set({ dialog: null }),
+  openZoomPicker: (elementIds) => set({ zoomPicker: { elementIds } }),
+  closeZoomPicker: () => set({ zoomPicker: null }),
 }))
 
 export function toast(t: Omit<Toast, 'id'>) {

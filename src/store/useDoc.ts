@@ -29,6 +29,8 @@ import {
 } from '../document/factory'
 import { alignRects, clamp, distribute, type AlignEdge } from '../document/geometry'
 import { sanitizeHtml } from '../document/text'
+import { newZoomId, triggerGroup } from '../document/zoom'
+import type { ZoomLink } from '../document/zoom'
 import type { LayoutDef } from '../templates/layouts'
 import { buildLayout } from '../templates/layouts'
 import type {
@@ -151,6 +153,10 @@ export interface DocState {
   toggleLock: () => void
   toggleVisible: () => void
   renameElement: (id: string, name: string) => void
+  /** Attach/detach a zoom link on the current slide's element (group-aware, undoable). */
+  setElementZoom: (elementId: string, link: ZoomLink | null, opts?: { group?: boolean; label?: string }) => void
+  /** One undo step for many links (AI suggestions, connect-actions). */
+  applyZoomBatch: (items: { slideId: string; elementId: string; link: ZoomLink }[], label?: string) => void
   nudge: (dx: number, dy: number) => void
   setPositions: (map: Record<string, { x: number; y: number }>, opts?: { history?: boolean }) => void
   setGeometry: (id: string, geo: { x?: number; y?: number; w?: number; h?: number; rotation?: number }) => void
@@ -367,7 +373,12 @@ export const useDoc = create<DocState>()(
             const copy: Slide = {
               ...structuredClone(src),
               id: newId('s'),
-              elements: src.elements.map((e) => ({ ...structuredClone(e), id: newId(e.kind) })),
+              elements: src.elements.map((e) => {
+                const c = { ...structuredClone(e), id: newId(e.kind) }
+                // zoom links travel with the element, but each copy owns its relationship id
+                if (c.zoom) c.zoom = { ...c.zoom, id: newZoomId() }
+                return c
+              }),
             }
             const slides = [...s.doc.slides]
             slides.splice(i + 1, 0, copy)
@@ -605,6 +616,7 @@ export const useDoc = create<DocState>()(
               for (const el of slide.elements.filter((e) => ids.includes(e.id))) {
                 const copy = structuredClone(el)
                 copy.id = newId(el.kind)
+                if (copy.zoom) copy.zoom.id = newZoomId()
                 copy.x += 24
                 copy.y += 24
                 if (copy.gid) {
@@ -726,6 +738,38 @@ export const useDoc = create<DocState>()(
         },
         renameElement: (id, name) => get().updateElement(id, { name }, 'إعادة تسمية'),
 
+        setElementZoom: (elementId, link, opts) => {
+          const slide = currentSlide()
+          if (!slide) return
+          const members = opts?.group ? triggerGroup(slide, elementId) : slide.elements.filter((e) => e.id === elementId)
+          if (!members.length) return
+          const ids = new Set(members.map((e) => e.id))
+          updateSlide(
+            slide.id,
+            (s) => {
+              for (const el of s.elements) {
+                if (!ids.has(el.id)) continue
+                // Each member owns its link object (fresh id): edges stay 1:1 with triggers.
+                el.zoom = link ? { ...structuredClone(link), id: newZoomId() } : undefined
+              }
+            },
+            opts?.label ?? (link ? (members.length > 1 ? `ربط زوم (${members.length})` : 'إضافة زوم') : 'إزالة الزوم'),
+          )
+        },
+
+        applyZoomBatch: (items, label) => {
+          if (!items.length) return
+          get().mutate((doc) => {
+            const bySlide = new Map<string, Slide>()
+            for (const s of doc.slides) bySlide.set(s.id, s)
+            for (const item of items) {
+              const slide = bySlide.get(item.slideId)
+              const el = slide?.elements.find((e) => e.id === item.elementId)
+              if (el) el.zoom = { ...structuredClone(item.link), id: newZoomId() }
+            }
+          }, label ?? `ربط زوم (${items.length})`)
+        },
+
         nudge: (dx, dy) => {
           const slide = currentSlide()
           const ids = get().selection
@@ -769,6 +813,7 @@ export const useDoc = create<DocState>()(
           const els = clip.map((el) => {
             const copy = structuredClone(el)
             copy.id = newId(el.kind)
+            if (copy.zoom) copy.zoom.id = newZoomId()
             copy.x += offset.x
             copy.y += offset.y
             if (copy.gid) {
