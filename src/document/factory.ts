@@ -41,7 +41,7 @@ import { containsArabic } from '../lib/fonts'
 const uid = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', 10)
 
 import { migrateSlideAnimations } from '../animation/migrate'
-import { normalizeZoomLink } from './zoom'
+import { newZoomId, normalizeZoomLink } from './zoom'
 
 export function newId(prefix = 'e'): string {
   return `${prefix}_${uid()}${nanoid(4).slice(0, 4)}`
@@ -448,6 +448,8 @@ export function cloneElement(el: AnyElement, offset = { x: 0, y: 0 }, keepId = f
   copy.x += offset.x
   copy.y += offset.y
   if (!keepId) copy.gid = undefined
+  // a copied trigger is a new relationship — never share the link id
+  if (copy.zoom && !keepId) copy.zoom = { ...copy.zoom, id: newZoomId() }
   return copy
 }
 

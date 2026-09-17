@@ -21,5 +21,5 @@ export {
   zoomsFromSlide,
   zoomsToSlide,
 } from '../../src/document/zoom'
-export { createPresentation, normalizeElement, normalizePresentation } from '../../src/document/factory'
+export { cloneElement, createPresentation, normalizeElement, normalizePresentation } from '../../src/document/factory'
 export { elementText, plainText, slideTitleText, suggestZoomLinks } from '../../src/services/ai/zoomSuggest'

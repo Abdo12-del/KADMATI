@@ -373,7 +373,12 @@ export const useDoc = create<DocState>()(
             const copy: Slide = {
               ...structuredClone(src),
               id: newId('s'),
-              elements: src.elements.map((e) => ({ ...structuredClone(e), id: newId(e.kind) })),
+              elements: src.elements.map((e) => {
+                const c = { ...structuredClone(e), id: newId(e.kind) }
+                // zoom links travel with the element, but each copy owns its relationship id
+                if (c.zoom) c.zoom = { ...c.zoom, id: newZoomId() }
+                return c
+              }),
             }
             const slides = [...s.doc.slides]
             slides.splice(i + 1, 0, copy)
@@ -611,6 +616,7 @@ export const useDoc = create<DocState>()(
               for (const el of slide.elements.filter((e) => ids.includes(e.id))) {
                 const copy = structuredClone(el)
                 copy.id = newId(el.kind)
+                if (copy.zoom) copy.zoom.id = newZoomId()
                 copy.x += 24
                 copy.y += 24
                 if (copy.gid) {
@@ -807,6 +813,7 @@ export const useDoc = create<DocState>()(
           const els = clip.map((el) => {
             const copy = structuredClone(el)
             copy.id = newId(el.kind)
+            if (copy.zoom) copy.zoom.id = newZoomId()
             copy.x += offset.x
             copy.y += offset.y
             if (copy.gid) {

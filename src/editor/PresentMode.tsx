@@ -353,7 +353,10 @@ export function PresentMode({ doc, startAt, onExit }: PresentModeProps) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      // a focused hotspot consumes its own Enter/Space (React stopPropagation shields us)
+      // a focused hotspot consumes its own Enter/Space (React stopPropagation shields us);
+      // presenter chrome (back button, transport…) keeps native button activation
+      const target = e.target as HTMLElement | null
+      if ((e.key === 'Enter' || e.key === ' ') && target?.closest?.('[data-present-ui]')) return
       switch (e.key) {
         case 'Escape':
           onExit()

@@ -12,6 +12,7 @@ import {
   canTriggerZoom,
   resolveZoomTarget,
   slideLabel,
+  triggerGroup,
   ZOOM_DURATIONS,
   ZOOM_EASINGS,
   ZOOM_ORIGINS,
@@ -52,12 +53,15 @@ export function ZoomSection({ elements }: { elements: AnyElement[] }) {
             <Button
               size="sm"
               variant="ghost"
+              title="إزالة كل روابط الزوم (تشمل المجموعات)"
               onClick={() => {
-                const ids = new Set(linked.map((e) => e.id))
-                const slideId = doc.slides[useDoc.getState().slideIndex]?.id
-                if (!slideId) return
+                const slide = doc.slides[useDoc.getState().slideIndex]
+                if (!slide) return
+                // mirror link creation: a group linked as one trigger unlinks as one
+                const ids = new Set<string>()
+                for (const e of linked) for (const m of triggerGroup(slide, e.id)) ids.add(m.id)
                 useDoc.getState().updateSlide(
-                  slideId,
+                  slide.id,
                   (s) => {
                     for (const el of s.elements) if (ids.has(el.id)) el.zoom = undefined
                   },
@@ -100,11 +104,33 @@ export function ZoomSection({ elements }: { elements: AnyElement[] }) {
 
   const targetId = link.target.kind === 'slide' ? resolveZoomTarget(doc, link.target) : null
   const broken = !targetId
+  // Settings edits apply to the whole trigger group (they were linked as one),
+  // each member keeping its own id/target — a single undo step.
   const patch = (fn: (z: ZoomLink) => void, label = 'تعديل الزوم') => {
-    const draft = structuredClone(link)
-    fn(draft)
-    useDoc.getState().updateElement(el.id, { zoom: draft }, label)
+    const st = useDoc.getState()
+    const slide = st.doc.slides[st.slideIndex]
+    const members = slide ? triggerGroup(slide, el.id).filter((m) => m.zoom) : []
+    if (members.length <= 1) {
+      const draft = structuredClone(link)
+      fn(draft)
+      st.updateElement(el.id, { zoom: draft }, label)
+      return
+    }
+    const ids = new Set(members.map((m) => m.id))
+    st.updateSlide(
+      slide!.id,
+      (s) => {
+        for (const m of s.elements) {
+          if (!ids.has(m.id) || !m.zoom) continue
+          const draft = structuredClone(m.zoom)
+          fn(draft)
+          m.zoom = draft
+        }
+      },
+      label,
+    )
   }
+  const unlink = () => useDoc.getState().setElementZoom(el.id, null, { group: true })
 
   return (
     <Section title="التنقل (Zoom)">
@@ -120,7 +146,7 @@ export function ZoomSection({ elements }: { elements: AnyElement[] }) {
             <Button size="sm" variant="surface" className="flex-1" onClick={() => openZoomPicker([el.id])}>
               اختيار شريحة
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => useDoc.getState().setElementZoom(el.id, null)}>
+            <Button size="sm" variant="ghost" onClick={unlink}>
               إزالة
             </Button>
           </div>
@@ -184,7 +210,7 @@ export function ZoomSection({ elements }: { elements: AnyElement[] }) {
         <Button size="sm" variant="surface" className="flex-1" onClick={() => openZoomPicker([el.id])}>
           <Pencil size={12} /> تعديل / تغيير الهدف
         </Button>
-        <Button size="sm" variant="ghost" onClick={() => useDoc.getState().setElementZoom(el.id, null)} title="إزالة رابط الزوم">
+        <Button size="sm" variant="ghost" onClick={unlink} title="إزالة رابط الزوم (يشمل المجموعة)">
           <Link2Off size={13} />
         </Button>
       </div>

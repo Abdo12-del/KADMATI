@@ -252,6 +252,17 @@ console.log('factory')
   invalid.zoom = { target: { kind: 'slide' } }
   check('factory strips unrepairable link', Z.normalizeElement(invalid).zoom === undefined)
 
+  // duplicating a trigger copies the link but mints a new relationship id
+  const src = text('src', '<p>src</p>')
+  src.zoom = Z.createZoomLink('s2')
+  const dup = Z.cloneElement(src, { x: 24, y: 24 })
+  check(
+    'clone keeps target, refreshes ids',
+    dup.id !== src.id && dup.zoom.target.slideId === 's2' && dup.zoom.id !== src.zoom.id,
+  )
+  const same = Z.cloneElement(src, { x: 0, y: 0 }, true)
+  check('keepId preserves both ids', same.id === src.id && same.zoom.id === src.zoom.id)
+
   // full-document normalize keeps the doc playable AND keeps dangling links for repair
   const { doc, agenda1 } = deck()
   doc.theme = Z.createPresentation().theme
