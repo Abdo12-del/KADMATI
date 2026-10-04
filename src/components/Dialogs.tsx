@@ -31,6 +31,7 @@ import { exportImagesZip, exportPdf, type RasterFormat } from '../services/expor
 import { makeRenderSlide } from '../services/renderOffscreen'
 import { downloadBlob, downloadUrl } from '../store/storage'
 import { importPptxFile } from '../services/importPptx'
+import { importAurovaFile } from '../services/importAurovaProject'
 import { cn, fileNameSafe } from '../lib/cn'
 import { requestOpenProject } from '../services/openDeck'
 import { PROVIDERS, connLabel, isRemoteReady, providerDef, testConnection, toConn, type ConnTest, type ProviderId } from '../services/ai/providers'
@@ -82,7 +83,7 @@ function NewPresentationDialog() {
             [
               ['template', 'من قالب', LayoutTemplate],
               ['blank', 'فارغ', FileText],
-              ['import', 'استيراد PPTX', Import],
+              ['import', 'استيراد عرض', Import],
               ['ai', 'توليد بالذكاء', Sparkles],
             ] as [NewMode, string, typeof FileText][]
           ).map(([id, label, Icon]) => (
@@ -218,7 +219,9 @@ function ImportFlow({ compact }: { compact?: boolean }) {
     if (!file) return
     setBusy(true)
     try {
-      await importPptxFile(file, (label, done, total) => setProgress(total ? `${label} (${done}/${total})` : label))
+      const onProgress = (label: string, done: number, total: number) => setProgress(total ? `${label} (${done}/${total})` : label)
+      if (/\.pptx?$/i.test(file.name)) await importPptxFile(file, onProgress)
+      else await importAurovaFile(file, onProgress)
       close()
     } catch (err) {
       toast({ kind: 'error', title: 'فشل الاستيراد', body: (err as Error).message })
@@ -247,16 +250,16 @@ function ImportFlow({ compact }: { compact?: boolean }) {
         )}
       >
         <Upload size={20} className="mx-auto text-ink-500" />
-        <p className="mt-2 text-[13px] font-medium text-ink-100">أفلت ملف PPTX هنا</p>
+        <p className="mt-2 text-[13px] font-medium text-ink-100">أفلت ملف عرض أو مشروع هنا</p>
         <p className="mt-1 text-[11.5px] leading-relaxed text-ink-400">
-          نقرأ النص، الصور، الأشكال، الجداول، المخططات والخلفيات كعناصر قابلة للتحرير. ما لا يمكن تحويله يبقى صورة آمنة ونخبرك به.
+          يدعم PowerPoint القابل للتحرير (.pptx)، وملف Aurova (.aurova.json)، وحزمة Open Slide الصادرة من Aurova (.zip). لا نشغّل ملفات TSX الخارجية.
         </p>
         <div className="mt-3 flex justify-center gap-2">
           <Button variant="surface" size="sm" onClick={() => input.current?.click()} disabled={busy}>
             {busy ? <Loader2 size={13} className="animate-spin" /> : <FileSpreadsheet size={13} />} اختيار ملف
           </Button>
         </div>
-        <input ref={input} type="file" accept=".pptx,ppt" className="hidden" onChange={(e) => void run(e.target.files?.[0])} />
+        <input ref={input} type="file" accept=".pptx,.ppt,.aurova.json,.json,.zip" className="hidden" onChange={(e) => { void run(e.target.files?.[0]); e.target.value = '' }} />
       </div>
       {progress ? <p className="text-[11.5px] text-signal-soft">{progress}</p> : null}
     </div>
@@ -367,7 +370,7 @@ function AiPane() {
 
 /* ------------------------------------------------------------------ export */
 
-type ExportFormat = 'pptx' | 'pdf' | 'png' | 'jpg'
+type ExportFormat = 'pptx' | 'pdf' | 'png' | 'jpg' | 'openslide'
 
 function ExportDialog() {
   const doc = useDoc((s) => s.doc)
@@ -409,6 +412,21 @@ function ExportDialog() {
           ],
         })
         toast({ kind: 'success', title: 'صُدِّر PPTX', body: `${doc.slides.length} شريحة قابلة للتحرير في PowerPoint` })
+      } else if (format === 'openslide') {
+        setBusy('يُجهّز مشروع Open Slide…')
+        const { exportOpenSlideProject } = await import('../services/openSlideProject')
+        const result = await exportOpenSlideProject(doc, (percent) => setBusy(`ضغط المشروع… ${Math.round(percent)}٪`))
+        downloadBlob(result.blob, result.fileName)
+        setReport({
+          title: `${result.fileName} · ${Math.round(result.blob.size / 1024)} ك.ب`,
+          lines: [
+            `مشروع React جاهز للتشغيل: ${result.slides} شريحة و${result.assets} وسيط محلي.`,
+            'يحتوي ملف Aurova قابلًا لإعادة الاستيراد؛ لا تُشغّل حزمة TSX خارجية داخل المتصفح.',
+            ...result.warnings.slice(0, 5),
+            ...(result.warnings.length > 5 ? [`و${result.warnings.length - 5} تنبيهات أخرى داخل تقرير التصدير.`] : []),
+          ],
+        })
+        toast({ kind: 'success', title: 'أُنشئ مشروع Open Slide', body: 'فكّ ZIP ثم شغّل npm install وبعدها npm run dev.' })
       } else if (format === 'pdf') {
         setBusy('يُجهّز PDF…')
         const slides = scope === 'current' ? [doc.slides[slideIndex]] : doc.slides
@@ -481,6 +499,7 @@ function ExportDialog() {
               { value: 'pdf', label: 'PDF' },
               { value: 'png', label: 'PNG' },
               { value: 'jpg', label: 'JPG' },
+              { value: 'openslide', label: 'Open Slide · React' },
             ]}
           />
           {format === 'pptx' ? (
@@ -495,7 +514,18 @@ function ExportDialog() {
               </div>
             </div>
           ) : null}
-          {format !== 'pptx' ? (
+          {format === 'openslide' ? (
+            <div className="space-y-3 rounded-xl border border-signal/25 bg-signal/5 p-3">
+              <p className="text-[12px] font-semibold text-ink-100">حزمة React جاهزة لـ Open Slide ووكيل البرمجة</p>
+              <p className="text-[11.5px] leading-relaxed text-ink-300">
+                تُنشئ صفحات TSX، وتضمّن الأصول وملف Aurova الأصلي لإعادة الاستيراد. شغّلها خارج المتصفح عبر Node.js 20.19+ باستخدام npm install ثم npm run dev.
+              </p>
+              <p className="text-[11px] leading-relaxed text-ink-500">
+                حركات العناصر وروابط الزوم تبقى محفوظة في الملف الجانبي لكنها لا تُنفّذ في Open Slide. لا يمكن استيراد TSX حرّ مباشرةً؛ استورد ZIP الصادر هنا أو صدّر PPTX.
+              </p>
+            </div>
+          ) : null}
+          {format !== 'pptx' && format !== 'openslide' ? (
             <div className="space-y-3">
               <Field label="الموضوع">
                 <Segmented
@@ -564,7 +594,7 @@ function Info({ label, value }: { label: string; value: string }) {
 
 function ImportDialog() {
   return (
-    <Modal open onClose={close} title="استيراد PowerPoint" width={560}>
+    <Modal open onClose={close} title="استيراد عرض أو مشروع" width={560}>
       <ImportFlow compact />
     </Modal>
   )

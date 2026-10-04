@@ -44,6 +44,10 @@ jobs:
       - name: Zoom navigation tests
         run: npm run test:zoom
 
+      # Open Slide project generation, source validation, and ZIP round-trip import.
+      - name: Open Slide bridge tests
+        run: npm run test:openslide
+
       # Dataset + gateway stub smoke.
       - name: Model smoke
         run: npm run test:model
