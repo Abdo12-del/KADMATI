@@ -11,7 +11,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "icons:generate": "node scripts/gen-icon-set.mjs",
     "assets:hands": "node scripts/build-hand-assets.mjs",
-    "test": "npm run typecheck && npm run test:unit && npm run test:anim && npm run test:pdf && npm run test:model && npm run test:zoom",
+    "test": "npm run typecheck && npm run test:unit && npm run test:anim && npm run test:pdf && npm run test:model && npm run test:zoom && npm run test:openslide",
     "test:unit": "node tests/document/build.mjs && node tests/document/sanitize.test.mjs",
     "test:anim": "node tests/animations/verify.mjs",
     "test:pdf": "node tests/pdf/fixtures.mjs && node tests/pdf/build.mjs && node .tmp-verify/pdf-test.mjs",
@@ -22,7 +22,8 @@
     "model:eval": "node model/eval.mjs",
     "model:eval:stub": "node model/eval.mjs --url http://127.0.0.1:8787/v1/chat/completions --model aurova-deck-1",
     "test:model": "node model/smoke.mjs",
-    "test:zoom": "node tests/zoom/build.mjs && node tests/zoom/verify.mjs"
+    "test:zoom": "node tests/zoom/build.mjs && node tests/zoom/verify.mjs",
+    "test:openslide": "node tests/open-slide/build.mjs && node tests/open-slide/verify.mjs"
   },
   "dependencies": {
     "@tanstack/react-virtual": "3.14.12",
@@ -35,7 +36,7 @@
     "jszip": "3.10.2",
     "lucide": "^0.544.0",
     "lucide-react": "1.45.0",
-    "nanoid": "5.1.6",
+    "nanoid": "5.1.16",
     "pdfjs-dist": "^6.3.289",
     "pptxgenjs": "4.0.1",
     "pptxtojson": "2.1.0",
@@ -48,6 +49,11 @@
     "tesseract.js": "^7.0.0",
     "zundo": "2.3.0",
     "zustand": "5.0.15"
+  },
+  "overrides": {
+    "pptxgenjs": {
+      "image-size": "2.0.4"
+    }
   },
   "devDependencies": {
     "@tailwindcss/vite": "4.3.3",
